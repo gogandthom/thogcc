@@ -1,0 +1,10 @@
+{
+    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, UseTab: Never, IndentWidth: 4, ColumnLimit: 100, AllowShortFunctionsOnASingleLine: Empty }",
+    "C_Cpp.clang_format_path": ".clang-format",
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "editor.formatOnType": false,
+    "vscode-pets.theme": "autumn",
+    "conventionalCommits.gitmoji": false,
+    "conventionalCommits.promptScopes": false
+}

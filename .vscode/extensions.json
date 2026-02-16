@@ -1,0 +1,12 @@
+{
+    "recommendations": [
+        "zhwu95.riscv",
+        "ms-vscode-remote.remote-containers",
+        "vivaxy.vscode-conventional-commits",
+        "editorconfig.editorconfig",
+        "eamodio.gitlens",
+        "gruntfuggly.todo-tree",
+        "tonybaloney.vscode-pets",
+        "redhat.vscode-yaml"
+    ]
+}
