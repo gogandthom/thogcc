@@ -1,0 +1,36 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cmake",
+			"label": "thogcc: build",
+			"command": "build",
+			"targets": [
+				"c_compiler"
+			],
+			"preset": "__defaultBuildPreset__",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [],
+			"detail": "build c_compiler"
+		},
+		{
+			"type": "cmake",
+			"label": "thogcc: clean",
+			"command": "clean",
+			"preset": "__defaultBuildPreset__",
+			"problemMatcher": [],
+			"detail": "CMake clean task"
+		},
+		{
+			"type": "cmake",
+			"label": "thogcc: cmake configure",
+			"command": "configure",
+			"preset": "clang",
+			"problemMatcher": [],
+			"detail": "CMake configure task"
+		}
+	]
+}
