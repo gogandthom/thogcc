@@ -47,3 +47,19 @@ target_include_directories(c_compiler PRIVATE
 )
 
 target_compile_options(c_compiler PRIVATE -Wall -Wextra -Wpedantic)
+
+enable_testing()
+
+find_program(LIT_EXECUTABLE lit)
+
+if (LIT_EXECUTABLE)
+    message(STATUS "lit found; adding tests")
+    set(LIT_TEST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+    add_test(NAME lit_tests
+        COMMAND ${LIT_EXECUTABLE}
+            --xunit-xml-output ${CMAKE_BINARY_DIR}/lit_out.xml
+            ${LIT_TEST_DIR}
+    )
+else()
+    message(STATUS "lit not found; skipping tests")
+endif()
