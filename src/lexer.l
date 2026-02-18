@@ -21,8 +21,14 @@ E   [Ee][+-]?{D}+
 FS  (f|F|l|L)
 IS  (u|U|l|L)*
 
+%x COMMENT
+
 %%
-"/*"        {/* consumes comment - TODO you might want to process and emit it in your assembly for debugging */}
+"/*"        { BEGIN(COMMENT); }
+<COMMENT>{
+.|\n        { /* eat */ }
+"*/"        { BEGIN(INITIAL); }
+}
 
 "auto"      { return(AUTO); }
 "break"     { return(BREAK); }
