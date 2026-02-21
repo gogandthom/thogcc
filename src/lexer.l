@@ -65,7 +65,8 @@ IS  (u|U|l|L)*
 
 {L}({L}|{D})*       { yylval.string = new std::string(yytext); return(IDENTIFIER); }
 
-0[xX]{H}+{IS}?      { yylval.number_int = (int)strtol(yytext, NULL, 0); return(INT_CONSTANT); }
+0[xX]{H}+{IS}?      { yylval.number_int = (int)strtol(yytext, NULL, 0); return(INT_CONSTANT);
+                      /* TODO what in gods name is this shit. uints and ints are longs cast to ints????? */ }
 0{D}+{IS}?          { yylval.number_int = (int)strtol(yytext, NULL, 0); return(INT_CONSTANT); }
 {D}+{IS}?           { yylval.number_int = (int)strtol(yytext, NULL, 0); return(INT_CONSTANT); }
 L?'(\\.|[^\\'])+'   { yylval.number_int = (int)strtol(yytext, NULL, 0); return(INT_CONSTANT); }

@@ -85,52 +85,50 @@ function_definition
 
 
 primary_expression
-    : IDENTIFIER
-    | INT_CONSTANT {
-        $$ = new IntConstant($1);
-    }
-    | FLOAT_CONSTANT
-    | STRING_LITERAL
-    | '(' expression ')'
+    : IDENTIFIER            { $$ = new IdentifierExpression($1); }
+    | INT_CONSTANT          { $$ = new PrimaryExpression($1); }
+    | FLOAT_CONSTANT        { $$ = new PrimaryExpression($1); }
+    | STRING_LITERAL        { $$ = new PrimaryExpression{$1}; }
+    | '(' expression ')'    { $$ = $2; }
     ;
 
 postfix_expression
-    : primary_expression
-    | postfix_expression '[' expression ']'
-    | postfix_expression '(' ')'
-    | postfix_expression '(' argument_expression_list ')'
-    | postfix_expression '.' IDENTIFIER
-    | postfix_expression PTR_OP IDENTIFIER
-    | postfix_expression INC_OP
-    | postfix_expression DEC_OP
+    : primary_expression                                    { $$ = $1; }
+    | postfix_expression '[' expression ']'                 { $$ = new postfix::ArrayAccessExpression($1, $3); }
+    | postfix_expression '(' ')'                            { $$ = new postfix::FunctionCallExpression($1); }
+    | postfix_expression '(' argument_expression_list ')'   { $$ = new postfix::FunctionCallExpression($1, $3); }
+    | postfix_expression '.' IDENTIFIER                     { $$ = new postfix::MemberAccessExpression($1); }
+    | postfix_expression PTR_OP IDENTIFIER                  { $$ = new postfix::MemberAccessExpression($1, true); }
+    | postfix_expression INC_OP                             { $$ = new postfix::IncDecExpression($1); }
+    | postfix_expression DEC_OP                             { $$ = new postfix::IncDecExpression($1, true); }
     ;
 
 argument_expression_list
-    : assignment_expression
-    | argument_expression_list ',' assignment_expression
+    : assignment_expression                                 { $$ = new NodeList($1); }
+    | argument_expression_list ',' assignment_expression    { $$ = std::make_unique<auto>($1->pushBack($3)); }
     ;
 
 unary_expression
-    : postfix_expression
-    | INC_OP unary_expression
-    | DEC_OP unary_expression
-    | unary_operator cast_expression
-    | SIZEOF unary_expression
-    | SIZEOF '(' type_name ')'
+    : postfix_expression                { $$ = $1; }
+    | INC_OP unary_expression           { $$ = new prefix::IncDecExpression($2); }
+    | DEC_OP unary_expression           { $$ = new prefix::IncDecExpression($2, true); }
+    | unary_operator cast_expression    { $$ = new prefix::UnaryOperatorExpression{$1, $2}; }
+    | SIZEOF unary_expression           { $$ = new prefix::UnaryOperatorExpression{prefix::UnaryOperatorType::SIZEOF, $2}; }
+    | SIZEOF '(' type_name ')'          { $$ = new prefix::UnaryOperatorExpression{prefix::UnaryOperatorType::SIZEOF, $3}; }
     ;
 
 unary_operator
-    : '&'
-    | '*'
-    | '+'
-    | '-'
-    | '~'
-    | '!'
+    : '&'   { $$ = prefix::UnaryOperatorType::ADDRESSOF; }
+    | '*'   { $$ = prefix::UnaryOperatorType::INDIRECTION; }
+    | '+'   { $$ = prefix::UnaryOperatorType::PLUS; }
+    | '-'   { $$ = prefix::UnaryOperatorType::MINUS; }
+    | '~'   { $$ = prefix::UnaryOperatorType::BITWISE_NOT; }
+    | '!'   { $$ = prefix::UnaryOperatorType::LOGICAL_NOT; }
     ;
 
 cast_expression
-    : unary_expression
-    | '(' type_name ')' cast_expression
+    : unary_expression                  { $$ = $1; }
+    | '(' type_name ')' cast_expression { $$ = new CastExpression($1, $3); }
     ;
 
 multiplicative_expression
@@ -221,7 +219,7 @@ expression
     ;
 
 constant_expression
-    : conditional_expression
+    : conditional_expression    { $$ = new ConstantExpression($1); } // Don't change this, see ExpressionUnion.h
     ;
 
 declaration
