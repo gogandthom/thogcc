@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include "ast/Node.h"
 #include "ast/declarators/AbstractDeclarator.h"
 

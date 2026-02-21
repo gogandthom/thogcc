@@ -1,8 +1,10 @@
 #pragma once
 
+#include <cstdint>
+
 namespace thogcc::ast {
 
-enum class TypeSpecifier {
+enum class TypeSpecifier : std::uint8_t {
     VOID,
     CHAR,
     SHORT,

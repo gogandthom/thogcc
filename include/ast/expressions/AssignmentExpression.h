@@ -1,13 +1,13 @@
 #pragma once
 
-#include <memory>
+#include <cstdint>
 
 #include "ast/expressions/ExpressionBase.h"
 #include "ast/expressions/ExpressionUnion.h"
 
 namespace thogcc::ast::expressions {
 
-typedef enum {
+enum class AssignmentExpressionType : std::uint8_t {
     ASSIGN,
     MUL_ASSIGN,
     DIV_ASSIGN,
@@ -19,7 +19,7 @@ typedef enum {
     AND_ASSIGN,
     XOR_ASSIGN,
     OR_ASSIGN,
-} AssignmentExpressionType;
+};
 
 class AssignmentExpression : public ExpressionBase {
    public:

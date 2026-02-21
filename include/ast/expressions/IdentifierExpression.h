@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "ast/expressions/ExpressionBase.h"
 
 namespace thogcc::ast::expressions {

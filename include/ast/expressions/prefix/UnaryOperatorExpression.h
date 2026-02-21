@@ -1,13 +1,13 @@
 #pragma once
 
-#include <memory>
+#include <cstdint>
 
 #include "ast/expressions/ExpressionBase.h"
 #include "ast/expressions/ExpressionUnion.h"
 
 namespace thogcc::ast::expressions::prefix {
 
-typedef enum {
+enum class UnaryOperatorType : std::uint8_t {
     ADDRESSOF,
     INDIRECTION,
     PLUS,
@@ -15,7 +15,7 @@ typedef enum {
     BITWISE_NOT,
     LOGICAL_NOT,
     SIZEOF,
-} UnaryOperatorType;
+};
 
 class UnaryOperatorExpression : public ExpressionBase {
    public:

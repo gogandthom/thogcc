@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ast/Node.h"
 #include "ast/expressions/ExpressionBase.h"
 #include "ast/expressions/ExpressionUnion.h"
 
