@@ -1,6 +1,9 @@
 #pragma once
 
+#include <memory>
+
 #include "ast/expressions/ExpressionBase.h"
+
 namespace thogcc::ast::expressions {
 
 class CastExpression : public ExpressionBase {

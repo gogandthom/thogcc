@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+
+#include "ast/Node.h"
 #include "ast/expressions/ExpressionBase.h"
 
 namespace thogcc::ast::expressions::postfix {

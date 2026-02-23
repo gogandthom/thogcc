@@ -1,5 +1,8 @@
 #pragma once
 
+#include <memory>
+
+#include "ast/Node.h"
 #include "ast/expressions/AssignmentExpression.h"
 #include "ast/expressions/ExpressionBase.h"
 
