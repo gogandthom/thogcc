@@ -14,21 +14,22 @@
     int yylex_destroy(void);
 }
 
+// Do modern cpp things
+%skeleton "lalr1.cc"
+%require "3.2"
+
+// Modern replacement for %union
+%define api.value.type variant
+
+// type safe %token
+%define api.token.constructor
+
 %define parse.error detailed
 %define parse.lac full
 
-// Represents the value associated with any kind of AST node.
-%union {
-  Node*             node;
-  NodeList*         node_list;
-  int               number_int;
-  double            number_float;
-  std::string*      string;
-  TypeSpecifier     type_specifier;
-  yytokentype       token;
-}
-
-%token IDENTIFIER INT_CONSTANT FLOAT_CONSTANT STRING_LITERAL
+%token <std::string> IDENTIFIER
+%token <int> INT_CONSTANT STRING_LITERAL // TODO fix
+%token <double> FLOAT_CONSTANT
 %token PTR_OP INC_OP DEC_OP LEFT_OP RIGHT_OP LE_OP GE_OP EQ_OP NE_OP AND_OP OR_OP
 %token MUL_ASSIGN DIV_ASSIGN MOD_ASSIGN ADD_ASSIGN SUB_ASSIGN LEFT_ASSIGN RIGHT_ASSIGN AND_ASSIGN XOR_ASSIGN OR_ASSIGN
 %token TYPE_NAME TYPEDEF EXTERN STATIC AUTO REGISTER SIZEOF
@@ -37,32 +38,31 @@
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token UNKNOWN
 
-%type <node> translation_unit external_declaration function_definition primary_expression postfix_expression argument_expression_list
-%type <node> unary_expression cast_expression multiplicative_expression additive_expression shift_expression relational_expression
-%type <node> equality_expression and_expression exclusive_or_expression inclusive_or_expression logical_and_expression logical_or_expression
-%type <node> conditional_expression assignment_expression expression constant_expression declaration init_declarator_list
-%type <node> init_declarator struct_specifier struct_declaration_list struct_declaration specifier_qualifier_list struct_declarator_list
-%type <node> struct_declarator enum_specifier enumerator_list enumerator declarator direct_declarator pointer parameter_list parameter_declaration
-%type <node> identifier_list type_name abstract_declarator direct_abstract_declarator initializer initializer_list statement labeled_statement
-%type <node> compound_statement declaration_list expression_statement selection_statement iteration_statement jump_statement
+%type <std::unique_ptr<Node>> translation_unit external_declaration function_definition primary_expression postfix_expression argument_expression_list
+%type <std::unique_ptr<Node>> unary_expression cast_expression multiplicative_expression additive_expression shift_expression relational_expression
+%type <std::unique_ptr<Node>> equality_expression and_expression exclusive_or_expression inclusive_or_expression logical_and_expression logical_or_expression
+%type <std::unique_ptr<Node>> conditional_expression assignment_expression expression constant_expression declaration init_declarator_list
+%type <std::unique_ptr<Node>> init_declarator struct_specifier struct_declaration_list struct_declaration specifier_qualifier_list struct_declarator_list
+%type <std::unique_ptr<Node>> struct_declarator enum_specifier enumerator_list enumerator declarator direct_declarator pointer parameter_list parameter_declaration
+%type <std::unique_ptr<Node>> identifier_list type_name abstract_declarator direct_abstract_declarator initializer initializer_list statement labelled_statement
+%type <std::unique_ptr<Node>> compound_statement declaration_list expression_statement selection_statement iteration_statement jump_statement
 
-%type <node_list> statement_list
+%type <std::unique_ptr<NodeList>> statement_list
 
-%type <string> unary_operator assignment_operator storage_class_specifier
+%type <expression::prefix::UnaryOperatorType> unary_operator
+%type <expression::AssignmentExpressionType> assignment_operator
+%type <std::string> storage_class_specifier // TODO use correct type
 
-%type <number_int> INT_CONSTANT STRING_LITERAL // TODO fix
-%type <number_float> FLOAT_CONSTANT
-%type <string> IDENTIFIER
-%type <type_specifier> type_specifier
+%type <TypeSpecifier> type_specifier
 // TODO: Make a better type for this (only needed for advanced features)
-%type <type_specifier> declaration_specifiers
+%type <TypeSpecifier> declaration_specifiers
 
 
 %start ROOT
 %%
 
 ROOT
-    : translation_unit { g_root = $1; }
+    : translation_unit { g_root = std::move($1); }
 
 translation_unit
     : external_declaration { $$ = $1; }
@@ -85,7 +85,7 @@ function_definition
 
 
 primary_expression
-    : IDENTIFIER            { $$ = std::make_unique<IdentifierExpression>(*$1); delete $1; }
+    : IDENTIFIER            { $$ = std::make_unique<IdentifierExpression>($1); }
     | INT_CONSTANT          { $$ = std::make_unique<PrimaryExpression>($1); }
     | FLOAT_CONSTANT        { $$ = std::make_unique<PrimaryExpression>($1); }
     | STRING_LITERAL        { $$ = std::make_unique<PrimaryExpression>($1); } // TODO change? also ownership?
@@ -473,9 +473,9 @@ void yyerror (const char *s)
     std::exit(1);
 }
 
-Node* g_root;
+std::unique_ptr<Node> g_root;
 
-NodePtr ParseAST(std::string file_name)
+std::unique_ptr<Node> ParseAST(const std::string& file_name)
 {
     yyin = fopen(file_name.c_str(), "r");
     if (yyin == nullptr) {
@@ -489,5 +489,5 @@ NodePtr ParseAST(std::string file_name)
     fclose(yyin);
     yylex_destroy();
 
-    return NodePtr(g_root);
+    return std::move(g_root);
 }
