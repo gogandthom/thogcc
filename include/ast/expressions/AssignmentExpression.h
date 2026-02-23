@@ -3,7 +3,6 @@
 #include <cstdint>
 
 #include "ast/expressions/ExpressionBase.h"
-#include "ast/expressions/ExpressionUnion.h"
 
 namespace thogcc::ast::expressions {
 
@@ -23,12 +22,12 @@ enum class AssignmentExpressionType : std::uint8_t {
 
 class AssignmentExpression : public ExpressionBase {
    public:
-    AssignmentExpression(std::unique_ptr<ExpressionUnion> unaryExpr, AssignmentExpressionType type,
-                         std::unique_ptr<ExpressionUnion> assExpr);
+    AssignmentExpression(std::unique_ptr<ExpressionBase> unaryExpr, AssignmentExpressionType type,
+                         std::unique_ptr<ExpressionBase> assExpr);
 
    private:
-    std::unique_ptr<ExpressionUnion> _unaryExpr;
-    std::unique_ptr<ExpressionUnion> _assExpr;
+    std::unique_ptr<ExpressionBase> _unaryExpr;
+    std::unique_ptr<ExpressionBase> _assExpr;
     AssignmentExpressionType _type;
 };
 
