@@ -23,6 +23,10 @@ jobs:
 
       - name: Install requirements
         run: |
+          apt-get update
+          apt-get install -y python3-venv
+          python3 -m venv venv
+          source venv/bin/activate
           pip install lit filecheck
 
       - name: Build and test
