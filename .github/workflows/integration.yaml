@@ -25,15 +25,15 @@ jobs:
         run: |
           apt-get update
           apt-get install -y python3-venv
-          python3 -m venv venv
-          pip install lit filecheck
 
       - name: Build and test
         id: test
         timeout-minutes: 1
         shell: bash
         run: |
+          python3 -m venv venv
           source venv/bin/activate
+          pip3 install -r requirements.txt
           make test
 
       - name: Perm issue fix
