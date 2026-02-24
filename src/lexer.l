@@ -3,18 +3,18 @@
 %option yylineno
 
 %{
-  // A lot of this lexer is based off the ANSI C grammar:
-  // https://www.lysator.liu.se/c/ANSI-C-grammar-l.html
+    // A lot of this lexer is based off the ANSI C grammar:
+    // https://www.lysator.liu.se/c/ANSI-C-grammar-l.html
 
-  // Avoids error "error: `fileno' was not declared in this scope"
-  extern "C" int fileno(FILE *stream);
+    // Avoids error "error: `fileno' was not declared in this scope"
+    extern "C" int fileno(FILE *stream);
 
-  #include "parser.tab.hpp"
+    #include "parser.tab.hpp"
 
-  using token = yy::parser::token;
+    using token = yy::parser::token;
 
-  // Suppress warning about unused function
-  [[maybe_unused]] static void yyunput (int c, char * yy_bp);
+    // Suppress warning about unused function
+    [[maybe_unused]] static void yyunput (int c, char * yy_bp);
 %}
 
 D   [0-9]
