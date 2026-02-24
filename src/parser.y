@@ -6,7 +6,7 @@
 
     extern int yylineno;
     extern char* yytext;
-    extern Node* g_root;
+    extern std::unique_ptr<Node> g_root;
     extern FILE* yyin;
 
     int yylex(void);
@@ -38,24 +38,54 @@
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token UNKNOWN
 
-%type <std::unique_ptr<Node>> translation_unit external_declaration function_definition primary_expression postfix_expression argument_expression_list
-%type <std::unique_ptr<Node>> unary_expression cast_expression multiplicative_expression additive_expression shift_expression relational_expression
-%type <std::unique_ptr<Node>> equality_expression and_expression exclusive_or_expression inclusive_or_expression logical_and_expression logical_or_expression
-%type <std::unique_ptr<Node>> conditional_expression assignment_expression expression constant_expression declaration init_declarator_list
-%type <std::unique_ptr<Node>> init_declarator struct_specifier struct_declaration_list struct_declaration specifier_qualifier_list struct_declarator_list
-%type <std::unique_ptr<Node>> struct_declarator enum_specifier enumerator_list enumerator declarator direct_declarator pointer parameter_list parameter_declaration
-%type <std::unique_ptr<Node>> identifier_list type_name abstract_declarator direct_abstract_declarator initializer initializer_list statement labelled_statement
-%type <std::unique_ptr<Node>> compound_statement declaration_list expression_statement selection_statement iteration_statement jump_statement
+%type <std::unique_ptr<Node>> type_name
+%type <std::unique_ptr<Node>> declaration_specifiers // TODO: Make a better type for this (only needed for advanced features)
 
-%type <std::unique_ptr<NodeList>> statement_list
+// Top level shite
+%type <std::unique_ptr<Node>> translation_unit
 
+// Expressions
+%type <std::unique_ptr<ExpressionBase>> initializer conditional_expression assignment_expression expression primary_expression postfix_expression
+%type <std::unique_ptr<ExpressionBase>> unary_expression cast_expression multiplicative_expression additive_expression shift_expression relational_expression
+%type <std::unique_ptr<ExpressionBase>> equality_expression and_expression exclusive_or_expression inclusive_or_expression logical_and_expression logical_or_expression
+%type <std::unique_ptr<ConstantExpression>> constant_expression
+%type <std::unique_ptr<NodeList<ExpressionBase>>> initializer_list argument_expression_list
+
+// Statements
+%type <std::unique_ptr<StatementBase>> compound_statement expression_statement selection_statement iteration_statement jump_statement labelled_statement statement
+%type <std::unique_ptr<NodeList<StatementBase>>> statement_list
+
+// Declarators
+%type <std::unique_ptr<DeclaratorBase>> direct_declarator direct_abstract_declarator abstract_declarator declarator init_declarator
+%type <std::unique_ptr<StructDeclarator>> struct_declarator
+%type <std::unique_ptr<NodeList<DeclaratorBase>>> init_declarator_list
+%type <std::unique_ptr<NodeList<IdentifierDeclarator>>> identifier_list
+%type <std::unique_ptr<NodeList<StructDeclarator>>> struct_declarator_list
+
+// Declarations (derived from Declarators??)
+%type <std::unique_ptr<DeclarationBase>> declaration external_declaration
+%type <std::unique_ptr<StructDeclaration>> struct_declaration
+%type <std::unique_ptr<EnumeratorValueDeclaration>> enumerator
+%type <std::unique_ptr<ParameterDeclaration>> parameter_declaration
+%type <std::unique_ptr<FunctionDefinition>> function_definition
+%type <std::unique_ptr<NodeList<DeclarationBase>>> declaration_list
+%type <std::unique_ptr<NodeList<StructDeclaration>>> struct_declaration_list
+%type <std::unique_ptr<NodeList<EnumeratorValueDeclaration>>> enumerator_list
+%type <std::unique_ptr<NodeList<ParameterDeclaration>>> parameter_list
+
+// Enumerators and structs
+%type <std::unique_ptr<Enumerator>> enum_specifier
+%type <std::unique_ptr<Struct>> struct_specifier
+
+// Enums for types and shit
+%type <ast::StorageClassSpecifier> storage_class_specifier
 %type <expression::prefix::UnaryOperatorType> unary_operator
 %type <expression::AssignmentExpressionType> assignment_operator
-%type <std::string> storage_class_specifier // TODO use correct type
 
 %type <TypeSpecifier> type_specifier
-// TODO: Make a better type for this (only needed for advanced features)
-%type <TypeSpecifier> declaration_specifiers
+%type <std::unique_ptr<NodeList<TypeSpecifier>>> specifier_qualifier_list
+
+%type <int> pointer
 
 
 %start ROOT
