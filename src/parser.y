@@ -57,7 +57,7 @@
 
 // Statements
 %type <std::unique_ptr<StatementBase>> compound_statement expression_statement selection_statement iteration_statement jump_statement labelled_statement statement
-%type <std::unique_ptr<NodeList<StatementBase>>> statement_list
+%type <std::unique_ptr<NodeList<StatementBase>>> statement_list statement_list_opt
 
 // Declarators
 %type <std::unique_ptr<DeclaratorBase>> direct_declarator direct_abstract_declarator abstract_declarator declarator init_declarator
@@ -72,7 +72,7 @@
 %type <std::unique_ptr<EnumeratorValueDeclaration>> enumerator
 %type <std::unique_ptr<ParameterDeclaration>> parameter_declaration
 %type <std::unique_ptr<FunctionDefinition>> function_definition
-%type <std::unique_ptr<NodeList<DeclarationBase>>> declaration_list
+%type <std::unique_ptr<NodeList<DeclarationBase>>> declaration_list declaration_list_opt
 %type <std::unique_ptr<NodeList<StructDeclaration>>> struct_declaration_list
 %type <std::unique_ptr<NodeList<EnumeratorValueDeclaration>>> enumerator_list
 %type <std::unique_ptr<NodeList<ParameterDeclaration>>> parameter_list
@@ -439,10 +439,7 @@ labelled_statement
     ;
 
 compound_statement
-    : '{' '}'                                                                   { $$ = std::make_unique<CompoundStatement>(); }
-    | '{'   { typedef_table.pushScope(); }  statement_list '}'                  { typedef_table.popScope(); $$ = std::make_unique<CompoundStatement>(nullptr, std::move($3)); }
-    | '{'   { typedef_table.pushScope(); }  declaration_list '}'                { typedef_table.popScope(); $$ = std::make_unique<CompoundStatement>(std::move($3), nullptr); }
-    | '{'   { typedef_table.pushScope(); }  declaration_list statement_list '}' { typedef_table.popScope(); $$ = std::make_unique<CompoundStatement>(std::move($3), std::move($4)); }
+    : '{' { typedef_table.pushScope(); } declaration_list_opt statement_list_opt '}'    { typedef_table.popScope(); $$ = std::make_unique<CompoundStatement>(std::move($3), std::move($4)); }
     ;
 
 declaration_list
@@ -450,9 +447,19 @@ declaration_list
     | declaration_list declaration  { $1->pushBack(std::move($2)); $$ = std::move($1); }
     ;
 
+declaration_list_opt
+    : %empty            { $$ = nullptr; }
+    | declaration_list  { $$ = std::move($1); }
+    ;
+
 statement_list
     : statement                 { $$ = std::make_unique<NodeList<StatementBase>>(std::move($1)); }
     | statement_list statement  { $1->pushBack(std::move($2)); $$ = std::move($1); }
+    ;
+
+statement_list_opt
+    : %empty            { $$ = nullptr; }
+    | statement_list    { $$ = std::move($1); }
     ;
 
 expression_statement
