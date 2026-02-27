@@ -9,13 +9,11 @@ namespace thogcc::ast::expressions {
 
 class PrimaryExpression : public ExpressionBase {
    public:
-    PrimaryExpression(int value);
-    PrimaryExpression(float value);
-    PrimaryExpression(std::string value);
+    template <typename T>
+    PrimaryExpression(T&& value);
 
    private:
-    // TODO introduce other types (uint, long, double, etc)?
-    std::variant<int, float, std::string> _value;
+    std::variant<int, unsigned, long, unsigned long, float, double, std::string> _value;
 };
 
 }  // namespace thogcc::ast::expressions

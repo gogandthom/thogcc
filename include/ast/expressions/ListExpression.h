@@ -1,8 +1,8 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 
+#include "ast/Node.h"
 #include "ast/expressions/ExpressionBase.h"
 
 namespace thogcc::ast::expressions {
@@ -10,10 +10,10 @@ namespace thogcc::ast::expressions {
 class ListExpression : public ExpressionBase {
    public:
     ListExpression(std::unique_ptr<ExpressionBase> expr);
-    std::unique_ptr<ListExpression> pushBack(std::unique_ptr<ExpressionBase> ptr);
+    void pushBack(std::unique_ptr<ExpressionBase> ptr);
 
    private:
-    std::vector<std::unique_ptr<ExpressionBase>> _list;
+    std::unique_ptr<NodeList<ExpressionBase>> _list;
 };
 
 }  // namespace thogcc::ast::expressions

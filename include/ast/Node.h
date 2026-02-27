@@ -14,8 +14,8 @@ class Node {
 template <std::derived_from<Node> T>
 class NodeList : public T {
    public:
-    NodeList(T node);
-    NodeList<T>* pushBack(T node);
+    NodeList(std::unique_ptr<T> node);
+    void pushBack(T node);
 
    private:
     std::vector<std::unique_ptr<T>> _nodes;

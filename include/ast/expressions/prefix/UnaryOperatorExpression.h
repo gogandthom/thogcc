@@ -14,16 +14,14 @@ enum class UnaryOperatorType : std::uint8_t {
     MINUS,
     BITWISE_NOT,
     LOGICAL_NOT,
-    SIZEOF,
 };
 
 class UnaryOperatorExpression : public ExpressionBase {
    public:
-    UnaryOperatorExpression(UnaryOperatorType type, std::unique_ptr<ExpressionBase> expr);
-    UnaryOperatorExpression(UnaryOperatorType type /* TODO , type_name */);
+    UnaryOperatorExpression(UnaryOperatorType op, std::unique_ptr<ExpressionBase> expr);
 
    private:
-    UnaryOperatorType _type;
+    UnaryOperatorType _op;
     std::unique_ptr<ExpressionBase> _expr;
 };
 

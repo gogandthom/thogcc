@@ -45,9 +45,10 @@
 %type <std::unique_ptr<Node>> translation_unit
 
 // Expressions
-%type <std::unique_ptr<ExpressionBase>> initializer conditional_expression assignment_expression expression primary_expression postfix_expression
-%type <std::unique_ptr<ExpressionBase>> unary_expression cast_expression multiplicative_expression additive_expression shift_expression relational_expression
-%type <std::unique_ptr<ExpressionBase>> equality_expression and_expression exclusive_or_expression inclusive_or_expression logical_and_expression logical_or_expression
+%type <std::unique_ptr<ExpressionBase>> primary_expression postfix_expression unary_expression cast_expression
+%type <std::unique_ptr<ExpressionBase>> multiplicative_expression additive_expression shift_expression relational_expression equality_expression
+%type <std::unique_ptr<ExpressionBase>> and_expression exclusive_or_expression inclusive_or_expression logical_and_expression logical_or_expression
+%type <std::unique_ptr<ExpressionBase>> conditional_expression assignment_expression expression initializer
 %type <std::unique_ptr<ConstantExpression>> constant_expression
 %type <std::unique_ptr<NodeList<ExpressionBase>>> initializer_list argument_expression_list
 
@@ -118,7 +119,7 @@ primary_expression
     : IDENTIFIER            { $$ = std::make_unique<IdentifierExpression>($1); }
     | INT_CONSTANT          { $$ = std::make_unique<PrimaryExpression>($1); }
     | FLOAT_CONSTANT        { $$ = std::make_unique<PrimaryExpression>($1); }
-    | STRING_LITERAL        { $$ = std::make_unique<PrimaryExpression>($1); } // TODO change? also ownership?
+    | STRING_LITERAL        { $$ = std::make_unique<PrimaryExpression>($1); }
     | '(' expression ')'    { $$ = std::move($2); }
     ;
 
@@ -127,24 +128,24 @@ postfix_expression
     | postfix_expression '[' expression ']'                 { $$ = std::make_unique<postfix::ArrayAccessExpression>(std::move($1), std::move($3)); }
     | postfix_expression '(' ')'                            { $$ = std::make_unique<postfix::FunctionCallExpression>(std::move($1)); }
     | postfix_expression '(' argument_expression_list ')'   { $$ = std::make_unique<postfix::FunctionCallExpression>(std::move($1), std::move($3)); }
-    | postfix_expression '.' IDENTIFIER                     { $$ = std::make_unique<postfix::MemberAccessExpression>(std::move($1)); }
-    | postfix_expression PTR_OP IDENTIFIER                  { $$ = std::make_unique<postfix::MemberAccessExpression>(std::move($1), true); }
-    | postfix_expression INC_OP                             { $$ = std::make_unique<postfix::IncDecExpression>(std::move($1)); }
-    | postfix_expression DEC_OP                             { $$ = std::make_unique<postfix::IncDecExpression>(std::move($1), true); }
+    | postfix_expression '.' IDENTIFIER                     { $$ = std::make_unique<postfix::MemberAccessExpression>(std::move($1), $3); }
+    | postfix_expression PTR_OP IDENTIFIER                  { $$ = std::make_unique<postfix::MemberAccessExpression>(std::move($1), $3, true); }
+    | postfix_expression INC_OP                             { $$ = std::make_unique<IncDecExpression>(std::move($1)); }
+    | postfix_expression DEC_OP                             { $$ = std::make_unique<IncDecExpression>(std::move($1), true); }
     ;
 
 argument_expression_list
-    : assignment_expression                                 { $$ = std::make_unique<NodeList>($1); }
-    | argument_expression_list ',' assignment_expression    { $$ = std::move($1->pushBack($3)); }
+    : assignment_expression                                 { $$ = std::make_unique<NodeList<ExpressionBase>>($1); }
+    | argument_expression_list ',' assignment_expression    { $1->pushBack($3); $$ = std::move($1); }
     ;
 
 unary_expression
     : postfix_expression                { $$ = std::move($1); }
-    | INC_OP unary_expression           { $$ = std::make_unique<prefix::IncDecExpression>(std::move($2)); }
-    | DEC_OP unary_expression           { $$ = std::make_unique<prefix::IncDecExpression>(std::move($2), true); }
+    | INC_OP unary_expression           { $$ = std::make_unique<IncDecExpression>(std::move($2), true); }
+    | DEC_OP unary_expression           { $$ = std::make_unique<IncDecExpression>(std::move($2), true, true); }
     | unary_operator cast_expression    { $$ = std::make_unique<prefix::UnaryOperatorExpression>($1, std::move($2)); }
-    | SIZEOF unary_expression           { $$ = std::make_unique<prefix::UnaryOperatorExpression>(prefix::UnaryOperatorType::SIZEOF, std::move($2)); }
-    | SIZEOF '(' type_name ')'          { $$ = std::make_unique<prefix::UnaryOperatorExpression>(prefix::UnaryOperatorType::SIZEOF, std::move($3)); }
+    | SIZEOF unary_expression           { $$ = std::make_unique<prefix::SizeofExpression>(std::move($2)); }
+    | SIZEOF '(' type_name ')'          { $$ = std::make_unique<prefix::SizeofExpression>(std::move($3)); }
     ;
 
 unary_operator
@@ -158,98 +159,98 @@ unary_operator
 
 cast_expression
     : unary_expression                  { $$ = std::move($1); }
-    | '(' type_name ')' cast_expression { $$ = std::make_unique<CastExpression>(std::move($1), std::move($3)); }
+    | '(' type_name ')' cast_expression { $$ = std::make_unique<CastExpression>(std::move($2), std::move($4)); }
     ;
 
 multiplicative_expression
     : cast_expression                               { $$ = std::move($1); }
-    | multiplicative_expression '*' cast_expression { $$ = std::make_unique<MultiplicativeExpression>(std::move($1), std::move($3), expressions::MultiplicativeExpressionType::MUL); }
-    | multiplicative_expression '/' cast_expression { $$ = std::make_unique<MultiplicativeExpression>(std::move($1), std::move($3), expressions::MultiplicativeExpressionType::DIV); }
-    | multiplicative_expression '%' cast_expression { $$ = std::make_unique<MultiplicativeExpression>(std::move($1), std::move($3), expressions::MultiplicativeExpressionType::REM); }
+    | multiplicative_expression '*' cast_expression { $$ = std::make_unique<binary::AddMultExpression>(std::move($1), std::move($3), binary::AddMultExpressionType::MUL); }
+    | multiplicative_expression '/' cast_expression { $$ = std::make_unique<binary::AddMultExpression>(std::move($1), std::move($3), binary::AddMultExpressionType::DIV); }
+    | multiplicative_expression '%' cast_expression { $$ = std::make_unique<binary::AddMultExpression>(std::move($1), std::move($3), binary::AddMultExpressionType::REM); }
     ;
 
 additive_expression
     : multiplicative_expression                         { $$ = std::move($1); }
-    | additive_expression '+' multiplicative_expression { $$ = std::make_unique<AdditiveExpression>(std::move($1), std::move($3)); }
-    | additive_expression '-' multiplicative_expression { $$ = std::make_unique<AdditiveExpression>(std::move($1), std::move($3), true); }
+    | additive_expression '+' multiplicative_expression { $$ = std::make_unique<binary::AddMultExpression>(std::move($1), std::move($3), binary::AddMultExpressionType::ADD); }
+    | additive_expression '-' multiplicative_expression { $$ = std::make_unique<binary::AddMultExpression>(std::move($1), std::move($3), binary::AddMultExpressionType::SUB); }
     ;
 
 shift_expression
     : additive_expression                           { $$ = std::move($1); }
-    | shift_expression LEFT_OP additive_expression  { $$ = std::make_unique<ShiftExpression>(std::move($1), std::move($3)); }
-    | shift_expression RIGHT_OP additive_expression { $$ = std::make_unique<ShiftExpression>(std::move($1), std::move($3), true); }
+    | shift_expression LEFT_OP additive_expression  { $$ = std::make_unique<binary::ShiftExpression>(std::move($1), std::move($3)); }
+    | shift_expression RIGHT_OP additive_expression { $$ = std::make_unique<binary::ShiftExpression>(std::move($1), std::move($3), true); }
     ;
 
 relational_expression
     : shift_expression                              { $$ = std::move($1); }
-    | relational_expression '<' shift_expression    { $$ = std::make_unique<RelationalExpression>(std::move($1), std::move($3), expressions::RelationalExpressionType::L); }
-    | relational_expression '>' shift_expression    { $$ = std::make_unique<RelationalExpression>(std::move($1), std::move($3), expressions::RelationalExpressionType::G); }
-    | relational_expression LE_OP shift_expression  { $$ = std::make_unique<RelationalExpression>(std::move($1), std::move($3), expressions::RelationalExpressionType::LE); }
-    | relational_expression GE_OP shift_expression  { $$ = std::make_unique<RelationalExpression>(std::move($1), std::move($3), expressions::RelationalExpressionType::GE); }
+    | relational_expression '<' shift_expression    { $$ = std::make_unique<binary::RelationalExpression>(std::move($1), std::move($3), binary::RelationalExpressionType::L); }
+    | relational_expression '>' shift_expression    { $$ = std::make_unique<binary::RelationalExpression>(std::move($1), std::move($3), binary::RelationalExpressionType::G); }
+    | relational_expression LE_OP shift_expression  { $$ = std::make_unique<binary::RelationalExpression>(std::move($1), std::move($3), binary::RelationalExpressionType::LE); }
+    | relational_expression GE_OP shift_expression  { $$ = std::make_unique<binary::RelationalExpression>(std::move($1), std::move($3), binary::RelationalExpressionType::GE); }
     ;
 
 equality_expression
     : relational_expression                             { $$ = std::move($1); }
-    | equality_expression EQ_OP relational_expression   { $$ = std::make_unique<EqualityExpression>(std::move($1), std::move($3)); }
-    | equality_expression NE_OP relational_expression   { $$ = std::make_unique<EqualityExpression>(std::move($1), std::move($3), true); }
+    | equality_expression EQ_OP relational_expression   { $$ = std::make_unique<binary::EqualityExpression>(std::move($1), std::move($3)); }
+    | equality_expression NE_OP relational_expression   { $$ = std::make_unique<binary::EqualityExpression>(std::move($1), std::move($3), true); }
     ;
 
 and_expression
     : equality_expression                       { $$ = std::move($1); }
-    | and_expression '&' equality_expression    { $$ = std::make_unique<BitwiseExpression>(std::move($1), std::move($3), expressions::BitwiseExpressionType::AND); }
+    | and_expression '&' equality_expression    { $$ = std::make_unique<binary::BitwiseExpression>(std::move($1), std::move($3), binary::BitwiseExpressionType::AND); }
     ;
 
 exclusive_or_expression
     : and_expression                                { $$ = std::move($1); }
-    | exclusive_or_expression '^' and_expression    { $$ = std::make_unique<BitwiseExpression>(std::move($1), std::move($3), expressions::BitwiseExpressionType::XOR); }
+    | exclusive_or_expression '^' and_expression    { $$ = std::make_unique<binary::BitwiseExpression>(std::move($1), std::move($3), binary::BitwiseExpressionType::XOR); }
     ;
 
 inclusive_or_expression
     : exclusive_or_expression                               { $$ = std::move($1); }
-    | inclusive_or_expression '|' exclusive_or_expression   { $$ = std::make_unique<BitwiseExpression>(std::move($1), std::move($3), expressions::BitwiseExpressionType::OR); }
+    | inclusive_or_expression '|' exclusive_or_expression   { $$ = std::make_unique<binary::BitwiseExpression>(std::move($1), std::move($3), binary::BitwiseExpressionType::OR); }
     ;
 
 logical_and_expression
     : inclusive_or_expression                               { $$ = std::move($1); }
-    | logical_and_expression AND_OP inclusive_or_expression { $$ = std::make_unique<LogicalExpression>(std::move($1), std::move($3), expressions::LogicalExpressionType::AND); }
+    | logical_and_expression AND_OP inclusive_or_expression { $$ = std::make_unique<binary::LogicalExpression>(std::move($1), std::move($3), binary::LogicalExpressionType::AND); }
     ;
 
 logical_or_expression
     : logical_and_expression                                { $$ = std::move($1); }
-    | logical_or_expression OR_OP logical_and_expression    { $$ = std::make_unique<LogicalExpression>(std::move($1), std::move($3), expressions::LogicalExpressionType::OR); }
+    | logical_or_expression OR_OP logical_and_expression    { $$ = std::make_unique<binary::LogicalExpression>(std::move($1), std::move($3), binary::LogicalExpressionType::OR); }
     ;
 
 conditional_expression
     : logical_or_expression                                             { $$ = std::move($1); }
-    | logical_or_expression '?' expression ':' conditional_expression   { $$ = std::make_unique<ConditionalExpression>(std::move($1), std::move($2), std::move($3))}
+    | logical_or_expression '?' expression ':' conditional_expression   { $$ = std::make_unique<ConditionalExpression>(std::move($1), std::move($3), std::move($5))}
     ;
 
 assignment_expression
     : conditional_expression                                        { $$ = std::move($1); }
-    | unary_expression assignment_operator assignment_expression    { $$ = std::make_unique<AssignmentExpression>(std::move($1), $2, std::move($3)); }
+    | unary_expression assignment_operator assignment_expression    { $$ = std::make_unique<binary::AssignmentExpression>(std::move($1), std::move($3), $2); }
     ;
 
 assignment_operator
-    : '='           { $$ = expression::AssignmentExpressionType::ASSIGN; }
-    | MUL_ASSIGN    { $$ = expression::AssignmentExpressionType::MUL_ASSIGN; }
-    | DIV_ASSIGN    { $$ = expression::AssignmentExpressionType::DIV_ASSIGN; }
-    | MOD_ASSIGN    { $$ = expression::AssignmentExpressionType::MOD_ASSIGN; }
-    | ADD_ASSIGN    { $$ = expression::AssignmentExpressionType::ADD_ASSIGN; }
-    | SUB_ASSIGN    { $$ = expression::AssignmentExpressionType::SUB_ASSIGN; }
-    | LEFT_ASSIGN   { $$ = expression::AssignmentExpressionType::LEFT_ASSIGN; }
-    | RIGHT_ASSIGN  { $$ = expression::AssignmentExpressionType::RIGHT_ASSIGN; }
-    | AND_ASSIGN    { $$ = expression::AssignmentExpressionType::AND_ASSIGN; }
-    | XOR_ASSIGN    { $$ = expression::AssignmentExpressionType::XOR_ASSIGN; }
-    | OR_ASSIGN     { $$ = expression::AssignmentExpressionType::OR_ASSIGN; }
+    : '='           { $$ = binary::AssignmentExpressionType::ASSIGN; }
+    | MUL_ASSIGN    { $$ = binary::AssignmentExpressionType::MUL_ASSIGN; }
+    | DIV_ASSIGN    { $$ = binary::AssignmentExpressionType::DIV_ASSIGN; }
+    | MOD_ASSIGN    { $$ = binary::AssignmentExpressionType::MOD_ASSIGN; }
+    | ADD_ASSIGN    { $$ = binary::AssignmentExpressionType::ADD_ASSIGN; }
+    | SUB_ASSIGN    { $$ = binary::AssignmentExpressionType::SUB_ASSIGN; }
+    | LEFT_ASSIGN   { $$ = binary::AssignmentExpressionType::LEFT_ASSIGN; }
+    | RIGHT_ASSIGN  { $$ = binary::AssignmentExpressionType::RIGHT_ASSIGN; }
+    | AND_ASSIGN    { $$ = binary::AssignmentExpressionType::AND_ASSIGN; }
+    | XOR_ASSIGN    { $$ = binary::AssignmentExpressionType::XOR_ASSIGN; }
+    | OR_ASSIGN     { $$ = binary::AssignmentExpressionType::OR_ASSIGN; }
     ;
 
 expression
     : assignment_expression                 { $$ = std::make_unique<ListExpression>(std::move($1)); }
-    | expression ',' assignment_expression  { $$ = $1->pushBack(std::move($3)); }
+    | expression ',' assignment_expression  { $1->pushBack(std::move($3)); $$ = std::move($1); }
     ;
 
 constant_expression
-    : conditional_expression    { $$ = std::make_unique<ConstantExpression>(std::move($1)); } // Don't change this, see ExpressionUnion.h
+    : conditional_expression    { $$ = std::make_unique<ConstantExpression>(std::move($1)); } // Cannot be flattened, as evaluated at compile time.
     ;
 
 declaration

@@ -2,18 +2,18 @@
 
 #include <memory>
 
-#include "ast/TypeName.h"
 #include "ast/expressions/ExpressionBase.h"
 
 namespace thogcc::ast::expressions {
 
-class CastExpression : public ExpressionBase {
+class IncDecExpression : public ExpressionBase {
    public:
-    CastExpression(std::unique_ptr<TypeName> typeName, std::unique_ptr<ExpressionBase> expr);
+    IncDecExpression(std::unique_ptr<ExpressionBase> expr, bool isDecrement = false,
+                     bool isPrefix = false);
 
    private:
     std::unique_ptr<ExpressionBase> _expr;
-    std::unique_ptr<TypeName> _typeName;
+    bool _isDecrement, _isPrefix;
 };
 
 }  // namespace thogcc::ast::expressions
