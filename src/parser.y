@@ -38,6 +38,9 @@
 %token CASE DEFAULT IF ELSE SWITCH WHILE DO FOR GOTO CONTINUE BREAK RETURN
 %token UNKNOWN
 
+%precedence LOWER_THAN_ELSE
+%precedence ELSE
+
 %type <std::unique_ptr<Node>> type_name
 %type <std::unique_ptr<Node>> declaration_specifiers // TODO: Make a better type for this (only needed for advanced features)
 
@@ -458,9 +461,9 @@ expression_statement
     ;
 
 selection_statement
-    : IF '(' expression ')' statement                   { $$ = std::make_unique<IfStatement>(std::move($3), std::move($5)); }
-    | IF '(' expression ')' statement ELSE statement    { $$ = std::make_unique<IfStatement>(std::move($3), std::move($5), std::move($7)); }
-    | SWITCH '(' expression ')' statement               { $$ = std::make_unique<SwitchStatement>(std::move($3), std::move($5)); }
+    : IF '(' expression ')' statement %prec LOWER_THAN_ELSE { $$ = std::make_unique<IfStatement>(std::move($3), std::move($5)); }
+    | IF '(' expression ')' statement ELSE statement        { $$ = std::make_unique<IfStatement>(std::move($3), std::move($5), std::move($7)); }
+    | SWITCH '(' expression ')' statement                   { $$ = std::make_unique<SwitchStatement>(std::move($3), std::move($5)); }
     ;
 
 iteration_statement
