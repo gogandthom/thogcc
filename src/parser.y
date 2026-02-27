@@ -421,76 +421,61 @@ initializer_list
     ;
 
 statement
-    : labeled_statement
-    | compound_statement
-    | expression_statement
-    | selection_statement
-    | iteration_statement
-    | jump_statement { $$ = $1; }
+    : labelled_statement    { $$ = std::move($1); }
+    | compound_statement    { $$ = std::move($1); }
+    | expression_statement  { $$ = std::move($1); }
+    | selection_statement   { $$ = std::move($1); }
+    | iteration_statement   { $$ = std::move($1); }
+    | jump_statement        { $$ = std::move($1); }
     ;
 
-labeled_statement
-    : IDENTIFIER ':' statement
-    | CASE constant_expression ':' statement
-    | DEFAULT ':' statement
+labelled_statement
+    : IDENTIFIER ':' statement                  { $$ = std::make_unique<LabelledStatement>($1, std::move($3)); }
+    | CASE constant_expression ':' statement    { $$ = std::make_unique<SwitchCaseStatement>(std::move($2), std::move($4)); }
+    | DEFAULT ':' statement                     { $$ = std::make_unique<SwitchCaseStatement>(std::move($3)); }
     ;
 
 compound_statement
-    : '{' '}' {
-        // TODO: correct this
-        $$ = nullptr;
-    }
-    | '{' statement_list '}' {
-        $$ = $2;
-    }
-    | '{' declaration_list '}' {
-        // TODO: correct this
-        $$ = nullptr;
-    }
-    | '{' declaration_list statement_list '}'  {
-        // TODO: correct this
-        $$ = nullptr;
-    }
+    : '{' '}'                                                                   { $$ = std::make_unique<CompoundStatement>(); }
+    | '{'   { typedef_table.pushScope(); }  statement_list '}'                  { typedef_table.popScope(); $$ = std::make_unique<CompoundStatement>(nullptr, std::move($3)); }
+    | '{'   { typedef_table.pushScope(); }  declaration_list '}'                { typedef_table.popScope(); $$ = std::make_unique<CompoundStatement>(std::move($3), nullptr); }
+    | '{'   { typedef_table.pushScope(); }  declaration_list statement_list '}' { typedef_table.popScope(); $$ = std::make_unique<CompoundStatement>(std::move($3), std::move($4)); }
     ;
 
 declaration_list
-    : declaration
-    | declaration_list declaration
+    : declaration                   { $$ = std::make_unique<NodeList<DeclarationBase>>(std::move($1)); }
+    | declaration_list declaration  { $1->pushBack(std::move($2)); $$ = std::move($1); }
     ;
 
 statement_list
-    : statement { $$ = new NodeList(NodePtr($1)); }
-    | statement_list statement { $1->PushBack(NodePtr($2)); $$=$1; }
+    : statement                 { $$ = std::make_unique<NodeList<StatementBase>>(std::move($1)); }
+    | statement_list statement  { $1->pushBack(std::move($2)); $$ = std::move($1); }
     ;
 
 expression_statement
-    : ';'
-    | expression ';' { $$ = $1; }
+    : ';'                       { $$ = std::make_unique<ExpressionStatement>(); }
+    | expression ';'            { $$ = std::make_unique<ExpressionStatement>(std::move($1)); }
     ;
 
 selection_statement
-    : IF '(' expression ')' statement
-    | IF '(' expression ')' statement ELSE statement
-    | SWITCH '(' expression ')' statement
+    : IF '(' expression ')' statement                   { $$ = std::make_unique<IfStatement>(std::move($3), std::move($5)); }
+    | IF '(' expression ')' statement ELSE statement    { $$ = std::make_unique<IfStatement>(std::move($3), std::move($5), std::move($7)); }
+    | SWITCH '(' expression ')' statement               { $$ = std::make_unique<SwitchStatement>(std::move($3), std::move($5)); }
     ;
 
 iteration_statement
-    : WHILE '(' expression ')' statement
-    | DO statement WHILE '(' expression ')' ';'
-    | FOR '(' expression_statement expression_statement ')' statement
-    | FOR '(' expression_statement expression_statement expression ')' statement
+    : WHILE '(' expression ')' statement                                            { $$ = IterationStatement::While(std::move($3), std::move($5)); }
+    | DO statement WHILE '(' expression ')' ';'                                     { $$ = IterationStatement::DoWhile(std::move($5), std::move($2)); }
+    | FOR '(' expression_statement expression_statement ')' statement               { $$ = IterationStatement::For(/* TODO what? */); }
+    | FOR '(' expression_statement expression_statement expression ')' statement    { $$ = IterationStatement::For(std::move($3), std::move($4), std::move($5), std::move($7)); }
     ;
 
 jump_statement
-    : GOTO IDENTIFIER ';'
-    | CONTINUE ';'
-    | BREAK ';'
-    | RETURN ';' {
-        $$ = new ReturnStatement(nullptr);
-    }
-    | RETURN expression ';' {
-        $$ = new ReturnStatement(NodePtr($2));
-    }
+    : GOTO IDENTIFIER ';'   { $$ = std::make_unqiue<GotoStatement>($2); }
+    | CONTINUE ';'          { $$ = std::make_unique<LoopControlStatement>(false); }
+    | BREAK ';'             { $$ = std::make_unique<LoopControlStatement>(true); }
+    | RETURN ';'            { $$ = std::make_unique<ReturnStatement>(); }
+    | RETURN expression ';' { $$ = std::make_unique<ReturnStatement>(NodePtr($2)); }
     ;
 
 
