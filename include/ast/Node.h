@@ -12,13 +12,22 @@ class Node {
 };
 
 template <std::derived_from<Node> T>
-class NodeList : public T {
+class NodeList : public Node {
    public:
     NodeList(std::unique_ptr<T> node);
     void pushBack(T node);
 
    private:
     std::vector<std::unique_ptr<T>> _nodes;
+};
+
+template <typename E>
+class ValueNode : public Node {
+   public:
+    ValueNode(E value);
+
+   protected:
+    E _value;
 };
 
 }  // namespace thogcc::ast

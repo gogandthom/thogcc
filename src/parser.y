@@ -262,58 +262,58 @@ declaration
     ;
 
 declaration_specifiers
-    : storage_class_specifier
-    | storage_class_specifier declaration_specifiers
-    | type_specifier { $$ = $1; }
-    | type_specifier declaration_specifiers
+    : storage_class_specifier                           { $$ = std::make_unique<DeclarationSpecifiers>(std::move($1), nullptr); }
+    | storage_class_specifier declaration_specifiers    { $2->pushBackStorage(std::move($1)); $$ = std::move($2); }
+    | type_specifier                                    { $$ = std::make_unique<DeclarationSpecifiers>(nullptr, std::move($1)); }
+    | type_specifier declaration_specifiers             { $2->pushBackType(std::move($1)); $$ = std::move($2); }
     ;
 
 init_declarator_list
-    : init_declarator
-    | init_declarator_list ',' init_declarator
+    : init_declarator                           { $$ = std::make_unique<NodeList<DeclaratorBase>>(std::move($1)); }
+    | init_declarator_list ',' init_declarator  { $1->pushBack(std::move($3)); $$ = std::move($1); }
     ;
 
 init_declarator
-    : declarator
-    | declarator '=' initializer
+    : declarator                    { $$ = std::move($1); }
+    | declarator '=' initializer    { $$ = std::make_unique<InitDeclarator>(std::move($1), std::move($3))}
     ;
 
 storage_class_specifier
-    : TYPEDEF
-    | EXTERN
-    | STATIC
-    | AUTO
-    | REGISTER
+    : TYPEDEF           { $$ = std::make_unique<ValueNode<StorageClassSpecifier>>(StorageClassSpecifier::TYPEDEF); }
+    | EXTERN            { $$ = std::make_unique<ValueNode<StorageClassSpecifier>>(StorageClassSpecifier::EXTERN); }
+    | STATIC            { $$ = std::make_unique<ValueNode<StorageClassSpecifier>>(StorageClassSpecifier::STATIC); }
+    | AUTO              { $$ = std::make_unique<ValueNode<StorageClassSpecifier>>(StorageClassSpecifier::AUTO); }
+    | REGISTER          { $$ = std::make_unique<ValueNode<StorageClassSpecifier>>(StorageClassSpecifier::REGISTER); }
     ;
 
 type_specifier
-    : VOID
-    | CHAR
-    | SHORT
-    | INT { $$ = TypeSpecifier::INT; }
-    | LONG
-    | FLOAT
-    | DOUBLE
-    | SIGNED
-    | UNSIGNED
-    | struct_specifier
-    | enum_specifier
-    | TYPE_NAME
+    : VOID              { $$ = std::make_unique<ValueNode<TypeSpecifier>>(TypeSpecifier::VOID); }
+    | CHAR              { $$ = std::make_unique<ValueNode<TypeSpecifier>>(TypeSpecifier::CHAR); }
+    | SHORT             { $$ = std::make_unique<ValueNode<TypeSpecifier>>(TypeSpecifier::SHORT); }
+    | INT               { $$ = std::make_unique<ValueNode<TypeSpecifier>>(TypeSpecifier::INT); }
+    | LONG              { $$ = std::make_unique<ValueNode<TypeSpecifier>>(TypeSpecifier::LONG); }
+    | FLOAT             { $$ = std::make_unique<ValueNode<TypeSpecifier>>(TypeSpecifier::FLOAT); }
+    | DOUBLE            { $$ = std::make_unique<ValueNode<TypeSpecifier>>(TypeSpecifier::DOUBLE); }
+    | SIGNED            { $$ = std::make_unique<ValueNode<TypeSpecifier>>(TypeSpecifier::SIGNED); }
+    | UNSIGNED          { $$ = std::make_unique<ValueNode<TypeSpecifier>>(TypeSpecifier::UNSIGNED); }
+    | struct_specifier  { $$ = std::move($1); }
+    | enum_specifier    { $$ = std::move($1); }
+    | TYPE_NAME         { $$ = std::make_unique<ValueNode<std::string>>($1); }
     ;
 
 struct_specifier
-    : STRUCT IDENTIFIER '{' struct_declaration_list '}'
-    | STRUCT '{' struct_declaration_list '}'
-    | STRUCT IDENTIFIER
+    : STRUCT IDENTIFIER '{' struct_declaration_list '}' { $$ = std::make_unique<StructSpecifier>(std::move($4), $2); }
+    | STRUCT '{' struct_declaration_list '}'            { $$ = std::make_unique<StructSpecifier>(std::move($3)); }
+    | STRUCT IDENTIFIER                                 { $$ = std::make_unique<StructSpecifier>(nullptr, $2); }
     ;
 
 struct_declaration_list
-    : struct_declaration
-    | struct_declaration_list struct_declaration
+    : struct_declaration                            { $$ = std::make_unique<NodeList<StructDeclaration>>(std::move($1)); }
+    | struct_declaration_list struct_declaration    { $1->pushBack(std::move($2)); $$ = std::move($1); }
     ;
 
 struct_declaration
-    : specifier_qualifier_list struct_declarator_list ';'
+    : specifier_qualifier_list struct_declarator_list ';'   { $$ = std::make_unique<StructDeclaration>(std::move($1), std::move($2)); }
     ;
 
 specifier_qualifier_list
@@ -413,14 +413,14 @@ direct_abstract_declarator
     ;
 
 initializer
-    : assignment_expression
-    | '{' initializer_list '}'
-    | '{' initializer_list ',' '}'
+    : assignment_expression         { $$ = std::move($1); }
+    | '{' initializer_list '}'      { $$ = std::make_unique<Initializer>(std::move($2)); }
+    | '{' initializer_list ',' '}'  { $$ = std::make_unique<Initializer>(std::move($2)); }
     ;
 
 initializer_list
-    : initializer
-    | initializer_list ',' initializer
+    : initializer                       { $$ = std::make_unique<NodeList<ExpressionBase>>(std::move($1)); }
+    | initializer_list ',' initializer  { $1->pushBack(std::move($3)); $$ = std::move($1); }
     ;
 
 statement
