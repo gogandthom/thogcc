@@ -1,0 +1,21 @@
+#pragma once
+
+#include <memory>
+#include <string>
+
+#include "ast/declarators/DeclaratorBase.h"
+#include "ast/expressions/ConstantExpression.h"
+
+namespace thogcc::ast::declarators {
+
+class EnumValueDeclarator : public DeclaratorBase {
+   public:
+    EnumValueDeclarator(std::string identifier,
+                        std::unique_ptr<expressions::ConstantExpression> expr = nullptr);
+
+   private:
+    std::string _identifier;
+    std::unique_ptr<expressions::ConstantExpression> _expr;
+};
+
+}  // namespace thogcc::ast::declarators
