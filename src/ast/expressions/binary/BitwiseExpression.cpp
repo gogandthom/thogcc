@@ -1,5 +1,11 @@
 #include "ast/expressions/binary/BitwiseExpression.h"
 
+#include <memory>
+#include <utility>
+
+#include "ast/expressions/ExpressionBase.h"
+#include "ast/expressions/binary/BinaryExpressionBase.h"
+
 namespace thogcc::ast::expressions::binary {
 
 BitwiseExpression::BitwiseExpression(std::unique_ptr<ExpressionBase> lhs,

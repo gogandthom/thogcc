@@ -3,6 +3,10 @@
 #include <memory>
 #include <utility>
 
+#include "ast/expressions/ExpressionBase.h"
+#include "ast/statements/ExpressionStatement.h"
+#include "ast/statements/StatementBase.h"
+
 namespace thogcc::ast::statements {
 
 IterationStatement::IterationStatement(IterationStatementType type,

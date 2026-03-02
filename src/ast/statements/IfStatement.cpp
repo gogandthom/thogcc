@@ -3,6 +3,9 @@
 #include <memory>
 #include <utility>
 
+#include "ast/expressions/ExpressionBase.h"
+#include "ast/statements/StatementBase.h"
+
 namespace thogcc::ast::statements {
 
 IfStatement::IfStatement(std::unique_ptr<expressions::ExpressionBase> expr,

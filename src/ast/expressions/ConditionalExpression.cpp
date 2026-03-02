@@ -1,5 +1,10 @@
 #include "ast/expressions/ConditionalExpression.h"
 
+#include <memory>
+#include <utility>
+
+#include "ast/expressions/ExpressionBase.h"
+
 namespace thogcc::ast::expressions {
 
 ConditionalExpression::ConditionalExpression(std::unique_ptr<ExpressionBase> cond,

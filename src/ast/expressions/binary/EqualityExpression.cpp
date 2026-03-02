@@ -1,5 +1,11 @@
 #include "ast/expressions/binary/EqualityExpression.h"
 
+#include <memory>
+#include <utility>
+
+#include "ast/expressions/ExpressionBase.h"
+#include "ast/expressions/binary/BinaryExpressionBase.h"
+
 namespace thogcc::ast::expressions::binary {
 
 EqualityExpression::EqualityExpression(std::unique_ptr<ExpressionBase> lhs,

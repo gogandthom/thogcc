@@ -1,5 +1,6 @@
 #include "ast/statements/GotoStatement.h"
 
+#include <string>
 #include <utility>
 
 namespace thogcc::ast::statements {

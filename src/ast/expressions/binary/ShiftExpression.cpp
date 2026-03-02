@@ -1,5 +1,11 @@
 #include "ast/expressions/binary/ShiftExpression.h"
 
+#include <memory>
+#include <utility>
+
+#include "ast/expressions/ExpressionBase.h"
+#include "ast/expressions/binary/BinaryExpressionBase.h"
+
 namespace thogcc::ast::expressions::binary {
 
 ShiftExpression::ShiftExpression(std::unique_ptr<ExpressionBase> lhs,

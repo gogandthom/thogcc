@@ -3,6 +3,9 @@
 #include <memory>
 #include <utility>
 
+#include "ast/expressions/ConstantExpression.h"
+#include "ast/statements/StatementBase.h"
+
 namespace thogcc::ast::statements {
 
 SwitchCaseStatement::SwitchCaseStatement(std::unique_ptr<expressions::ConstantExpression> expr,

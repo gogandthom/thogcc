@@ -1,5 +1,6 @@
 #include "ast/expressions/postfix/MemberAccessExpression.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 

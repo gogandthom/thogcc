@@ -1,5 +1,11 @@
 #include "ast/expressions/postfix/FunctionCallExpression.h"
 
+#include <memory>
+#include <utility>
+
+#include "ast/Node.h"
+#include "ast/expressions/ExpressionBase.h"
+
 namespace thogcc::ast::expressions::postfix {
 
 FunctionCallExpression::FunctionCallExpression(std::unique_ptr<ExpressionBase> expr,
