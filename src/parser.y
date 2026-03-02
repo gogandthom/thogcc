@@ -45,13 +45,14 @@
 %type <std::unique_ptr<DeclarationSpecifiers>> declaration_specifiers
 
 // Top level shite
-%type <std::unique_ptr<Node>> translation_unit
+%type <std::unique_ptr<NodeList<DeclarationBase>>> translation_unit
 
 // Expressions
 %type <std::unique_ptr<ExpressionBase>> primary_expression postfix_expression unary_expression cast_expression
 %type <std::unique_ptr<ExpressionBase>> multiplicative_expression additive_expression shift_expression relational_expression equality_expression
 %type <std::unique_ptr<ExpressionBase>> and_expression exclusive_or_expression inclusive_or_expression logical_and_expression logical_or_expression
-%type <std::unique_ptr<ExpressionBase>> conditional_expression assignment_expression expression
+%type <std::unique_ptr<ExpressionBase>> conditional_expression assignment_expression
+%type <std::unique_ptr<ListExpression>> expression
 %type <std::unique_ptr<Initializer>> initializer
 %type <std::unique_ptr<NodeList<Initializer>>> initializer_list
 %type <std::unique_ptr<ConstantExpression>> constant_expression
@@ -102,7 +103,7 @@ ROOT
     : translation_unit  { g_root = std::move($1); }
 
 translation_unit
-    : external_declaration                  { $$ = std::make_unique<NodeList<DeclarationBase>>($1); }
+    : external_declaration                  { $$ = std::make_unique<NodeList<DeclarationBase>>(std::move($1)); }
     | translation_unit external_declaration { $1->pushBack(std::move($2)); $$ = std::move($1); }
     ;
 
@@ -139,8 +140,8 @@ postfix_expression
     ;
 
 argument_expression_list
-    : assignment_expression                                 { $$ = std::make_unique<NodeList<ExpressionBase>>($1); }
-    | argument_expression_list ',' assignment_expression    { $1->pushBack($3); $$ = std::move($1); }
+    : assignment_expression                                 { $$ = std::make_unique<NodeList<ExpressionBase>>(std::move($1)); }
+    | argument_expression_list ',' assignment_expression    { $1->pushBack(std::move($3)); $$ = std::move($1); }
     ;
 
 unary_expression
@@ -226,7 +227,7 @@ logical_or_expression
 
 conditional_expression
     : logical_or_expression                                             { $$ = std::move($1); }
-    | logical_or_expression '?' expression ':' conditional_expression   { $$ = std::make_unique<ConditionalExpression>(std::move($1), std::move($3), std::move($5))}
+    | logical_or_expression '?' expression ':' conditional_expression   { $$ = std::make_unique<ConditionalExpression>(std::move($1), std::move($3), std::move($5)); }
     ;
 
 assignment_expression
@@ -284,7 +285,7 @@ init_declarator_list
 
 init_declarator
     : declarator                    { $$ = std::move($1); }
-    | declarator '=' initializer    { $$ = std::make_unique<InitDeclarator>(std::move($1), std::move($3))}
+    | declarator '=' initializer    { $$ = std::make_unique<InitDeclarator>(std::move($1), std::move($3)); }
     ;
 
 storage_class_specifier
@@ -349,7 +350,7 @@ enum_specifier
 
 enumerator_list
     : enumerator                        { $$ = std::make_unique<NodeList<EnumValueDeclarator>>(std::move($1)); }
-    | enumerator_list ',' enumerator    { $1->pushBack(std::move($3)); $$ = std::move($3); }
+    | enumerator_list ',' enumerator    { $1->pushBack(std::move($3)); $$ = std::move($1); }
     ;
 
 enumerator
@@ -385,12 +386,12 @@ parameter_list
 parameter_declaration
     : declaration_specifiers declarator             { $$ = std::make_unique<ParameterDeclaration>(std::move($1), std::move($2)); }
     | declaration_specifiers abstract_declarator    { $$ = std::make_unique<ParameterDeclaration>(std::move($1), std::move($2)); }
-    | declaration_specifiers                        { $$ = std::make_unique<ParameterDeclaration>(std::move($1), ); }
+    | declaration_specifiers                        { $$ = std::make_unique<ParameterDeclaration>(std::move($1)); }
     ;
 
 identifier_list
     : IDENTIFIER                        { $$ = std::make_unique<NodeList<IdentifierDeclarator>>(std::make_unique<IdentifierDeclarator>($1)); }
-    | identifier_list ',' IDENTIFIER    { $$ = $1->pushBack(std::make_unique<IdentifierDeclarator>($3)); }
+    | identifier_list ',' IDENTIFIER    { $1->pushBack(std::make_unique<IdentifierDeclarator>($3)); $$ = std::move($1); }
     ;
 
 type_name
@@ -485,11 +486,11 @@ iteration_statement
     ;
 
 jump_statement
-    : GOTO IDENTIFIER ';'   { $$ = std::make_unqiue<GotoStatement>($2); }
+    : GOTO IDENTIFIER ';'   { $$ = std::make_unique<GotoStatement>($2); }
     | CONTINUE ';'          { $$ = std::make_unique<LoopControlStatement>(false); }
     | BREAK ';'             { $$ = std::make_unique<LoopControlStatement>(true); }
     | RETURN ';'            { $$ = std::make_unique<ReturnStatement>(); }
-    | RETURN expression ';' { $$ = std::make_unique<ReturnStatement>(NodePtr($2)); }
+    | RETURN expression ';' { $$ = std::make_unique<ReturnStatement>(std::move($2)); }
     ;
 
 

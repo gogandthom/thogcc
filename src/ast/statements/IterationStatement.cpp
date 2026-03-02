@@ -33,7 +33,7 @@ std::unique_ptr<IterationStatement> IterationStatement::For(
     std::unique_ptr<expressions::ExpressionBase> condExpr,
     std::unique_ptr<expressions::ExpressionBase> updateExpr,
     std::unique_ptr<StatementBase> statement) {
-    return std::make_unique<IterationStatement>(IterationStatementType::WHILE, std::move(statement),
+    return std::make_unique<IterationStatement>(IterationStatementType::FOR, std::move(statement),
                                                 std::move(initExpr), std::move(condExpr),
                                                 std::move(updateExpr));
 };

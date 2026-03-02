@@ -7,7 +7,7 @@
 
 namespace thogcc::ast::statements {
 
-class SwitchStatement : StatementBase {
+class SwitchStatement : public StatementBase {
    public:
     SwitchStatement(std::unique_ptr<expressions::ExpressionBase> expr,
                     std::unique_ptr<StatementBase> statement);

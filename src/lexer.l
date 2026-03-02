@@ -102,8 +102,8 @@ L?\"(\\.|[^\\"])*\"     {/* TODO process string literal */; return(STRING_LITERA
 ">="        { return(token::GE_OP); }
 "=="        { return(token::EQ_OP); }
 "!="        { return(token::NE_OP); }
-";"         { return(token';'); }
-("{"|"<%")  { return(token'{'); }
+";"         { return(';'); }
+("{"|"<%")  { return('{'); }
 ("}"|"%>")  { return('}'); }
 ","         { return(','); }
 ":"         { return(':'); }
