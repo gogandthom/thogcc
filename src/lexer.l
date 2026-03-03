@@ -11,7 +11,7 @@
 
     #include "parser.tab.hpp"
     #include "CScanner.h"
-    #include <stdexcept>
+    #include "errors/errors.h"
 
     using parser = yy::parser;
     using token = parser::token;
@@ -132,6 +132,6 @@ L?\"(\\.|[^\\"])*\"     {/* TODO process string literal */; return(parser::make_
 "?"         { return('?'); }
 
 [ \a\b\t\v\f\n\r]   { /* ignore new lines and special sequences */ }
-.                   { throw std::runtime_error(std::format("Found unknown token '{}' on line {}", yytext, yylineno)); }
+.                   { throw errors::ParseError(std::format("Found unknown token '{}' on line {}", yytext, yylineno)); }
 
 %%
