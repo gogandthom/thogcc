@@ -9,7 +9,8 @@ namespace thogcc::ast::statements {
 
 class LabelledStatement : public StatementBase {
    public:
-    LabelledStatement(std::string identifier, std::unique_ptr<StatementBase> statement);
+    LabelledStatement(std::string identifier, std::unique_ptr<StatementBase> statement)
+        : _identifier(std::move(identifier)), _statement(std::move(statement)){};
 
    private:
     std::string _identifier;

@@ -18,7 +18,8 @@ enum class UnaryOperatorType : std::uint8_t {
 
 class UnaryOperatorExpression : public ExpressionBase {
    public:
-    UnaryOperatorExpression(UnaryOperatorType op, std::unique_ptr<ExpressionBase> expr);
+    UnaryOperatorExpression(UnaryOperatorType op, std::unique_ptr<ExpressionBase> expr)
+        : _op(std::move(op)), _expr(std::move(expr)){};
 
    private:
     UnaryOperatorType _op;

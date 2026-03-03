@@ -11,7 +11,8 @@ namespace thogcc::ast::declarators {
 class EnumValueDeclarator : public DeclaratorBase {
    public:
     EnumValueDeclarator(std::string identifier,
-                        std::unique_ptr<expressions::ConstantExpression> expr = nullptr);
+                        std::unique_ptr<expressions::ConstantExpression> expr = nullptr)
+        : _identifier(std::move(identifier)), _expr(std::move(expr)){};
 
    private:
     std::string _identifier;

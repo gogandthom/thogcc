@@ -25,7 +25,8 @@ enum class AssignmentExpressionType : std::uint8_t {
 class AssignmentExpression : public BinaryExpressionBase {
    public:
     AssignmentExpression(std::unique_ptr<ExpressionBase> lhs, std::unique_ptr<ExpressionBase> rhs,
-                         AssignmentExpressionType op);
+                         AssignmentExpressionType op)
+        : BinaryExpressionBase(std::move(lhs), std::move(rhs)), _op(op){};
 
    private:
     AssignmentExpressionType _op;

@@ -10,7 +10,8 @@ namespace thogcc::ast::expressions::binary {
 class ShiftExpression : public BinaryExpressionBase {
    public:
     ShiftExpression(std::unique_ptr<ExpressionBase> lhs, std::unique_ptr<ExpressionBase> rhs,
-                    bool isRightShift = false);
+                    bool isRightShift = false)
+        : BinaryExpressionBase(std::move(lhs), std::move(rhs)), _isRightShift(isRightShift){};
 
    private:
     bool _isRightShift;

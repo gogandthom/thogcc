@@ -13,7 +13,8 @@ enum class BitwiseExpressionType : std::uint8_t { AND, OR, XOR };
 class BitwiseExpression : public BinaryExpressionBase {
    public:
     BitwiseExpression(std::unique_ptr<ExpressionBase> lhs, std::unique_ptr<ExpressionBase> rhs,
-                      BitwiseExpressionType op);
+                      BitwiseExpressionType op)
+        : BinaryExpressionBase(std::move(lhs), std::move(rhs)), _op(op){};
 
    private:
     BitwiseExpressionType _op;

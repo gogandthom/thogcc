@@ -13,7 +13,8 @@ enum class RelationalExpressionType : std::uint8_t { L, G, LE, GE };
 class RelationalExpression : public BinaryExpressionBase {
    public:
     RelationalExpression(std::unique_ptr<ExpressionBase> lhs, std::unique_ptr<ExpressionBase> rhs,
-                         RelationalExpressionType op);
+                         RelationalExpressionType op)
+        : BinaryExpressionBase(std::move(lhs), std::move(rhs)), _op(op){};
 
    private:
     RelationalExpressionType _op;

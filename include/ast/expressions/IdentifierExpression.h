@@ -8,7 +8,7 @@ namespace thogcc::ast::expressions {
 
 class IdentifierExpression : public ExpressionBase {
    public:
-    IdentifierExpression(std::string identifier);
+    IdentifierExpression(std::string identifier) : _identifier(std::move(identifier)){};
 
    private:
     std::string _identifier;

@@ -8,7 +8,7 @@ namespace thogcc::ast::declarators {
 
 class IdentifierDeclarator : public DeclaratorBase {
    public:
-    IdentifierDeclarator(std::string identifier);
+    IdentifierDeclarator(std::string identifier) : _identifier(std::move(identifier)){};
 
    private:
     std::string _identifier;

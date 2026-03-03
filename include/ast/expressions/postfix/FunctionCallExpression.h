@@ -10,7 +10,8 @@ namespace thogcc::ast::expressions::postfix {
 class FunctionCallExpression : public ExpressionBase {
    public:
     FunctionCallExpression(std::unique_ptr<ExpressionBase> expr,
-                           std::unique_ptr<NodeList<ExpressionBase>> args = nullptr);
+                           std::unique_ptr<NodeList<ExpressionBase>> args = nullptr)
+        : _expr(std::move(expr)), _args(std::move(args)){};
 
    private:
     std::unique_ptr<ExpressionBase> _expr;

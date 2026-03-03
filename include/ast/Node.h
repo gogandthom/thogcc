@@ -8,7 +8,7 @@ namespace thogcc::ast {
 
 class Node {
    public:
-    virtual ~Node();
+    virtual ~Node() = default;
 };
 
 template <std::derived_from<Node> T>
@@ -24,7 +24,7 @@ class NodeList : public Node {
 template <typename E>
 class ValueNode : public Node {
    public:
-    ValueNode(E value);
+    ValueNode(E value) : _value(value){};
 
    protected:
     E _value;

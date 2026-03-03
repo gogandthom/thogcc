@@ -10,7 +10,8 @@ namespace thogcc::ast::expressions::binary {
 class EqualityExpression : public BinaryExpressionBase {
    public:
     EqualityExpression(std::unique_ptr<ExpressionBase> lhs, std::unique_ptr<ExpressionBase> rhs,
-                       bool isNe);
+                       bool isNe = false)
+        : BinaryExpressionBase(std::move(lhs), std::move(rhs)), _isNe(isNe){};
 
    private:
     bool _isNe;

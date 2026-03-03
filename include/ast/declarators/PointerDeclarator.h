@@ -8,8 +8,7 @@ namespace thogcc::ast::declarators {
 
 class PointerDeclarator : public DeclaratorBase {
    public:
-    PointerDeclarator();
-    PointerDeclarator(std::unique_ptr<DeclaratorBase> ptr);
+    PointerDeclarator(std::unique_ptr<DeclaratorBase> ptr = nullptr) : _ptr(std::move(ptr)){};
     /// Attach node to leaf
     void attach(std::unique_ptr<DeclaratorBase> node);
 

@@ -19,7 +19,8 @@ enum class AddMultExpressionType : std::uint8_t {
 class AddMultExpression : public BinaryExpressionBase {
    public:
     AddMultExpression(std::unique_ptr<ExpressionBase> lhs, std::unique_ptr<ExpressionBase> rhs,
-                      AddMultExpressionType op);
+                      AddMultExpressionType op)
+        : BinaryExpressionBase(std::move(lhs), std::move(rhs)), _op(op){};
 
    private:
     AddMultExpressionType _op;

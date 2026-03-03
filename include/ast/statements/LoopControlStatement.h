@@ -6,7 +6,7 @@ namespace thogcc::ast::statements {
 
 class LoopControlStatement : public StatementBase {
    public:
-    LoopControlStatement(bool isBreak = false);
+    LoopControlStatement(bool isBreak = false) : _isBreak(isBreak){};
 
    private:
     bool _isBreak;

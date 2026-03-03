@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 
 #include "ast/DeclarationSpecifiers.h"
 #include "ast/Node.h"
@@ -18,7 +19,11 @@ class FunctionDefinition
     FunctionDefinition(std::unique_ptr<DeclarationSpecifiers> specifiers,
                        std::unique_ptr<declarators::DeclaratorBase> declarator,
                        std::unique_ptr<NodeList<DeclarationBase>> declarations,
-                       std::unique_ptr<statements::CompoundStatement> statement);
+                       std::unique_ptr<statements::CompoundStatement> statement)
+        : _specifiers(std::move(specifiers)),
+          _declarator(std::move(declarator)),
+          _declarations(std::move(declarations)),
+          _statement(std::move(statement)){};
 
    private:
     std::unique_ptr<DeclarationSpecifiers> _specifiers;

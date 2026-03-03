@@ -9,7 +9,8 @@ namespace thogcc::ast::statements {
 
 class ExpressionStatement : public StatementBase, public expressions::ExpressionBase {
    public:
-    ExpressionStatement(std::unique_ptr<expressions::ExpressionBase> expr = nullptr);
+    ExpressionStatement(std::unique_ptr<expressions::ExpressionBase> expr = nullptr)
+        : _expr(std::move(expr)){};
 
    private:
     std::unique_ptr<expressions::ExpressionBase> _expr;

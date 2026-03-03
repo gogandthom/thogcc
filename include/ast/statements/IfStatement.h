@@ -11,7 +11,10 @@ class IfStatement : public StatementBase {
    public:
     IfStatement(std::unique_ptr<expressions::ExpressionBase> expr,
                 std::unique_ptr<StatementBase> ifStatement,
-                std::unique_ptr<StatementBase> elseStatement = nullptr);
+                std::unique_ptr<StatementBase> elseStatement = nullptr)
+        : _expr(std::move(expr)),
+          _ifStatement(std::move(ifStatement)),
+          _elseStatement(std::move(elseStatement)){};
 
    private:
     std::unique_ptr<expressions::ExpressionBase> _expr;
