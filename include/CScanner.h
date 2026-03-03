@@ -1,7 +1,7 @@
 #pragma once
 
 // Include guard in FlexLexer.h is broken
-#if !defined(yyFlexLexerOnce)
+#ifndef yyFlexLexerOnce
 #include <FlexLexer.h>
 #endif
 

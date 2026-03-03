@@ -8,7 +8,10 @@ namespace thogcc::ast {
 
 class Node {
    public:
+    Node() = default;
     virtual ~Node() = default;
+    Node(const Node&) = delete;
+    Node& operator=(const Node&) = delete;
 };
 
 template <typename T>

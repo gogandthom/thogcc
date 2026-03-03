@@ -1,10 +1,11 @@
 #pragma once
 
+#include <memory>
+#include <string>
 #include <utility>
 
 #include "Node.h"
 #include "ast/declarators/EnumValueDeclarator.h"
-#include "ast/expressions/ConstantExpression.h"
 
 namespace thogcc::ast {
 
