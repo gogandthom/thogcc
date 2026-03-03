@@ -1,17 +1,36 @@
 // Adapted from: https://www.lysator.liu.se/c/ANSI-C-grammar-y.html
 
 %code requires {
-    #include "ast.hpp"
-    using namespace ast;
+    #include "ast/ast.h"
+    #include "TypedefTable.h"
 
-    extern int yylineno;
-    extern char* yytext;
-    extern std::unique_ptr<Node> g_root;
-    extern FILE* yyin;
+    // Avoid recursive includes
+    namespace thogcc {
+        class CScanner;
+    }
 
-    int yylex(void);
-    void yyerror(const char*);
-    int yylex_destroy(void);
+    // TODO use a different namespace?
+    namespace yy {
+        // Bring all Node subclasses into scope
+        namespace ast = thogcc::ast;
+        using namespace ast;
+        using namespace ast::declarations;
+        using namespace ast::declarators;
+        using namespace ast::expressions;
+        using namespace ast::statements;
+
+        // AST root
+        extern std::unique_ptr<Node> g_root;
+    }
+}
+
+%code {
+    #include "CScanner.h"
+    #include "errors/errors.h"
+
+    // Use our own scanner
+    #undef yylex
+    #define yylex scanner.yylex
 }
 
 // Do modern cpp things
@@ -26,6 +45,18 @@
 
 %define parse.error detailed
 %define parse.lac full
+
+// Preferred over scanner.lineno()
+// TODO switch to bison locations
+// Must also update yyerror and CScanner
+// %locations
+
+// Modifies yy::parser constructor to allow passing our own scanner instance
+// This is needed when using flex++
+%parse-param { thogcc::CScanner& scanner }
+// Modifies both lex-param and parse-param
+// Needed because C is context-sensitive for typedefs
+%param { thogcc::TypedefTable& typedefTable }
 
 %token <std::string> IDENTIFIER STRING_LITERAL TYPE_NAME
 %token <int> INT_CONSTANT
@@ -497,28 +528,12 @@ jump_statement
 
 %%
 
-void yyerror (const char *s)
-{
-    std::cerr << "Error: " << s << " at line " << yylineno;
-    std::cerr << " near '" << yytext << "'" << std::endl;
-    std::exit(1);
-}
+namespace yy {
 
 std::unique_ptr<Node> g_root;
 
-std::unique_ptr<Node> ParseAST(const std::string& file_name)
-{
-    yyin = fopen(file_name.c_str(), "r");
-    if (yyin == nullptr) {
-        std::cerr << "Couldn't open input file: " << file_name << std::endl;
-        std::exit(1);
-    }
-
-    g_root = nullptr;
-    yyparse();
-
-    fclose(yyin);
-    yylex_destroy();
-
-    return std::move(g_root);
+void parser::error(const std::string& msg) {
+    throw std::runtime_error(std::format("Error '{}' at line {} ", msg, scanner.lineno()));
 }
+
+}  // namespace yy

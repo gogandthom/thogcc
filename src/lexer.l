@@ -1,20 +1,24 @@
-%option c++
-%option noyywrap
-%option yylineno
+%option c++ noyywrap yylineno nodefault
+
+/* Use our own scanner class */
+%option yyclass="thogcc::CScanner"
 
 %{
     // A lot of this lexer is based off the ANSI C grammar:
     // https://www.lysator.liu.se/c/ANSI-C-grammar-l.html
 
-    // Avoids error "error: `fileno' was not declared in this scope"
-    extern "C" int fileno(FILE *stream);
+    // Modified to generate C++
 
     #include "parser.tab.hpp"
+    #include "CScanner.h"
+    #include <stdexcept>
 
-    using token = yy::parser::token;
+    using parser = yy::parser;
+    using token = parser::token;
 
-    // Suppress warning about unused function
-    [[maybe_unused]] static void yyunput (int c, char * yy_bp);
+    // Change signature of yylex to match what bison will call
+    #undef YY_DECL
+    #define YY_DECL parser::symbol_type thogcc::CScanner::yylex(thogcc::TypedefTable& typedefTable)
 %}
 
 D   [0-9]
@@ -66,19 +70,19 @@ IS  (u|U|l|L)*
 "volatile"  { return(token::VOLATILE); }
 "while"     { return(token::WHILE); }
 
-{L}({L}|{D})*       { return(typedefTable.isType(yytext) ? yy::parser::make_TYPE_NAME(yytext) : yy::parser::make_IDENTIFIER(yytext)); }
+{L}({L}|{D})*       { return(typedefTable.isType(yytext) ? parser::make_TYPE_NAME(yytext) : parser::make_IDENTIFIER(yytext)); }
 
-0[xX]{H}+{IS}?      { return(yy::parser::make_INT_CONSTANT((int)strtol(yytext, nullptr, 0)));
+0[xX]{H}+{IS}?      { return(parser::make_INT_CONSTANT((int)strtol(yytext, nullptr, 0)));
                       /* TODO what in gods name is this shit. uints and ints are longs cast to ints????? */ }
-0{D}+{IS}?          { return(yy::parser::make_INT_CONSTANT((int)strtol(yytext, nullptr, 0))); }
-{D}+{IS}?           { return(yy::parser::make_INT_CONSTANT((int)strtol(yytext, nullptr, 0))); }
-L?'(\\.|[^\\'])+'   { return(yy::parser::make_INT_CONSTANT((int)strtol(yytext, nullptr, 0))); }
+0{D}+{IS}?          { return(parser::make_INT_CONSTANT((int)strtol(yytext, nullptr, 0))); }
+{D}+{IS}?           { return(parser::make_INT_CONSTANT((int)strtol(yytext, nullptr, 0))); }
+L?'(\\.|[^\\'])+'   { return(parser::make_INT_CONSTANT((int)strtol(yytext, nullptr, 0))); }
 
-{D}+{E}{FS}?            { return(yy::parser::make_FLOAT_CONSTANT(strtod(yytext, nullptr))); }
-{D}*"."{D}+({E})?{FS}?  { return(yy::parser::make_FLOAT_CONSTANT(strtod(yytext, nullptr))); }
-{D}+"."{D}*({E})?{FS}?  { return(yy::parser::make_FLOAT_CONSTANT(strtod(yytext, nullptr))); }
+{D}+{E}{FS}?            { return(parser::make_FLOAT_CONSTANT(strtod(yytext, nullptr))); }
+{D}*"."{D}+({E})?{FS}?  { return(parser::make_FLOAT_CONSTANT(strtod(yytext, nullptr))); }
+{D}+"."{D}*({E})?{FS}?  { return(parser::make_FLOAT_CONSTANT(strtod(yytext, nullptr))); }
 
-L?\"(\\.|[^\\"])*\"     {/* TODO process string literal */; return(STRING_LITERAL); }
+L?\"(\\.|[^\\"])*\"     {/* TODO process string literal */; return(parser::make_STRING_LITERAL(yytext)); }
 
 "..."       { return(token::ELLIPSIS); }
 ">>="       { return(token::RIGHT_ASSIGN); }
@@ -128,6 +132,6 @@ L?\"(\\.|[^\\"])*\"     {/* TODO process string literal */; return(STRING_LITERA
 "?"         { return('?'); }
 
 [ \a\b\t\v\f\n\r]   { /* ignore new lines and special sequences */ }
-.                   { std::cerr << "Unknown token: " << yytext << std::endl; return(UNKNOWN); }
+.                   { throw std::runtime_error(std::format("Found unknown token '{}' on line {}", yytext, yylineno)); }
 
 %%
