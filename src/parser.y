@@ -481,7 +481,7 @@ selection_statement
 iteration_statement
     : WHILE '(' expression ')' statement                                            { $$ = IterationStatement::While(std::move($3), std::move($5)); }
     | DO statement WHILE '(' expression ')' ';'                                     { $$ = IterationStatement::DoWhile(std::move($5), std::move($2)); }
-    | FOR '(' expression_statement expression_statement ')' statement               { $$ = IterationStatement::For(/* TODO what? */); }
+    | FOR '(' expression_statement expression_statement ')' statement               { $$ = IterationStatement::For(std::move($3), std::move($4), nullptr, std::move($6)); }
     | FOR '(' expression_statement expression_statement expression ')' statement    { $$ = IterationStatement::For(std::move($3), std::move($4), std::move($5), std::move($7)); }
     ;
 

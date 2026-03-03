@@ -33,8 +33,7 @@ std::unique_ptr<IterationStatement> IterationStatement::DoWhile(
 };
 
 std::unique_ptr<IterationStatement> IterationStatement::For(
-    std::unique_ptr<expressions::ExpressionBase> initExpr,
-    std::unique_ptr<expressions::ExpressionBase> condExpr,
+    std::unique_ptr<ExpressionStatement> initExpr, std::unique_ptr<ExpressionStatement> condExpr,
     std::unique_ptr<expressions::ExpressionBase> updateExpr,
     std::unique_ptr<StatementBase> statement) {
     return std::make_unique<IterationStatement>(IterationStatementType::FOR, std::move(statement),
