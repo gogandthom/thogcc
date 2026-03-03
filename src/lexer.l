@@ -66,7 +66,7 @@ IS  (u|U|l|L)*
 "volatile"  { return(token::VOLATILE); }
 "while"     { return(token::WHILE); }
 
-{L}({L}|{D})*       { return(yy::parser::make_IDENTIFIER(yytext)); }
+{L}({L}|{D})*       { return(typedefTable.isType(yytext) ? yy::parser::make_TYPE_NAME(yytext) : yy::parser::make_IDENTIFIER(yytext)); }
 
 0[xX]{H}+{IS}?      { return(yy::parser::make_INT_CONSTANT((int)strtol(yytext, nullptr, 0)));
                       /* TODO what in gods name is this shit. uints and ints are longs cast to ints????? */ }
