@@ -3,9 +3,10 @@
 #include <memory>
 
 #include "ast/Node.h"
+#include "cli.h"
 
 namespace thogcc {
 
-std::unique_ptr<ast::Node> ParseC(std::ifstream& file);
+std::unique_ptr<ast::Node> ParseC(std::ifstream& file, CommandLineArgs& args);
 
 }  // namespace thogcc
