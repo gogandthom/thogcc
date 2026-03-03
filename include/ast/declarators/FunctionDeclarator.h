@@ -4,6 +4,7 @@
 #include <memory>
 #include <utility>
 
+#include "ast/Node.h"
 #include "ast/declarations/ParameterDeclaration.h"
 #include "ast/declarators/DeclaratorBase.h"
 #include "ast/declarators/IdentifierDeclarator.h"

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <utility>
 
 #include "ast/expressions/ExpressionBase.h"
 #include "ast/expressions/binary/BinaryExpressionBase.h"
