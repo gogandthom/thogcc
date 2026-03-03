@@ -11,11 +11,11 @@ class Node {
     virtual ~Node() = default;
 };
 
-template <std::derived_from<Node> T>
+template <typename T>
 class NodeList : public Node {
    public:
     NodeList(std::unique_ptr<T> node);
-    void pushBack(T node);
+    void pushBack(std::unique_ptr<T> node);
 
    private:
     std::vector<std::unique_ptr<T>> _nodes;
@@ -28,6 +28,17 @@ class ValueNode : public Node {
 
    protected:
     E _value;
+};
+
+template <typename T>
+NodeList<T>::NodeList(std::unique_ptr<T> node) {
+    static_assert(std::derived_from<T, Node>, "T must derive from Node");
+    _nodes.push_back(std::move(node));
+};
+
+template <typename T>
+void NodeList<T>::pushBack(std::unique_ptr<T> node) {
+    _nodes.push_back(std::move(node));
 };
 
 }  // namespace thogcc::ast
