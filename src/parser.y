@@ -114,7 +114,7 @@ external_declaration
 
 function_definition
     : declaration_specifiers declarator declaration_list compound_statement { $$ = std::make_unique<FunctionDefinition>(std::move($1), std::move($2), std::move($3), std::move($4)); }
-    | declaration_specifiers declarator compound_statement                  { $$ = std::make_unique<FunctionDefinition>(std::move($1), nullptr, std::move($2), std::move($3)); }
+    | declaration_specifiers declarator compound_statement                  { $$ = std::make_unique<FunctionDefinition>(std::move($1), std::move($2), nullptr, std::move($3)); }
     | declarator declaration_list compound_statement                        { $$ = std::make_unique<FunctionDefinition>(nullptr, std::move($1), std::move($2), std::move($3)); }
     | declarator compound_statement                                         { $$ = std::make_unique<FunctionDefinition>(nullptr, std::move($1), nullptr, std::move($2)); }
     ;
