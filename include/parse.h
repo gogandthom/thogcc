@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fstream>
 #include <memory>
 
 #include "ast/Node.h"

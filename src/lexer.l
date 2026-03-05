@@ -12,6 +12,7 @@
     #include "parser.tab.hpp"
     #include "CScanner.h"
     #include <stdexcept>
+    #include <format>
 
     using parser = yy::parser;
     using token = parser::token;
