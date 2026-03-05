@@ -8,7 +8,7 @@ end_of_line = lf
 charset = utf-8
 insert_final_newline = true
 
-[*.{cpp,h,hpp}]
+[*.{cpp,h,hpp,y,l}]
 indent_style = space
 indent_size = 4
 trim_trailing_whitespace = true

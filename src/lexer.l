@@ -1,17 +1,25 @@
-%option noyywrap
-%option yylineno
+%option c++ noyywrap yylineno nodefault
+
+/* Use our own scanner class */
+%option yyclass="thogcc::CScanner"
 
 %{
-  // A lot of this lexer is based off the ANSI C grammar:
-  // https://www.lysator.liu.se/c/ANSI-C-grammar-l.html
+    // A lot of this lexer is based off the ANSI C grammar:
+    // https://www.lysator.liu.se/c/ANSI-C-grammar-l.html
 
-  // Avoids error "error: `fileno' was not declared in this scope"
-  extern "C" int fileno(FILE *stream);
+    // Modified to generate C++
 
-  #include "parser.tab.hpp"
+    #include "parser.tab.hpp"
+    #include "CScanner.h"
+    #include <stdexcept>
+    #include <format>
 
-  // Suppress warning about unused function
-  [[maybe_unused]] static void yyunput (int c, char * yy_bp);
+    using parser = yy::parser;
+    using token = parser::token;
+
+    // Change signature of yylex to match what bison will call
+    #undef YY_DECL
+    #define YY_DECL parser::symbol_type thogcc::CScanner::yylex(thogcc::TypedefTable& typedefTable)
 %}
 
 D   [0-9]
@@ -30,74 +38,75 @@ IS  (u|U|l|L)*
 "*/"        { BEGIN(INITIAL); }
 }
 
-"auto"      { return(AUTO); }
-"break"     { return(BREAK); }
-"case"      { return(CASE); }
-"char"      { return(CHAR); }
-"const"     { return(CONST); }
-"continue"  { return(CONTINUE); }
-"default"   { return(DEFAULT); }
-"do"        { return(DO); }
-"double"    { return(DOUBLE); }
-"else"      { return(ELSE); }
-"enum"      { return(ENUM); }
-"extern"    { return(EXTERN); }
-"float"     { return(FLOAT); }
-"for"       { return(FOR); }
-"goto"      { return(GOTO); }
-"if"        { return(IF); }
-"int"       { return(INT); }
-"long"      { return(LONG); }
-"register"  { return(REGISTER); }
-"return"    { return(RETURN); }
-"short"     { return(SHORT); }
-"signed"    { return(SIGNED); }
-"sizeof"    { return(SIZEOF); }
-"static"    { return(STATIC); }
-"struct"    { return(STRUCT); }
-"switch"    { return(SWITCH); }
-"typedef"   { return(TYPEDEF); }
-"union"     { return(UNION); }
-"unsigned"  { return(UNSIGNED); }
-"void"      { return(VOID); }
-"volatile"  { return(VOLATILE); }
-"while"     { return(WHILE); }
+"auto"      { return(token::AUTO); }
+"break"     { return(token::BREAK); }
+"case"      { return(token::CASE); }
+"char"      { return(token::CHAR); }
+"const"     { return(token::CONST); }
+"continue"  { return(token::CONTINUE); }
+"default"   { return(token::DEFAULT); }
+"do"        { return(token::DO); }
+"double"    { return(token::DOUBLE); }
+"else"      { return(token::ELSE); }
+"enum"      { return(token::ENUM); }
+"extern"    { return(token::EXTERN); }
+"float"     { return(token::FLOAT); }
+"for"       { return(token::FOR); }
+"goto"      { return(token::GOTO); }
+"if"        { return(token::IF); }
+"int"       { return(token::INT); }
+"long"      { return(token::LONG); }
+"register"  { return(token::REGISTER); }
+"return"    { return(token::RETURN); }
+"short"     { return(token::SHORT); }
+"signed"    { return(token::SIGNED); }
+"sizeof"    { return(token::SIZEOF); }
+"static"    { return(token::STATIC); }
+"struct"    { return(token::STRUCT); }
+"switch"    { return(token::SWITCH); }
+"typedef"   { return(token::TYPEDEF); }
+"union"     { return(token::UNION); }
+"unsigned"  { return(token::UNSIGNED); }
+"void"      { return(token::VOID); }
+"volatile"  { return(token::VOLATILE); }
+"while"     { return(token::WHILE); }
 
-{L}({L}|{D})*       { yylval.string = new std::string(yytext); return(IDENTIFIER); }
+{L}({L}|{D})*       { return(typedefTable.isType(yytext) ? parser::make_TYPE_NAME(yytext) : parser::make_IDENTIFIER(yytext)); }
 
-0[xX]{H}+{IS}?      { yylval.number_int = (int)strtol(yytext, NULL, 0); return(INT_CONSTANT); }
-0{D}+{IS}?          { yylval.number_int = (int)strtol(yytext, NULL, 0); return(INT_CONSTANT); }
-{D}+{IS}?           { yylval.number_int = (int)strtol(yytext, NULL, 0); return(INT_CONSTANT); }
-L?'(\\.|[^\\'])+'   { yylval.number_int = (int)strtol(yytext, NULL, 0); return(INT_CONSTANT); }
+0[xX]{H}+{IS}?      { return(parser::make_INT_CONSTANT((int)strtol(yytext, nullptr, 0)));
+                      /* TODO what in gods name is this shit. uints and ints are longs cast to ints????? */ }
+0{D}+{IS}?          { return(parser::make_INT_CONSTANT((int)strtol(yytext, nullptr, 0))); }
+{D}+{IS}?           { return(parser::make_INT_CONSTANT((int)strtol(yytext, nullptr, 0))); }
+L?'(\\.|[^\\'])+'   { return(parser::make_INT_CONSTANT((int)strtol(yytext, nullptr, 0))); }
 
-{D}+{E}{FS}?            { yylval.number_float = strtod(yytext, NULL); return(FLOAT_CONSTANT); }
-{D}*"."{D}+({E})?{FS}?  { yylval.number_float = strtod(yytext, NULL); return(FLOAT_CONSTANT); }
-{D}+"."{D}*({E})?{FS}?  { yylval.number_float = strtod(yytext, NULL); return(FLOAT_CONSTANT); }
+{D}+{E}{FS}?            { return(parser::make_FLOAT_CONSTANT(strtod(yytext, nullptr))); }
+{D}*"."{D}+({E})?{FS}?  { return(parser::make_FLOAT_CONSTANT(strtod(yytext, nullptr))); }
+{D}+"."{D}*({E})?{FS}?  { return(parser::make_FLOAT_CONSTANT(strtod(yytext, nullptr))); }
 
-L?\"(\\.|[^\\"])*\"     {/* TODO process string literal */; return(STRING_LITERAL); }
+L?\"(\\.|[^\\"])*\"     {/* TODO process string literal */; return(parser::make_STRING_LITERAL(yytext)); }
 
-"..."       { return(ELLIPSIS); }
-">>="       { return(RIGHT_ASSIGN); }
-"<<="       { return(LEFT_ASSIGN); }
-"+="        { return(ADD_ASSIGN); }
-"-="        { return(SUB_ASSIGN); }
-"*="        { return(MUL_ASSIGN); }
-"/="        { return(DIV_ASSIGN); }
-"%="        { return(MOD_ASSIGN); }
-"&="        { return(AND_ASSIGN); }
-"^="        { return(XOR_ASSIGN); }
-"|="        { return(OR_ASSIGN); }
-">>"        { return(RIGHT_OP); }
-"<<"        { return(LEFT_OP); }
-"++"        { return(INC_OP); }
-"--"        { return(DEC_OP); }
-"->"        { return(PTR_OP); }
-"&&"        { return(AND_OP); }
-"||"        { return(OR_OP); }
-"<="        { return(LE_OP); }
-">="        { return(GE_OP); }
-"=="        { return(EQ_OP); }
-"!="        { return(NE_OP); }
+"..."       { return(token::ELLIPSIS); }
+">>="       { return(token::RIGHT_ASSIGN); }
+"<<="       { return(token::LEFT_ASSIGN); }
+"+="        { return(token::ADD_ASSIGN); }
+"-="        { return(token::SUB_ASSIGN); }
+"*="        { return(token::MUL_ASSIGN); }
+"/="        { return(token::DIV_ASSIGN); }
+"%="        { return(token::MOD_ASSIGN); }
+"&="        { return(token::AND_ASSIGN); }
+"^="        { return(token::XOR_ASSIGN); }
+"|="        { return(token::OR_ASSIGN); }
+">>"        { return(token::RIGHT_OP); }
+"<<"        { return(token::LEFT_OP); }
+"++"        { return(token::INC_OP); }
+"--"        { return(token::DEC_OP); }
+"->"        { return(token::PTR_OP); }
+"&&"        { return(token::AND_OP); }
+"||"        { return(token::OR_OP); }
+"<="        { return(token::LE_OP); }
+">="        { return(token::GE_OP); }
+"=="        { return(token::EQ_OP); }
+"!="        { return(token::NE_OP); }
 ";"         { return(';'); }
 ("{"|"<%")  { return('{'); }
 ("}"|"%>")  { return('}'); }
@@ -124,6 +133,6 @@ L?\"(\\.|[^\\"])*\"     {/* TODO process string literal */; return(STRING_LITERA
 "?"         { return('?'); }
 
 [ \a\b\t\v\f\n\r]   { /* ignore new lines and special sequences */ }
-.                   { std::cerr << "Unknown token: " << yytext << std::endl; return(UNKNOWN); }
+.                   { throw std::runtime_error(std::format("Found unknown token '{}' on line {}", yytext, yylineno)); }
 
 %%
