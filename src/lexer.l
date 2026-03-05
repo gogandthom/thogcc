@@ -9,10 +9,11 @@
 
     // Modified to generate C++
 
-    #include "parser.tab.hpp"
+    #include <format>
+
     #include "CScanner.h"
     #include "errors/errors.h"
-    #include <format>
+    #include "parser.tab.hpp"
 
     using parser = yy::parser;
     using token = parser::token;

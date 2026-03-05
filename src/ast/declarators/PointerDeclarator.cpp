@@ -9,15 +9,17 @@
 namespace thogcc::ast::declarators {
 
 void PointerDeclarator::attach(std::unique_ptr<DeclaratorBase> node) {
-    if (!_ptr) {
-        _ptr = std::move(node);
-    } else {
-        if (auto child = dynamic_cast<PointerDeclarator*>(_ptr.get())) {
-            child->attach(std::move(node));
+    PointerDeclarator* current = this;
+
+    while (current->_ptr) {
+        if (auto* child = dynamic_cast<PointerDeclarator*>(current->_ptr.get())) {
+            current = child;
         } else {
             throw std::runtime_error("attach() called on PointerDeclarator with existing child");
         }
     }
+
+    current->_ptr = std::move(node);
 };
 
 }  // namespace thogcc::ast::declarators

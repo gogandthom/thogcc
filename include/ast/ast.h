@@ -1,5 +1,7 @@
 #pragma once
 
+// NOLINTBEGIN(misc-include-cleaner)
+
 #include "ast/DeclarationSpecifiers.h"
 #include "ast/EnumSpecifier.h"
 #include "ast/Node.h"
@@ -54,3 +56,5 @@
 #include "ast/statements/StatementBase.h"
 #include "ast/statements/SwitchCaseStatement.h"
 #include "ast/statements/SwitchStatement.h"
+
+// NOLINTEND(misc-include-cleaner)
