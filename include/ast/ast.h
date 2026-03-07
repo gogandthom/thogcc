@@ -1,6 +1,7 @@
 #pragma once
 
 // NOLINTBEGIN(misc-include-cleaner)
+// IWYU pragma: begin_keep
 
 #include "ast/DeclarationSpecifiers.h"
 #include "ast/EnumSpecifier.h"
@@ -58,3 +59,4 @@
 #include "ast/statements/SwitchStatement.h"
 
 // NOLINTEND(misc-include-cleaner)
+// IWYU pragma: end_keep
