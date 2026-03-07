@@ -2,7 +2,6 @@
 #include <format>
 #include <fstream>
 #include <iostream>
-#include <ostream>
 #include <string_view>
 #include <vector>
 
@@ -13,7 +12,7 @@
 int main(int argc, char** argv) {
     try {
         // Parse args
-        std::vector<std::string_view> rawArgs(argv + 1, argv + argc);
+        const std::vector<std::string_view> rawArgs(argv + 1, argv + argc);
         thogcc::CommandLineArgs args = thogcc::parseArgs(rawArgs);
 
         // Open source file
@@ -26,7 +25,7 @@ int main(int argc, char** argv) {
         // Parse source file
         thogcc::ParseC(input, args);
     } catch (const std::exception& e) {
-        std::cerr << "thogcc: " << e.what() << std::endl;
+        std::cerr << "thogcc: " << e.what() << '\n';
         return 1;
     }
 }

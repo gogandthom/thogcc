@@ -8,12 +8,12 @@
 
 namespace thogcc {
 
-CommandLineArgs parseArgs(std::vector<std::string_view> args) {
+CommandLineArgs parseArgs(const std::vector<std::string_view>& args) {
     CommandLineArgs res;
     auto it = args.begin();
 
     while (it != args.end()) {
-        std::string_view arg = *it;
+        const std::string_view arg = *it;
 
         if (arg == "-S") {
             if (++it == args.end()) throw errors::CommandLineError("-S requires a filename");

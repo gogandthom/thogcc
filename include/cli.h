@@ -12,6 +12,6 @@ struct CommandLineArgs {
     bool verbose = false;
 };
 
-CommandLineArgs parseArgs(std::vector<std::string_view> args);
+CommandLineArgs parseArgs(const std::vector<std::string_view> &args);
 
 }  // namespace thogcc
