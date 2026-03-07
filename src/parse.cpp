@@ -11,14 +11,14 @@
 
 namespace thogcc {
 
-std::unique_ptr<ast::Node> ParseC(std::ifstream& file, CommandLineArgs& args) {
+std::unique_ptr<ast::Node> ParseC(std::ifstream& file, const CommandLineArgs& args) {
     CScanner scanner(file, std::cerr);
 
     TypedefTable typedefTable;
     yy::g_root = nullptr;
     yy::parser parse(scanner, typedefTable);
 
-    parse.set_debug_level(args.verbose);
+    parse.set_debug_level((int)args.verbose);
 
     parse();
 

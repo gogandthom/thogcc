@@ -8,6 +8,6 @@
 
 namespace thogcc {
 
-std::unique_ptr<ast::Node> ParseC(std::ifstream& file, CommandLineArgs& args);
+std::unique_ptr<ast::Node> ParseC(std::ifstream& file, const CommandLineArgs& args);
 
 }  // namespace thogcc

@@ -18,7 +18,7 @@ class CScanner : public yyFlexLexer {
     CScanner(std::istream& in, std::ostream& out) : yyFlexLexer(in, out){};
 
     // Suppresses warning about hidden overloaded virtual function
-    [[deprecated("Do not call yylex without arguments!")]] int yylex() {
+    [[deprecated("Do not call yylex without arguments!")]] int yylex() override {
         return 1;
     };
 

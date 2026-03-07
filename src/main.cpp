@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
     try {
         // Parse args
         const std::vector<std::string_view> rawArgs(argv + 1, argv + argc);
-        thogcc::CommandLineArgs args = thogcc::parseArgs(rawArgs);
+        const thogcc::CommandLineArgs args = thogcc::parseArgs(rawArgs);
 
         // Open source file
         std::ifstream input(args.srcPath);
