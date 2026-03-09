@@ -9,7 +9,7 @@
 
 namespace thogcc::ast {
 
-class StructSpecifier : public Node {
+class StructSpecifier : public VisitableNode<StructSpecifier> {
    public:
     StructSpecifier(std::unique_ptr<NodeList<declarations::StructDeclaration>> declarations,
                     std::string identifier = {})

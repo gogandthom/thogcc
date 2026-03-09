@@ -9,7 +9,7 @@
 
 namespace thogcc::ast::expressions {
 
-class Initializer : public Node {
+class Initializer : public VisitableNode<Initializer> {
    public:
     Initializer(std::unique_ptr<ExpressionBase> expr) : _child(std::move(expr)){};
     Initializer(std::unique_ptr<NodeList<Initializer>> list) : _child(std::move(list)){};

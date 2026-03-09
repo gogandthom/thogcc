@@ -3,12 +3,13 @@
 #include <memory>
 #include <utility>
 
+#include "ast/Node.h"
 #include "ast/declarators/DeclaratorBase.h"
 #include "ast/expressions/ConstantExpression.h"
 
 namespace thogcc::ast::declarators {
 
-class ArrayDeclarator : public DeclaratorBase {
+class ArrayDeclarator : public VisitableNode<ArrayDeclarator, DeclaratorBase> {
    public:
     ArrayDeclarator(std::unique_ptr<expressions::ConstantExpression> expr = nullptr)
         : _expr(std::move(expr)){};

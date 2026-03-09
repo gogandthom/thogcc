@@ -9,7 +9,7 @@
 
 namespace thogcc::ast::statements {
 
-class CompoundStatement : public StatementBase {
+class CompoundStatement : public VisitableNode<CompoundStatement, StatementBase> {
    public:
     CompoundStatement(
         std::unique_ptr<NodeList<declarations::DeclarationBase>> declarationList = nullptr,

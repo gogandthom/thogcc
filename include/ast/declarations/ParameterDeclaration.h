@@ -4,12 +4,13 @@
 #include <utility>
 
 #include "ast/DeclarationSpecifiers.h"
+#include "ast/Node.h"
 #include "ast/declarations/DeclarationBase.h"
 #include "ast/declarators/DeclaratorBase.h"
 
 namespace thogcc::ast::declarations {
 
-class ParameterDeclaration : public DeclarationBase {
+class ParameterDeclaration : public VisitableNode<ParameterDeclaration, DeclarationBase> {
    public:
     ParameterDeclaration(std::unique_ptr<DeclarationSpecifiers> specifiers,
                          std::unique_ptr<declarators::DeclaratorBase> decl = nullptr)

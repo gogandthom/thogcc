@@ -3,12 +3,13 @@
 #include <memory>
 #include <utility>
 
+#include "ast/Node.h"
 #include "ast/expressions/ExpressionBase.h"
 #include "ast/statements/StatementBase.h"
 
 namespace thogcc::ast::statements {
 
-class IfStatement : public StatementBase {
+class IfStatement : public VisitableNode<IfStatement, StatementBase> {
    public:
     IfStatement(std::unique_ptr<expressions::ExpressionBase> expr,
                 std::unique_ptr<StatementBase> ifStatement,

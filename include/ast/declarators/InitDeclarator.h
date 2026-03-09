@@ -3,12 +3,13 @@
 #include <memory>
 #include <utility>
 
+#include "ast/Node.h"
 #include "ast/declarators/DeclaratorBase.h"
 #include "ast/expressions/Initializer.h"
 
 namespace thogcc::ast::declarators {
 
-class InitDeclarator : public DeclaratorBase {
+class InitDeclarator : public VisitableNode<InitDeclarator, DeclaratorBase> {
    public:
     InitDeclarator(std::unique_ptr<DeclaratorBase> decl,
                    std::unique_ptr<expressions::Initializer> initizer = nullptr)

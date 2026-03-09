@@ -4,6 +4,7 @@
 #include <memory>
 #include <utility>
 
+#include "ast/Node.h"
 #include "ast/expressions/ExpressionBase.h"
 #include "ast/expressions/binary/BinaryExpressionBase.h"
 
@@ -23,11 +24,13 @@ enum class AssignmentExpressionType : std::uint8_t {
     OR_ASSIGN,
 };
 
-class AssignmentExpression : public BinaryExpressionBase {
+class AssignmentExpression : public VisitableNode<AssignmentExpression, BinaryExpressionBase> {
    public:
     AssignmentExpression(std::unique_ptr<ExpressionBase> lhs, std::unique_ptr<ExpressionBase> rhs,
                          AssignmentExpressionType op)
-        : BinaryExpressionBase(std::move(lhs), std::move(rhs)), _op(op){};
+        : VisitableNode(std::move(lhs),
+                        std::move(rhs)),  // Must call direct parent's constructor
+          _op(op){};
 
    private:
     AssignmentExpressionType _op;

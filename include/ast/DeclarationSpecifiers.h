@@ -8,7 +8,7 @@
 
 namespace thogcc::ast {
 
-class DeclarationSpecifiers : public Node {
+class DeclarationSpecifiers : public VisitableNode<DeclarationSpecifiers> {
    public:
     DeclarationSpecifiers(std::unique_ptr<ValueNode<StorageClassSpecifier>> storageClassSpecifier,
                           std::unique_ptr<Node> typeSpecifier)

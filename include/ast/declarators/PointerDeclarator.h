@@ -3,11 +3,12 @@
 #include <memory>
 #include <utility>
 
+#include "ast/Node.h"
 #include "ast/declarators/DeclaratorBase.h"
 
 namespace thogcc::ast::declarators {
 
-class PointerDeclarator : public DeclaratorBase {
+class PointerDeclarator : public VisitableNode<PointerDeclarator, DeclaratorBase> {
    public:
     PointerDeclarator(std::unique_ptr<DeclaratorBase> ptr = nullptr) : _ptr(std::move(ptr)){};
     /// Attach node to leaf

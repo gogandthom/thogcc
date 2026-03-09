@@ -3,11 +3,12 @@
 #include <memory>
 #include <utility>
 
+#include "ast/Node.h"
 #include "ast/expressions/ExpressionBase.h"
 
 namespace thogcc::ast::expressions {
 
-class IncDecExpression : public ExpressionBase {
+class IncDecExpression : public VisitableNode<IncDecExpression, ExpressionBase> {
    public:
     IncDecExpression(std::unique_ptr<ExpressionBase> expr, bool isDecrement = false,
                      bool isPrefix = false)

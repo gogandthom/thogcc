@@ -1,7 +1,9 @@
 #pragma once
 
 #include <concepts>
+#include <cstddef>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace thogcc::ast {
@@ -12,6 +14,25 @@ class Node {
     virtual ~Node() = default;
     Node(const Node&) = delete;
     Node& operator=(const Node&) = delete;
+
+    virtual void accept(visitors::Visitor& v) = 0;
+    virtual NodeKind getKind() const = 0;
+};
+
+template <typename Derived, typename Base = Node>
+class VisitableNode : public Base {
+   public:
+    using Base::Base;  // Keep Base constructor
+    using BaseType = Base;
+
+    static constexpr NodeKind kind = NodeKindTrait<Derived>::kind;
+
+    NodeKind getKind() const override {
+        return kind;
+    };
+    void accept(visitors::Visitor& v) override {
+        v.visit(static_cast<Derived&>(*this));
+    }
 };
 
 template <typename T>

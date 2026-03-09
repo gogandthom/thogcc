@@ -13,7 +13,7 @@ namespace thogcc::ast::declarators {
 
 enum class FunctionDeclaratorForm : std::uint8_t { Prototype, KAndR };
 
-class FunctionDeclarator : public DeclaratorBase {
+class FunctionDeclarator : public VisitableNode<FunctionDeclarator, DeclaratorBase> {
    public:
     FunctionDeclarator(
         std::unique_ptr<DeclaratorBase> base = nullptr,

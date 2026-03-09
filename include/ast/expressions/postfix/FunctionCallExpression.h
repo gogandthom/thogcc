@@ -8,7 +8,7 @@
 
 namespace thogcc::ast::expressions::postfix {
 
-class FunctionCallExpression : public ExpressionBase {
+class FunctionCallExpression : public VisitableNode<FunctionCallExpression, ExpressionBase> {
    public:
     FunctionCallExpression(std::unique_ptr<ExpressionBase> expr,
                            std::unique_ptr<NodeList<ExpressionBase>> args = nullptr)

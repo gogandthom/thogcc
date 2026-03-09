@@ -4,11 +4,12 @@
 #include <string>
 #include <utility>
 
+#include "ast/Node.h"
 #include "ast/expressions/ExpressionBase.h"
 
 namespace thogcc::ast::expressions::postfix {
 
-class MemberAccessExpression : public ExpressionBase {
+class MemberAccessExpression : public VisitableNode<MemberAccessExpression, ExpressionBase> {
    public:
     MemberAccessExpression(std::unique_ptr<ExpressionBase> expr, std::string identifier,
                            bool exprIsPtr = false)

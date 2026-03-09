@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 
+#include "ast/Node.h"
 #include "ast/expressions/ExpressionBase.h"
 #include "ast/statements/ExpressionStatement.h"
 #include "ast/statements/StatementBase.h"
@@ -15,7 +16,7 @@ enum class IterationStatementType : std::uint8_t {
     FOR,
 };
 
-class IterationStatement : public StatementBase {
+class IterationStatement : public VisitableNode<IterationStatement, StatementBase> {
    public:
     IterationStatement(IterationStatementType type, std::unique_ptr<StatementBase> statement,
                        std::unique_ptr<expressions::ExpressionBase> initExpr = nullptr,

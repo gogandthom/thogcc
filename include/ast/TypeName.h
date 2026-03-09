@@ -8,7 +8,7 @@
 
 namespace thogcc::ast {
 
-class TypeName : public Node {
+class TypeName : public VisitableNode<TypeName> {
    public:
     TypeName(std::unique_ptr<NodeList<Node>> specifiers,
              std::unique_ptr<declarators::DeclaratorBase> declarators = nullptr)

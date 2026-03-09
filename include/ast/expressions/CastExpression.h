@@ -3,12 +3,13 @@
 #include <memory>
 #include <utility>
 
+#include "ast/Node.h"
 #include "ast/TypeName.h"
 #include "ast/expressions/ExpressionBase.h"
 
 namespace thogcc::ast::expressions {
 
-class CastExpression : public ExpressionBase {
+class CastExpression : public VisitableNode<CastExpression, ExpressionBase> {
    public:
     CastExpression(std::unique_ptr<TypeName> typeName, std::unique_ptr<ExpressionBase> expr)
         : _expr(std::move(expr)), _typeName(std::move(typeName)){};

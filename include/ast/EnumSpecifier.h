@@ -9,7 +9,7 @@
 
 namespace thogcc::ast {
 
-class EnumSpecifier : public Node {
+class EnumSpecifier : public VisitableNode<EnumSpecifier> {
    public:
     EnumSpecifier(std::string identifier,
                   std::unique_ptr<NodeList<declarators::EnumValueDeclarator>> declarators = nullptr)

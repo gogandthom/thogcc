@@ -3,12 +3,13 @@
 #include <memory>
 #include <utility>
 
+#include "ast/Node.h"
 #include "ast/expressions/ConstantExpression.h"
 #include "ast/statements/StatementBase.h"
 
 namespace thogcc::ast::statements {
 
-class SwitchCaseStatement : public StatementBase {
+class SwitchCaseStatement : public VisitableNode<SwitchCaseStatement, StatementBase> {
    public:
     SwitchCaseStatement(std::unique_ptr<expressions::ConstantExpression> expr,
                         std::unique_ptr<StatementBase> statement)
