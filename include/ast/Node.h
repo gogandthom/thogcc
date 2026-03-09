@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 
+#include "ast/StorageClassSpecifier.h"
+#include "ast/TypeSpecifier.h"
 #include "ast/utils.h"
 #include "visitors/Visitor.h"
 
