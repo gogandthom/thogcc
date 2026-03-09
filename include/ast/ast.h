@@ -42,7 +42,6 @@
 #include "ast/expressions/postfix/ArrayAccessExpression.h"
 #include "ast/expressions/postfix/FunctionCallExpression.h"
 #include "ast/expressions/postfix/MemberAccessExpression.h"
-#include "ast/expressions/prefix/IncDecExpression.h"
 #include "ast/expressions/prefix/SizeofExpression.h"
 #include "ast/expressions/prefix/UnaryOperatorExpression.h"
 #include "ast/statements/CompoundStatement.h"
