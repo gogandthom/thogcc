@@ -16,6 +16,10 @@ class ListExpression : public VisitableNode<ListExpression, ExpressionBase> {
         _list->pushBack(std::move(ptr));
     };
 
+    auto* getList() const {
+        return _list.get();
+    }
+
    private:
     std::unique_ptr<NodeList<ExpressionBase>> _list;
 };

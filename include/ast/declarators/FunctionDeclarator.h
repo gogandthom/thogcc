@@ -27,6 +27,19 @@ class FunctionDeclarator : public VisitableNode<FunctionDeclarator, DeclaratorBa
           _base(std::move(base)),
           _identifiers(std::move(identifiers)){};
 
+    auto getForm() const {
+        return _form;
+    };
+    auto* getBase() const {
+        return _base.get();
+    };
+    auto* getParams() const {
+        return _params.get();
+    };
+    auto* getIdentifiers() const {
+        return _identifiers.get();
+    };
+
    private:
     FunctionDeclaratorForm _form;
     std::unique_ptr<DeclaratorBase> _base;

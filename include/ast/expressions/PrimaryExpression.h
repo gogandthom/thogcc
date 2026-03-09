@@ -13,6 +13,10 @@ class PrimaryExpression : public VisitableNode<PrimaryExpression, ExpressionBase
     template <typename T>
     PrimaryExpression(T&& value) : _value(std::forward<T>(value)){};
 
+    auto getValue() const {
+        return _value;
+    };
+
    private:
     std::variant<int, unsigned, long, unsigned long, float, double, std::string> _value;
 };

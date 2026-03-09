@@ -14,6 +14,10 @@ class ReturnStatement : public VisitableNode<ReturnStatement, StatementBase> {
     ReturnStatement(std::unique_ptr<expressions::ExpressionBase> expr = nullptr)
         : _expr(std::move(expr)){};
 
+    auto* getExpr() const {
+        return _expr.get();
+    };
+
    private:
     std::unique_ptr<expressions::ExpressionBase> _expr;
 };

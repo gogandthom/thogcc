@@ -14,7 +14,9 @@ namespace thogcc::ast::declarations {
 /// Function definition (ie. with CompoundStatement) only.
 /// Function declarations do not have their own type.
 class FunctionDefinition
-    : public DeclarationBase {  // Must derive from DeclarationBase for external_declaration
+    : public VisitableNode<FunctionDefinition,
+                           DeclarationBase> {  // Must derive from DeclarationBase for
+                                               // external_declaration
    public:
     FunctionDefinition(std::unique_ptr<DeclarationSpecifiers> specifiers,
                        std::unique_ptr<declarators::DeclaratorBase> declarator,
@@ -24,6 +26,19 @@ class FunctionDefinition
           _declarator(std::move(declarator)),
           _declarations(std::move(declarations)),
           _statement(std::move(statement)){};
+
+    auto* getSpecifiers() const {
+        return _specifiers.get();
+    };
+    auto* getDeclarator() const {
+        return _declarator.get();
+    };
+    auto* getDeclarations() const {
+        return _declarations.get();
+    };
+    auto* getStatement() const {
+        return _statement.get();
+    };
 
    private:
     std::unique_ptr<DeclarationSpecifiers> _specifiers;

@@ -16,6 +16,13 @@ class CompoundStatement : public VisitableNode<CompoundStatement, StatementBase>
         std::unique_ptr<NodeList<StatementBase>> statementList = nullptr)
         : _declarationList(std::move(declarationList)), _statementList(std::move(statementList)){};
 
+    auto* getDeclarationList() const {
+        return _declarationList.get();
+    };
+    auto* getStatementList() const {
+        return _statementList.get();
+    };
+
    private:
     std::unique_ptr<NodeList<declarations::DeclarationBase>> _declarationList;
     std::unique_ptr<NodeList<StatementBase>> _statementList;
