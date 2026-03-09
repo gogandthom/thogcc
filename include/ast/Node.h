@@ -88,6 +88,7 @@ class NodeList : public NodeListBase {  // Yes, this is correct. We don't use Vi
 class ValueNodeBase : public Node {
    public:
     using BaseType = Node;
+    virtual std::string getLabel() = 0;
 };
 
 template <typename E>
@@ -95,8 +96,39 @@ class ValueNode
     : public ValueNodeBase {  // Same as NodeList, we will override getKind, accept ourselves
    public:
     ValueNode(E value) : _value(value){};
+    std::string getLabel() override {
+        if constexpr (std::is_same_v<E, TypeSpecifier>) {
+            switch (_value) {
+#define X(VAL)   \
+    case E::VAL: \
+        return #VAL;
+                TYPE_SPECIFIER
+#undef X
+            }
+        } else if constexpr (std::is_same_v<E, StorageClassSpecifier>) {
+            switch (_value) {
+#define X(VAL)   \
+    case E::VAL: \
+        return #VAL;
+                STORAGE_CLASS_SPECIFIER
+#undef X
+            }
+        } else if constexpr (std::is_convertible_v<E, std::string>) {
+            return _value;
+        } else {
+            static_assert(always_false<E>, "fuck");
+        }
+    };
 
-   protected:
+    using BaseType = ValueNodeBase;
+    NodeKind getKind() const override {
+        return NodeKind::ValueNodeBase;
+    }
+    void accept(visitors::Visitor& v) override {
+        v.visit(static_cast<ValueNodeBase&>(*this));
+    }
+
+   private:
     E _value;
 };
 
