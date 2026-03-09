@@ -41,14 +41,43 @@ class VisitableNode : public Base {
 class NodeListBase : public Node {
    public:
     using BaseType = Node;
+    virtual size_t size() const = 0;
+    virtual Node& getRawNode(size_t index) const = 0;
 };
 
 template <typename T>
 class NodeList : public NodeListBase {  // Yes, this is correct. We don't use VisitableNode, because
                                         // we manually override getKind and accept
    public:
-    NodeList(std::unique_ptr<T> node);
-    void pushBack(std::unique_ptr<T> node);
+    NodeList() = default;
+    NodeList(std::unique_ptr<T> node) {
+        static_assert(std::derived_from<T, Node>, "T must derive from Node");
+        _nodes.push_back(std::move(node));
+    };
+
+    void pushBack(std::unique_ptr<T> node) {
+        if (node) _nodes.push_back(std::move(node));
+    };
+    auto& getNodes() const {
+        return _nodes;
+    };
+
+    size_t size() const override {
+        return _nodes.size();
+    };
+    Node& getRawNode(size_t index) const override {
+        return *_nodes[index];
+    };
+
+    using BaseType = NodeListBase;
+    NodeKind getKind() const override {
+        // Every NodeList<T> is a NodeListBase
+        return NodeKind::NodeListBase;
+    }
+    void accept(visitors::Visitor& v) override {
+        // NodeList<T>::accept() calls visit(NodeListBase& node) for all T
+        v.visit(static_cast<NodeListBase&>(*this));
+    }
 
    private:
     std::vector<std::unique_ptr<Node>> _nodes;
@@ -67,17 +96,6 @@ class ValueNode
 
    protected:
     E _value;
-};
-
-template <typename T>
-NodeList<T>::NodeList(std::unique_ptr<T> node) {
-    static_assert(std::derived_from<T, Node>, "T must derive from Node");
-    _nodes.push_back(std::move(node));
-};
-
-template <typename T>
-void NodeList<T>::pushBack(std::unique_ptr<T> node) {
-    _nodes.push_back(std::move(node));
 };
 
 }  // namespace thogcc::ast
