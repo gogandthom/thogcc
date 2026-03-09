@@ -6,6 +6,9 @@
 #include <string>
 #include <vector>
 
+#include "ast/utils.h"
+#include "visitors/Visitor.h"
+
 namespace thogcc::ast {
 
 class Node {
@@ -35,18 +38,30 @@ class VisitableNode : public Base {
     }
 };
 
+class NodeListBase : public Node {
+   public:
+    using BaseType = Node;
+};
+
 template <typename T>
-class NodeList : public Node {
+class NodeList : public NodeListBase {  // Yes, this is correct. We don't use VisitableNode, because
+                                        // we manually override getKind and accept
    public:
     NodeList(std::unique_ptr<T> node);
     void pushBack(std::unique_ptr<T> node);
 
    private:
-    std::vector<std::unique_ptr<T>> _nodes;
+    std::vector<std::unique_ptr<Node>> _nodes;
+};
+
+class ValueNodeBase : public Node {
+   public:
+    using BaseType = Node;
 };
 
 template <typename E>
-class ValueNode : public Node {
+class ValueNode
+    : public ValueNodeBase {  // Same as NodeList, we will override getKind, accept ourselves
    public:
     ValueNode(E value) : _value(value){};
 
