@@ -23,6 +23,8 @@ CommandLineArgs parseArgs(const std::vector<std::string_view>& args) {
             res.destPath = *it;
         } else if (arg == "-v" || arg == "--verbose") {
             res.verbose = true;
+        } else if (arg == "-g" || arg == "--graph") {
+            res.printGraph = true;
         } else {
             throw errors::CommandLineError("Unknown argument: " + std::string(arg));
         }
