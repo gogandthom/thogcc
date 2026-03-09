@@ -4,6 +4,7 @@
 #include <string_view>
 
 #include "ast/Node.h"
+#include "ast/fwd.h"
 #include "visitors/DefaultVisitor.h"
 
 namespace thogcc::visitors {

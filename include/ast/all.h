@@ -1,6 +1,6 @@
 #pragma once
 
-// NOLINTBEGIN(misc-include-cleaner)
+// IWYU pragma: begin_exports
 
 #include "ast/DeclarationSpecifiers.h"
 #include "ast/EnumSpecifier.h"
@@ -56,4 +56,4 @@
 #include "ast/statements/SwitchCaseStatement.h"
 #include "ast/statements/SwitchStatement.h"
 
-// NOLINTEND(misc-include-cleaner)
+// IWYU pragma: end_exports

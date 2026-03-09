@@ -1,6 +1,7 @@
 #pragma once
 
-#include "ast/utils.h"
+#include "ast/fwd.h"  // IWYU pragma: keep
+#include "ast/nodes.h"
 
 namespace thogcc::visitors {
 

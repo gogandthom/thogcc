@@ -3,7 +3,8 @@
 #include <type_traits>
 
 #include "Visitor.h"
-#include "ast/ast.h"  // IWYU pragma: keep
+#include "ast/all.h"
+#include "ast/nodes.h"
 #include "ast/utils.h"
 
 namespace thogcc::visitors {

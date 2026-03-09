@@ -1,7 +1,9 @@
 // Adapted from: https://www.lysator.liu.se/c/ANSI-C-grammar-y.html
 
 %code requires {
-    #include "ast/ast.h"
+    #include <memory>
+
+    #include "ast/all.h"
     #include "TypedefTable.h"
 
     // Avoid recursive includes

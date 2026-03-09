@@ -8,8 +8,7 @@
 #include <variant>
 
 #include "ast/Node.h"
-#include "ast/ast.h"  // IWYU pragma: keep
-#include "ast/declarators/FunctionDeclarator.h"
+#include "ast/all.h"
 #include "ast/utils.h"
 
 namespace thogcc::visitors {
