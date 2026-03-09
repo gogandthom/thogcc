@@ -4,6 +4,9 @@
 
 namespace thogcc::visitors {
 
+/// Visitor base class
+/// This is strict, all visit() must be implemented.
+/// See DefaultVisitor for fallthrough implementation.
 class Visitor {
    public:
     virtual ~Visitor() = default;

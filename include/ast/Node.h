@@ -13,6 +13,8 @@
 
 namespace thogcc::ast {
 
+/// Abstract base class for all AST nodes
+/// Do not use, except through VisitableNode
 class Node {
    public:
     Node() = default;
@@ -24,6 +26,8 @@ class Node {
     virtual NodeKind getKind() const = 0;
 };
 
+/// CRTP helper for AST nodes.
+/// You likely want to use this instead of Node directly.
 template <typename Derived, typename Base = Node>
 class VisitableNode : public Base {
    public:
@@ -40,6 +44,8 @@ class VisitableNode : public Base {
     }
 };
 
+/// Non templated abstract base class for NodeList<T>.
+/// Visitors will visit(NodeListBase& node) instead of each individual NodeList<T>
 class NodeListBase : public Node {
    public:
     using BaseType = Node;
@@ -47,6 +53,7 @@ class NodeListBase : public Node {
     virtual Node& getRawNode(size_t index) const = 0;
 };
 
+/// Templated container for vector<unique_ptr<T>>
 template <typename T>
 class NodeList : public NodeListBase {  // Yes, this is correct. We don't use VisitableNode, because
                                         // we manually override getKind and accept
@@ -85,12 +92,14 @@ class NodeList : public NodeListBase {  // Yes, this is correct. We don't use Vi
     std::vector<std::unique_ptr<Node>> _nodes;
 };
 
+/// Non templated abstract base class for ValueNode<E>
 class ValueNodeBase : public Node {
    public:
     using BaseType = Node;
     virtual std::string getLabel() = 0;
 };
 
+/// Templated container for various things (enum values, strings, etc.)
 template <typename E>
 class ValueNode
     : public ValueNodeBase {  // Same as NodeList, we will override getKind, accept ourselves
