@@ -55,6 +55,13 @@ void PrintVisitor::visit(ast::DeclarationSpecifiers& node) {
     visitChild(cur, "TypeSpecifier", node.getTypeSpecifier());
 }
 
+void PrintVisitor::visit(ast::declarations::Declaration& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "Specifiers", node.getSpecifiers());
+    visitChild(cur, "Declarators", node.getDeclarators());
+}
+
 void PrintVisitor::visit(ast::declarations::FunctionDefinition& node) {
     const int cur = _id;
     printNode(cur, node);
@@ -82,6 +89,12 @@ void PrintVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
     _out << std::format("  n{} -->|Identifier| n{}[{}]\n", cur, ++_id, node.getIdentifier());
 };
 
+void PrintVisitor::visit(ast::expressions::IdentifierExpression& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    _out << std::format("  n{} -->|Identifier| n{}[{}]\n", cur, ++_id, node.getIdentifier());
+};
+
 void PrintVisitor::visit(ast::expressions::ListExpression& node) {
     const int cur = _id;
     printNode(cur, node);
@@ -91,11 +104,17 @@ void PrintVisitor::visit(ast::expressions::ListExpression& node) {
 void PrintVisitor::visit(ast::expressions::PrimaryExpression& node) {
     const int cur = _id;
     printNode(cur, node);
-    const std::variant<int, unsigned int, long, unsigned long, float, double, std::string> value =
-        node.getValue();
+    const auto value = node.getValue();
     std::visit(
         [this, cur](auto&& v) { _out << std::format("  n{} -->|Value| n{}[{}]\n", cur, ++_id, v); },
         value);
+};
+
+void PrintVisitor::visit(ast::expressions::prefix::SizeofExpression& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    std::visit([this, cur](const auto& ptr) { visitChild(cur, "Expr", ptr.get()); },
+               node.getExpr());
 };
 
 void PrintVisitor::visit(ast::statements::CompoundStatement& node) {

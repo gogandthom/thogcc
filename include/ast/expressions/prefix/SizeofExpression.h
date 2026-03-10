@@ -15,6 +15,10 @@ class SizeofExpression : public VisitableNode<SizeofExpression, ExpressionBase> 
     SizeofExpression(std::unique_ptr<ExpressionBase> expr) : _expr(std::move(expr)){};
     SizeofExpression(std::unique_ptr<TypeName> typeName) : _expr(std::move(typeName)){};
 
+    auto& getExpr() const {
+        return _expr;
+    }
+
    private:
     std::variant<std::unique_ptr<ExpressionBase>, std::unique_ptr<TypeName>> _expr;
 };
