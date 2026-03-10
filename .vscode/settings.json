@@ -6,8 +6,5 @@
     "editor.formatOnType": false,
     "vscode-pets.theme": "autumn",
     "conventionalCommits.gitmoji": false,
-    "conventionalCommits.promptScopes": false,
-    "yaml.schemas": {
-        "https://www.schemastore.org/clang-tidy.json": "file:///home/thomas/Projects/IAC/thogcc/.clang-tidy"
-    }
+    "conventionalCommits.promptScopes": false
 }
