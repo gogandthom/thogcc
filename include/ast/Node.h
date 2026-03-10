@@ -147,6 +147,10 @@ class ValueNode
         v.visit(static_cast<ValueNodeBase&>(*this));
     }
 
+    E getValue() const {
+        return _value;
+    }
+
    private:
     E _value;
 };

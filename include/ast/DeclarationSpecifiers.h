@@ -30,7 +30,10 @@ class DeclarationSpecifiers : public VisitableNode<DeclarationSpecifiers> {
     };
 
     bool isTypedef() const {
-        // TODO isTypedef
+        if (!_storageClassSpecifiers) return false;
+        for (const auto& specifier : _storageClassSpecifiers->getNodes()) {
+            if (specifier->getValue() == StorageClassSpecifier::TYPEDEF) return true;
+        }
         return false;
     };
 
