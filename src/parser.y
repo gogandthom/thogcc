@@ -533,7 +533,7 @@ namespace yy {
 std::unique_ptr<Node> g_root;
 
 void parser::error(const std::string& msg) {
-    throw std::runtime_error(std::format("Error '{}' at line {} ", msg, scanner.lineno()));
+    throw thogcc::errors::ParseError(std::format("Error '{}' at line {} ", msg, scanner.lineno()));
 }
 
 }  // namespace yy
