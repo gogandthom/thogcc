@@ -61,7 +61,7 @@ class NodeList : public NodeListBase {  // Yes, this is correct. We don't use Vi
     NodeList() = default;
     NodeList(std::unique_ptr<T> node) {
         static_assert(std::derived_from<T, Node>, "T must derive from Node");
-        _nodes.push_back(std::move(node));
+        if (node) _nodes.push_back(std::move(node));
     };
 
     void pushBack(std::unique_ptr<T> node) {

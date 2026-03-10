@@ -14,9 +14,12 @@ class DeclarationSpecifiers : public VisitableNode<DeclarationSpecifiers> {
                           std::unique_ptr<Node> typeSpecifier)
         : _storageClassSpecifiers(std::make_unique<NodeList<ValueNode<StorageClassSpecifier>>>()),
           _typeSpecifiers(std::make_unique<NodeList<Node>>()) {
-        if (storageClassSpecifier)
+        if (storageClassSpecifier) {
             _storageClassSpecifiers->pushBack(std::move(storageClassSpecifier));
-        if (typeSpecifier) _typeSpecifiers->pushBack(std::move(typeSpecifier));
+        }
+        if (typeSpecifier) {
+            _typeSpecifiers->pushBack(std::move(typeSpecifier));
+        }
     };
 
     void pushBackStorage(std::unique_ptr<ValueNode<StorageClassSpecifier>> storageClassSpecifier) {
