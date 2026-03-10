@@ -42,6 +42,10 @@ class VisitableNode : public Base {
     void accept(visitors::Visitor& v) override {
         v.visit(static_cast<Derived&>(*this));
     }
+
+   private:
+    VisitableNode() = default;
+    friend Derived;
 };
 
 /// Non templated abstract base class for NodeList<T>.

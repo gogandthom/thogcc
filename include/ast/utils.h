@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string_view>
 
 #include "ast/fwd.h"  // IWYU pragma: keep
@@ -15,7 +16,7 @@ constexpr bool always_false = false;
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define V(NS, NAME) NAME,
 /// Enum class for all types of node
-enum class NodeKind { AST_NODES_ALL(V) };
+enum class NodeKind : std::uint8_t { AST_NODES_ALL(V) };
 #undef V
 
 template <typename T>
