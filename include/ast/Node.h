@@ -70,6 +70,12 @@ class NodeList : public NodeListBase {  // Yes, this is correct. We don't use Vi
     auto& getNodes() const {
         return _nodes;
     };
+    auto begin() const {
+        return _nodes.begin();
+    };
+    auto end() const {
+        return _nodes.end();
+    };
 
     size_t size() const override {
         return _nodes.size();
@@ -89,7 +95,7 @@ class NodeList : public NodeListBase {  // Yes, this is correct. We don't use Vi
     }
 
    private:
-    std::vector<std::unique_ptr<Node>> _nodes;
+    std::vector<std::unique_ptr<T>> _nodes;
 };
 
 /// Non templated abstract base class for ValueNode<E>

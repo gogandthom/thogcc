@@ -26,6 +26,11 @@ class DeclarationSpecifiers : public VisitableNode<DeclarationSpecifiers> {
         _typeSpecifiers->pushBack(std::move(typeSpecifier));
     };
 
+    bool isTypedef() const {
+        // TODO isTypedef
+        return false;
+    };
+
     auto* getStorageClassSpecifier() const {
         return _storageClassSpecifiers.get();
     };

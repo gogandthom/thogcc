@@ -1,6 +1,8 @@
 #pragma once
 
 #include <memory>
+#include <stdexcept>
+#include <string_view>
 #include <utility>
 
 #include "ast/Node.h"
@@ -16,6 +18,13 @@ class ArrayDeclarator : public VisitableNode<ArrayDeclarator, DeclaratorBase> {
     ArrayDeclarator(std::unique_ptr<DeclaratorBase> base,
                     std::unique_ptr<expressions::ConstantExpression> expr = nullptr)
         : _base(std::move(base)), _expr(std::move(expr)){};
+
+    std::string_view getIdentifier() const override {
+        if (!_base) {
+            throw std::runtime_error("getIdentifier() called on an abstract ArrayDeclarator.");
+        }
+        return _base->getIdentifier();
+    }
 
    private:
     std::unique_ptr<DeclaratorBase> _base;

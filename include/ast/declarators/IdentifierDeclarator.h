@@ -13,7 +13,7 @@ class IdentifierDeclarator : public VisitableNode<IdentifierDeclarator, Declarat
    public:
     IdentifierDeclarator(std::string identifier) : _identifier(std::move(identifier)){};
 
-    std::string_view getIdentifier() const {
+    std::string_view getIdentifier() const override {
         return _identifier;
     }
 

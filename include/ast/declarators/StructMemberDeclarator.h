@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string_view>
 #include <utility>
 
 #include "ast/Node.h"
@@ -14,6 +15,10 @@ class StructMemberDeclarator : public VisitableNode<StructMemberDeclarator, Decl
     StructMemberDeclarator(std::unique_ptr<DeclaratorBase> decl,
                            std::unique_ptr<expressions::ConstantExpression> expr = nullptr)
         : _decl(std::move(decl)), _expr(std::move(expr)){};
+
+    std::string_view getIdentifier() const override {
+        return _decl->getIdentifier();
+    };
 
    private:
     std::unique_ptr<DeclaratorBase> _decl;

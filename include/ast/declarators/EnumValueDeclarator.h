@@ -1,7 +1,10 @@
 #pragma once
 
+#include <cassert>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <string_view>
 #include <utility>
 
 #include "ast/Node.h"
@@ -15,6 +18,11 @@ class EnumValueDeclarator : public VisitableNode<EnumValueDeclarator, Declarator
     EnumValueDeclarator(std::string identifier,
                         std::unique_ptr<expressions::ConstantExpression> expr = nullptr)
         : _identifier(std::move(identifier)), _expr(std::move(expr)){};
+
+    std::string_view getIdentifier() const override {
+        throw std::runtime_error(
+            "getIdentifier() called on EnumValueDeclarator. This shouldn't happen.");
+    };
 
    private:
     std::string _identifier;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <stdexcept>
 #include <utility>
 
 #include "ast/Node.h"
@@ -13,6 +14,13 @@ class PointerDeclarator : public VisitableNode<PointerDeclarator, DeclaratorBase
     PointerDeclarator(std::unique_ptr<DeclaratorBase> ptr = nullptr) : _ptr(std::move(ptr)){};
     /// Attach node to leaf
     void attach(std::unique_ptr<DeclaratorBase> node);
+
+    std::string_view getIdentifier() const override {
+        if (!_ptr) {
+            throw std::runtime_error("getIndetifier() called on unattached PointerDeclarator.");
+        }
+        return _ptr->getIdentifier();
+    };
 
    private:
     std::unique_ptr<DeclaratorBase> _ptr;

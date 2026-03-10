@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string_view>
 #include <utility>
 
 #include "ast/Node.h"
@@ -26,6 +27,10 @@ class FunctionDeclarator : public VisitableNode<FunctionDeclarator, DeclaratorBa
         : _form(FunctionDeclaratorForm::KAndR),
           _base(std::move(base)),
           _identifiers(std::move(identifiers)){};
+
+    std::string_view getIdentifier() const override {
+        return _base->getIdentifier();
+    };
 
     auto getForm() const {
         return _form;
