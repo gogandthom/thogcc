@@ -18,8 +18,9 @@ BISON_TARGET(
     ThogParser
     ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.y
     ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.cpp
-    # generate parser.output
-    COMPILE_FLAGS "-v"
+    # Generate parser.output always,
+    # parse.trace only for debug builds
+    OPTIONS -v $<$<CONFIG:Debug>:-t>
 )
 
 FLEX_TARGET(
