@@ -30,7 +30,7 @@ class PrintVisitor : public DefaultVisitor {
     void printNode(int id, ast::Node& node);
 
     template <typename T>
-    void visitChild(int parent, std::string_view label, T* child);
+    void visitChild(int cur, std::string_view label, T* child);
 
     std::ostream& _out;
     int _id = 0;

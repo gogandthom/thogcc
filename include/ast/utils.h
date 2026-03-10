@@ -12,12 +12,11 @@ namespace thogcc::ast {
 template <class...>
 constexpr bool always_false = false;
 
-/// Enum class for all types of node
-enum class NodeKind {
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define V(NS, NAME) NAME,
-    AST_NODES_ALL(V)
+/// Enum class for all types of node
+enum class NodeKind { AST_NODES_ALL(V) };
 #undef V
-};
 
 template <typename T>
 struct NodeKindTrait;

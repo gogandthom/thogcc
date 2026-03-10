@@ -37,12 +37,9 @@ void PrintVisitor::visit(ast::Node& node) {
 
 void PrintVisitor::visit(ast::NodeListBase& node) {
     const int cur = _id;
-    if (!node.size()) {
-        _out << std::format("  n{}[/NodeList/]\n", _id);
-        return;
-    }
+    _out << std::format("  n{}[/NodeList/]\n", cur);
     for (size_t i = 0; i < node.size(); ++i) {
-        _out << std::format("  n{}[/NodeList/] --> n{}\n", cur, ++_id);
+        _out << std::format("  n{} --> n{}\n", cur, ++_id);
         node.getRawNode(i).accept(*this);  // Recursively visit each element
     }
 };

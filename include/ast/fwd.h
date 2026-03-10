@@ -2,6 +2,8 @@
 
 #include "ast/nodes.h"
 
+// NOLINTBEGIN(cppcoreguidelines-macro-usage,bugprone-macro-parentheses)
+
 // Forward declarations
 #define V(NS, NAME)        \
     namespace thogcc::NS { \
@@ -17,3 +19,5 @@ class NodeList;
 template <typename E>
 class ValueNode;
 }  // namespace thogcc::ast
+
+// NOLINTEND(cppcoreguidelines-macro-usage,bugprone-macro-parentheses)

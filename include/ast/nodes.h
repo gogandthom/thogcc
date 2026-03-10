@@ -1,5 +1,6 @@
 #pragma once
 
+// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define AST_NODES_ALL(V)                                 \
     /* Core things */                                    \
     V(ast, Node)                                         \
