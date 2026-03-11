@@ -10,7 +10,13 @@ namespace thogcc::visitors {
 /// See DefaultVisitor for fallthrough implementation.
 class Visitor {
    public:
+    Visitor() = default;
     virtual ~Visitor() = default;
+
+    Visitor(const Visitor&) = delete;
+    Visitor& operator=(const Visitor&) = delete;
+    Visitor(Visitor&&) = delete;
+    Visitor& operator=(Visitor&&) = delete;
 
 #define V(NS, NAME) virtual void visit(NS::NAME& node) = 0;
     AST_NODES_ALL(V)

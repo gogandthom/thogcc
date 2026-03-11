@@ -16,8 +16,6 @@ concept HasBase = requires { typename T::BaseType; };
 /// (eg. CastExpression -> ExpressionBase -> Node)
 class DefaultVisitor : public Visitor {
    public:
-    virtual ~DefaultVisitor() = default;
-
     template <typename T>
     void fallback(T& node) {
         if constexpr (std::is_same_v<T, ast::Node>) {
