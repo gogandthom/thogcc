@@ -23,6 +23,10 @@ class PointerDeclarator : public VisitableNode<PointerDeclarator, DeclaratorBase
         return _ptr->getIdentifier();
     };
 
+    auto* getPtr() const {
+        return _ptr.get();
+    }
+
    private:
     std::unique_ptr<DeclaratorBase> _ptr;
 };

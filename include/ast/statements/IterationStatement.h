@@ -35,6 +35,19 @@ class IterationStatement : public VisitableNode<IterationStatement, StatementBas
         std::unique_ptr<expressions::ExpressionBase> updateExpr,
         std::unique_ptr<StatementBase> statement);
 
+    auto* getStatement() const {
+        return _statement.get();
+    }
+    auto* getInitExpr() const {
+        return _initExpr.get();
+    }
+    auto* getCondExpr() const {
+        return _initExpr.get();
+    }
+    auto* getUpdateExpr() const {
+        return _updateExpr.get();
+    }
+
    private:
     IterationStatementType _type;
     std::unique_ptr<StatementBase> _statement;

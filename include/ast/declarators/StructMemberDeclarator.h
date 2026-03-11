@@ -20,6 +20,13 @@ class StructMemberDeclarator : public VisitableNode<StructMemberDeclarator, Decl
         return _decl->getIdentifier();
     };
 
+    auto* getDecl() const {
+        return _decl.get();
+    }
+    auto* getExpr() const {
+        return _expr.get();
+    }
+
    private:
     std::unique_ptr<DeclaratorBase> _decl;
     std::unique_ptr<expressions::ConstantExpression> _expr;

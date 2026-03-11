@@ -14,6 +14,13 @@ class TypeName : public VisitableNode<TypeName> {
              std::unique_ptr<declarators::DeclaratorBase> declarators = nullptr)
         : _specifiers(std::move(specifiers)), _declarator(std::move(declarators)){};
 
+    auto* getSpecifiers() const {
+        return _specifiers.get();
+    }
+    auto* getDeclarator() const {
+        return _declarator.get();
+    }
+
    private:
     std::unique_ptr<NodeList<Node>> _specifiers;
     std::unique_ptr<declarators::DeclaratorBase> _declarator;

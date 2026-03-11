@@ -14,6 +14,13 @@ class FunctionCallExpression : public VisitableNode<FunctionCallExpression, Expr
                            std::unique_ptr<NodeList<ExpressionBase>> args = nullptr)
         : _expr(std::move(expr)), _args(std::move(args)){};
 
+    auto* getExpr() const {
+        return _expr.get();
+    }
+    auto* getArgs() const {
+        return _args.get();
+    }
+
    private:
     std::unique_ptr<ExpressionBase> _expr;
     std::unique_ptr<NodeList<ExpressionBase>> _args;

@@ -24,6 +24,10 @@ class EnumValueDeclarator : public VisitableNode<EnumValueDeclarator, Declarator
             "getIdentifier() called on EnumValueDeclarator. This shouldn't happen.");
     };
 
+    auto* getExpr() const {
+        return _expr.get();
+    }
+
    private:
     std::string _identifier;
     std::unique_ptr<expressions::ConstantExpression> _expr;

@@ -14,6 +14,10 @@ class IncDecExpression : public VisitableNode<IncDecExpression, ExpressionBase> 
                      bool isPrefix = false)
         : _expr(std::move(expr)), _isDecrement(isDecrement), _isPrefix(isPrefix){};
 
+    auto* getExpr() const {
+        return _expr.get();
+    }
+
    private:
     std::unique_ptr<ExpressionBase> _expr;
     bool _isDecrement, _isPrefix;

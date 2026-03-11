@@ -15,6 +15,13 @@ class StructDeclaration : public VisitableNode<StructDeclaration, DeclarationBas
                       std::unique_ptr<NodeList<declarators::StructMemberDeclarator>> declarators)
         : _qualifiers(std::move(qualifiers)), _declarators(std::move(declarators)){};
 
+    auto* getQualifiers() const {
+        return _qualifiers.get();
+    }
+    auto* getDeclarators() const {
+        return _declarators.get();
+    }
+
    private:
     std::unique_ptr<NodeList<Node>> _qualifiers;
     std::unique_ptr<NodeList<declarators::StructMemberDeclarator>> _declarators;

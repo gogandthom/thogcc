@@ -13,6 +13,13 @@ class BinaryExpressionBase : public VisitableNode<BinaryExpressionBase, Expressi
     BinaryExpressionBase(std::unique_ptr<ExpressionBase> lhs, std::unique_ptr<ExpressionBase> rhs)
         : _lhs(std::move(lhs)), _rhs(std::move(rhs)){};
 
+    auto* getLhs() const {
+        return _lhs.get();
+    }
+    auto* getRhs() const {
+        return _rhs.get();
+    }
+
    private:
     std::unique_ptr<ExpressionBase> _lhs, _rhs;
 };

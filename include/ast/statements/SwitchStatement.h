@@ -15,6 +15,13 @@ class SwitchStatement : public VisitableNode<SwitchStatement, StatementBase> {
                     std::unique_ptr<StatementBase> statement)
         : _expr(std::move(expr)), _statement(std::move(statement)){};
 
+    auto* getExpr() const {
+        return _expr.get();
+    }
+    auto* getStatement() const {
+        return _statement.get();
+    }
+
    private:
     std::unique_ptr<expressions::ExpressionBase> _expr;
     std::unique_ptr<StatementBase> _statement;

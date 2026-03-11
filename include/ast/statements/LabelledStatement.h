@@ -14,6 +14,10 @@ class LabelledStatement : public VisitableNode<LabelledStatement, StatementBase>
     LabelledStatement(std::string identifier, std::unique_ptr<StatementBase> statement)
         : _identifier(std::move(identifier)), _statement(std::move(statement)){};
 
+    auto* getStatement() const {
+        return _statement.get();
+    }
+
    private:
     std::string _identifier;
     std::unique_ptr<StatementBase> _statement;

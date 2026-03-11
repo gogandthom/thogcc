@@ -23,6 +23,10 @@ class UnaryOperatorExpression : public VisitableNode<UnaryOperatorExpression, Ex
     UnaryOperatorExpression(UnaryOperatorType op, std::unique_ptr<ExpressionBase> expr)
         : _op(op), _expr(std::move(expr)){};
 
+    auto* getExpr() const {
+        return _expr.get();
+    }
+
    private:
     UnaryOperatorType _op;
     std::unique_ptr<ExpressionBase> _expr;

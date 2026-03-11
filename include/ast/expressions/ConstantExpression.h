@@ -12,6 +12,10 @@ class ConstantExpression : public VisitableNode<ConstantExpression, ExpressionBa
    public:
     ConstantExpression(std::unique_ptr<ExpressionBase> expr) : _expr(std::move(expr)){};
 
+    auto* getExpr() const {
+        return _expr.get();
+    }
+
    private:
     std::unique_ptr<ExpressionBase> _expr;
 };

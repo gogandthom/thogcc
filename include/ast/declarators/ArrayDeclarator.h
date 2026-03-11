@@ -26,6 +26,13 @@ class ArrayDeclarator : public VisitableNode<ArrayDeclarator, DeclaratorBase> {
         return _base->getIdentifier();
     }
 
+    auto* getBase() const {
+        return _base.get();
+    }
+    auto* getExpr() const {
+        return _expr.get();
+    }
+
    private:
     std::unique_ptr<DeclaratorBase> _base;
     std::unique_ptr<expressions::ConstantExpression> _expr;

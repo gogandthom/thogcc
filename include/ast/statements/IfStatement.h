@@ -18,6 +18,16 @@ class IfStatement : public VisitableNode<IfStatement, StatementBase> {
           _ifStatement(std::move(ifStatement)),
           _elseStatement(std::move(elseStatement)){};
 
+    auto* getExpr() const {
+        return _expr.get();
+    }
+    auto* getIfStatement() const {
+        return _ifStatement.get();
+    }
+    auto* getElseStatement() const {
+        return _elseStatement.get();
+    }
+
    private:
     std::unique_ptr<expressions::ExpressionBase> _expr;
     std::unique_ptr<StatementBase> _ifStatement;

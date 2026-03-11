@@ -17,6 +17,13 @@ class SwitchCaseStatement : public VisitableNode<SwitchCaseStatement, StatementB
     SwitchCaseStatement(std::unique_ptr<StatementBase> statement)
         : _expr(nullptr), _statement(std::move(statement)), _isDefault(true){};
 
+    auto* getExpr() const {
+        return _expr.get();
+    }
+    auto* getStatement() const {
+        return _statement.get();
+    }
+
    private:
     std::unique_ptr<expressions::ConstantExpression> _expr;
     std::unique_ptr<StatementBase> _statement;

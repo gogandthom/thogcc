@@ -15,6 +15,10 @@ class EnumSpecifier : public VisitableNode<EnumSpecifier> {
                   std::unique_ptr<NodeList<declarators::EnumValueDeclarator>> declarators = nullptr)
         : _identifier(std::move(identifier)), _declarators(std::move(declarators)){};
 
+    auto* getDeclarators() const {
+        return _declarators.get();
+    }
+
    private:
     std::string _identifier;
     std::unique_ptr<NodeList<declarators::EnumValueDeclarator>> _declarators;

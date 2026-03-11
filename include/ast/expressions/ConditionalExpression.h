@@ -15,6 +15,16 @@ class ConditionalExpression : public VisitableNode<ConditionalExpression, Expres
                           std::unique_ptr<ExpressionBase> elseExpr)
         : _cond(std::move(cond)), _ifExpr(std::move(ifExpr)), _elseExpr(std::move(elseExpr)){};
 
+    auto* getCond() const {
+        return _cond.get();
+    }
+    auto* getIfExpr() const {
+        return _ifExpr.get();
+    }
+    auto* getElseExpr() const {
+        return _elseExpr.get();
+    }
+
    private:
     std::unique_ptr<ExpressionBase> _cond, _ifExpr, _elseExpr;
 };

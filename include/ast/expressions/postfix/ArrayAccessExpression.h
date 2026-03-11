@@ -14,6 +14,13 @@ class ArrayAccessExpression : public VisitableNode<ArrayAccessExpression, Expres
                           std::unique_ptr<ExpressionBase> arrayExpr)
         : _expr(std::move(expr)), _arrayExpr(std::move(arrayExpr)){};
 
+    auto* getExpr() const {
+        return _expr.get();
+    }
+    auto* getArrayExpr() const {
+        return _arrayExpr.get();
+    }
+
    private:
     std::unique_ptr<ExpressionBase> _expr, _arrayExpr;
 };
