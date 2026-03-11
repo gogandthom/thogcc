@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <string_view>
 #include <utility>
 
 #include "ast/Node.h"

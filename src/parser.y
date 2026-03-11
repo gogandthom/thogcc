@@ -292,16 +292,19 @@ constant_expression
     ;
 
 declaration
-    : declaration_specifiers ';'                        { $$ = std::make_unique<Declaration>(std::move($1)); }
-    | declaration_specifiers init_declarator_list ';'   {
-                                                            if ($1->isTypedef()) {
-                                                                for (const auto& decl : *$2) {
-                                                                    auto name = decl->getIdentifier();
-                                                                    typedefTable.addType(std::string{name});
-                                                                }
+    : declaration_specifiers ';'                    { $$ = std::make_unique<Declaration>(std::move($1)); }
+    | declaration_specifiers init_declarator_list   {
+                                                        if ($1->isTypedef()) {
+                                                            for (const auto& decl : *$2) {
+                                                                auto name = decl->getIdentifier();
+                                                                typedefTable.addType(std::string{name});
                                                             }
-                                                            $$ = std::make_unique<Declaration>(std::move($1), std::move($2));
                                                         }
+                                                    } // Lexer always looks ahead, so must update typedefTable mid-rule
+                                            ';'
+                                                    {
+                                                        $$ = std::make_unique<Declaration>(std::move($1), std::move($2));
+                                                    }
     ;
 
 declaration_specifiers

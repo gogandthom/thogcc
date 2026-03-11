@@ -99,7 +99,7 @@ class NodeList : public NodeListBase {  // Yes, this is correct. We don't use Vi
     }
 
    private:
-    std::vector<std::unique_ptr<T>> _nodes;
+    std::vector<std::unique_ptr<T>> _nodes{};
 };
 
 /// Non templated abstract base class for ValueNode<E>
