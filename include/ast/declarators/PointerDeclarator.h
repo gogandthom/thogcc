@@ -3,6 +3,7 @@
 #include <memory>
 #include <utility>
 
+#include "ast/Node.h"
 #include "ast/TypeQualifier.h"
 #include "ast/declarators/DeclaratorBase.h"
 

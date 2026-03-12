@@ -16,7 +16,9 @@ class DeclarationSpecifiers : public Node {
                           std::unique_ptr<ValueNode<TypeQualifier>> typeQualifier)
         : _storageClassSpecifiers(std::make_unique<NodeList<ValueNode<StorageClassSpecifier>>>(
               std::move(storageClassSpecifier))),
-          _typeSpecifiers(std::make_unique<NodeList<Node>>(std::move(typeSpecifier))) {};
+          _typeSpecifiers(std::make_unique<NodeList<Node>>(std::move(typeSpecifier))),
+          _typeQualifiers(
+              std::make_unique<NodeList<ValueNode<TypeQualifier>>>(std::move(typeQualifier))) {};
 
     void pushBackStorage(std::unique_ptr<ValueNode<StorageClassSpecifier>> storageClassSpecifier) {
         _storageClassSpecifiers->pushBack(std::move(storageClassSpecifier));
