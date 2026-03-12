@@ -12,6 +12,13 @@
 
 namespace thogcc::visitors {
 
+template <class... Ts>
+struct overload : Ts... {
+    using Ts::operator()...;
+};
+template <class... Ts>
+overload(Ts...) -> overload<Ts...>;
+
 PrintVisitor::PrintVisitor(std::ostream& out) : _out(out) {
     _out << "%%{init: {\"flowchart\": {\"defaultRenderer\": \"elk\"}} }%%\n";
     _out << "flowchart TD\n";
@@ -70,6 +77,14 @@ void PrintVisitor::visit(ast::declarations::FunctionDefinition& node) {
     visitChild(cur, "Statement", node.getStatement());
 };
 
+void PrintVisitor::visit(ast::declarators::ArrayDeclarator& node) {
+    const int cur = _id;
+    printNode(cur, node);
+
+    visitChild(cur, "DeclaratorBase", node.getBase());
+    visitChild(cur, "Expression", node.getExpr());
+}
+
 void PrintVisitor::visit(ast::declarators::FunctionDeclarator& node) {
     const int cur = _id;
     auto form = node.getForm();
@@ -87,6 +102,13 @@ void PrintVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
     printNode(cur, node);
     _out << std::format("  n{} -->|Identifier| n{}[{}]\n", cur, ++_id, node.getIdentifier());
 };
+
+void PrintVisitor::visit(ast::declarators::InitDeclarator& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "Declarator", node.getDecl());
+    visitChild(cur, "Initializer", node.getInitializer());
+}
 
 void PrintVisitor::visit(ast::expressions::IdentifierExpression& node) {
     const int cur = _id;
@@ -115,6 +137,22 @@ void PrintVisitor::visit(ast::expressions::prefix::SizeofExpression& node) {
     std::visit([this, cur](const auto& ptr) { visitChild(cur, "Expr", ptr.get()); },
                node.getExpr());
 };
+
+void PrintVisitor::visit(ast::expressions::Initializer& node) {
+    const int cur = _id;
+    printNode(cur, node);
+
+    std::visit(
+        overload{
+            [this, cur](const std::unique_ptr<ast::expressions::ExpressionBase>& e) {
+                visitChild(cur, "Expression", e.get());
+            },
+            [this, cur](const std::unique_ptr<ast::NodeList<ast::expressions::Initializer>>& e) {
+                visitChild(cur, "InitializerList", e.get());
+            },
+        },
+        node.getChild());
+}
 
 void PrintVisitor::visit(ast::statements::CompoundStatement& node) {
     const int cur = _id;
