@@ -128,6 +128,10 @@
 %type <prefix::UnaryOperatorType> unary_operator
 %type <binary::AssignmentExpressionType> assignment_operator
 
+// Qualifiers
+%type <std::unique_ptr<ValueNode<TypeQualifier>>> type_qualifier
+%type <std::unique_ptr<NodeList<ValueNode<TypeQualifier>>>> type_qualifier_list
+
 
 %start ROOT
 %%
@@ -308,10 +312,12 @@ declaration
     ;
 
 declaration_specifiers
-    : storage_class_specifier                           { $$ = std::make_unique<DeclarationSpecifiers>(std::move($1), nullptr); }
+    : storage_class_specifier                           { $$ = std::make_unique<DeclarationSpecifiers>(std::move($1), nullptr, nullptr); }
     | storage_class_specifier declaration_specifiers    { $2->pushBackStorage(std::move($1)); $$ = std::move($2); }
-    | type_specifier                                    { $$ = std::make_unique<DeclarationSpecifiers>(nullptr, std::move($1)); }
-    | type_specifier declaration_specifiers             { $2->pushBackType(std::move($1)); $$ = std::move($2); }
+    | type_specifier                                    { $$ = std::make_unique<DeclarationSpecifiers>(nullptr, std::move($1), nullptr); }
+    | type_specifier declaration_specifiers             { $2->pushBackTypeSpecifier(std::move($1)); $$ = std::move($2); }
+    | type_qualifier                                    { $$ = std::make_unique<DeclarationSpecifiers>(nullptr, nullptr, std::move($1)); }
+    | type_qualifier declaration_specifiers             { $2->pushBackTypeQualifier(std::move($1)); $$ = std::move($2); }
     ;
 
 init_declarator_list
@@ -365,6 +371,8 @@ struct_declaration
 specifier_qualifier_list
     : type_specifier specifier_qualifier_list   { $2->pushBack(std::move($1)); $$ = std::move($2); }
     | type_specifier                            { $$ = std::make_unique<NodeList<Node>>(std::move($1)); }
+    | type_qualifier specifier_qualifier_list   { $2->pushBack(std::move($1)); $$ = std::move($2); }
+    | type_qualifier                            { $$ = std::make_unique<NodeList<Node>>(std::move($1)); }
     ;
 
 struct_declarator_list
@@ -389,6 +397,11 @@ enumerator_list
     | enumerator_list ',' enumerator    { $1->pushBack(std::move($3)); $$ = std::move($1); }
     ;
 
+type_qualifier
+    : CONST     { std::make_unique<ValueNode<TypeQualifier>>(TypeQualifier::CONST); }
+    | VOLATILE  { std::make_unique<ValueNode<TypeQualifier>>(TypeQualifier::VOLATILE); }
+    ;
+
 enumerator
     : IDENTIFIER                            { $$ = std::make_unique<EnumValueDeclarator>($1); }
     | IDENTIFIER '=' constant_expression    { $$ = std::make_unique<EnumValueDeclarator>($1, std::move($3)); }
@@ -410,8 +423,15 @@ direct_declarator
     ;
 
 pointer
-    : '*'           { $$ = std::make_unique<PointerDeclarator>(); }
-    | '*' pointer   { $$ = std::make_unique<PointerDeclarator>(std::move($2)); }
+    : '*'                               { $$ = std::make_unique<PointerDeclarator>(); }
+    | '*' type_qualifier_list           { $$ = std::make_unique<PointerDeclarator>(std::move($2)); }
+    | '*' pointer                       { $$ = std::make_unique<PointerDeclarator>(nullptr, std::move($2)); }
+    | '*' type_qualifier_list pointer   { $$ = std::make_unique<PointerDeclarator>(std::move($2), std::move($3)); }
+    ;
+
+type_qualifier_list
+    : type_qualifier                        { $$ = std::make_unique<NodeList<ValueNode<TypeQualifier>>>(std::move($1)); }
+    | type_qualifier type_qualifier_list    { $2->pushBack(std::move($1)); $$ = std::move($2); }
     ;
 
 parameter_list
