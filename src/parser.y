@@ -426,7 +426,7 @@ pointer
 
 type_qualifier_list
     : type_qualifier                        { $$ = std::make_unique<NodeList<ValueNode<TypeQualifier>>>(std::move($1)); }
-    | type_qualifier type_qualifier_list    { $2->pushBack(std::move($1)); $$ = std::move($1); }
+    | type_qualifier type_qualifier_list    { $2->pushBack(std::move($1)); $$ = std::move($2); }
     ;
 
 parameter_list
