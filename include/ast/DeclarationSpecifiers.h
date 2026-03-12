@@ -40,10 +40,6 @@ class DeclarationSpecifiers : public VisitableNode<DeclarationSpecifiers> {
         _typeQualifiers->pushBack(std::move(typeQualifier));
     }
 
-    void pushBackTypeQualifier(std::unique_ptr<ValueNode<TypeQualifier>> typeQualifier) {
-        _typeQualifiers->pushBack(std::move(typeQualifier));
-    }
-
     bool isTypedef() const {
         if (!_storageClassSpecifiers) return false;
         for (const auto& specifier : _storageClassSpecifiers->getNodes()) {
