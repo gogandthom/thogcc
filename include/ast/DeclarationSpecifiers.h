@@ -12,14 +12,21 @@ namespace thogcc::ast {
 class DeclarationSpecifiers : public VisitableNode<DeclarationSpecifiers> {
    public:
     DeclarationSpecifiers(std::unique_ptr<ValueNode<StorageClassSpecifier>> storageClassSpecifier,
-                          std::unique_ptr<Node> typeSpecifier)
+                          std::unique_ptr<Node> typeSpecifier,
+                          std::unique_ptr<ValueNode<TypeQualifier>> typeQualifier)
         : _storageClassSpecifiers(std::make_unique<NodeList<ValueNode<StorageClassSpecifier>>>()),
-          _typeSpecifiers(std::make_unique<NodeList<Node>>()) {
+          _typeSpecifiers(std::make_unique<NodeList<Node>>()),
+          _typeQualifiers(std::make_unique<NodeList<ValueNode<TypeQualifier>>>()) {
         if (storageClassSpecifier) {
             _storageClassSpecifiers->pushBack(std::move(storageClassSpecifier));
         }
+
         if (typeSpecifier) {
             _typeSpecifiers->pushBack(std::move(typeSpecifier));
+        }
+
+        if (typeQualifier) {
+            _typeQualifiers->pushBack(std::move(typeQualifier));
         }
     };
 

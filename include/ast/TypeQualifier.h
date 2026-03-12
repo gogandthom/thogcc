@@ -4,9 +4,12 @@
 
 namespace thogcc::ast {
 
-enum class TypeQualifier : std::uint8_t {
-    CONST,
-    VOLATILE,
-};
+#define TYPE_QUALIFIER \
+    X(CONST)           \
+    X(VOLATILE)
 
-}
+#define X(VAL) VAL,
+enum class TypeQualifier : std::uint8_t { TYPE_QUALIFIER };
+#undef X
+
+}  // namespace thogcc::ast
