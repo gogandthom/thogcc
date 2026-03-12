@@ -13,7 +13,6 @@ namespace thogcc::ast {
 template <class...>
 constexpr bool always_false = false;
 
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define V(NS, NAME) NAME,
 /// Enum class for all types of node
 enum class NodeKind : std::uint8_t { AST_NODES_ALL(V) };

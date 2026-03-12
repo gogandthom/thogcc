@@ -18,7 +18,6 @@ namespace thogcc::ast {
     X(ENUM)            \
     X(TYPE_NAME)
 
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define X(VAL) VAL,
 enum class TypeSpecifier : std::uint8_t { TYPE_SPECIFIER };
 #undef X

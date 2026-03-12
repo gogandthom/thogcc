@@ -8,7 +8,7 @@
 
 namespace thogcc::visitors {
 
-void RecursiveVisitor::visit(ast::Node& node) {
+void RecursiveVisitor::visit(ast::Node& /* node */) {
     assert(false);
 }
 
@@ -18,7 +18,7 @@ void RecursiveVisitor::visit(ast::NodeListBase& node) {
     }
 }
 
-void RecursiveVisitor::visit(ast::ValueNodeBase& node) {}
+void RecursiveVisitor::visit(ast::ValueNodeBase& /* node */) {}
 
 void RecursiveVisitor::visit(ast::DeclarationSpecifiers& node) {
     traverse(node.getStorageClassSpecifier());
@@ -38,7 +38,7 @@ void RecursiveVisitor::visit(ast::TypeName& node) {
     traverse(node.getDeclarator());
 }
 
-void RecursiveVisitor::visit(ast::declarations::DeclarationBase& node) {}
+void RecursiveVisitor::visit(ast::declarations::DeclarationBase& /* node */) {}
 
 void RecursiveVisitor::visit(ast::declarations::Declaration& node) {
     traverse(node.getSpecifiers());
@@ -62,7 +62,7 @@ void RecursiveVisitor::visit(ast::declarations::StructDeclaration& node) {
     traverse(node.getDeclarators());
 }
 
-void RecursiveVisitor::visit(ast::declarators::DeclaratorBase& node) {}
+void RecursiveVisitor::visit(ast::declarators::DeclaratorBase& /* node */) {}
 
 void RecursiveVisitor::visit(ast::declarators::ArrayDeclarator& node) {
     traverse(node.getBase());
@@ -79,7 +79,7 @@ void RecursiveVisitor::visit(ast::declarators::FunctionDeclarator& node) {
     traverse(node.getParams());
 }
 
-void RecursiveVisitor::visit(ast::declarators::IdentifierDeclarator& node) {}
+void RecursiveVisitor::visit(ast::declarators::IdentifierDeclarator& /* node */) {}
 
 void RecursiveVisitor::visit(ast::declarators::InitDeclarator& node) {
     traverse(node.getDecl());
@@ -95,7 +95,7 @@ void RecursiveVisitor::visit(ast::declarators::StructMemberDeclarator& node) {
     traverse(node.getExpr());
 }
 
-void RecursiveVisitor::visit(ast::expressions::ExpressionBase& node) {}
+void RecursiveVisitor::visit(ast::expressions::ExpressionBase& /* node */) {}
 
 void RecursiveVisitor::visit(ast::expressions::CastExpression& node) {
     traverse(node.getExpr());
@@ -112,7 +112,7 @@ void RecursiveVisitor::visit(ast::expressions::ConstantExpression& node) {
     traverse(node.getExpr());
 }
 
-void RecursiveVisitor::visit(ast::expressions::IdentifierExpression& node) {}
+void RecursiveVisitor::visit(ast::expressions::IdentifierExpression& /* node */) {}
 
 void RecursiveVisitor::visit(ast::expressions::IncDecExpression& node) {
     traverse(node.getExpr());
@@ -126,7 +126,7 @@ void RecursiveVisitor::visit(ast::expressions::ListExpression& node) {
     traverse(node.getList());
 }
 
-void RecursiveVisitor::visit(ast::expressions::PrimaryExpression& node) {}
+void RecursiveVisitor::visit(ast::expressions::PrimaryExpression& /* node */) {}
 
 void RecursiveVisitor::visit(ast::expressions::binary::BinaryExpressionBase& node) {
     traverse(node.getLhs());
@@ -183,7 +183,7 @@ void RecursiveVisitor::visit(ast::expressions::prefix::UnaryOperatorExpression& 
     traverse(node.getExpr());
 }
 
-void RecursiveVisitor::visit(ast::statements::StatementBase& node) {}
+void RecursiveVisitor::visit(ast::statements::StatementBase& /* node */) {}
 
 void RecursiveVisitor::visit(ast::statements::CompoundStatement& node) {
     traverse(node.getStatementList());
@@ -194,7 +194,7 @@ void RecursiveVisitor::visit(ast::statements::ExpressionStatement& node) {
     traverse(node.getExpr());
 }
 
-void RecursiveVisitor::visit(ast::statements::GotoStatement& node) {}
+void RecursiveVisitor::visit(ast::statements::GotoStatement& /* node */) {}
 
 void RecursiveVisitor::visit(ast::statements::IfStatement& node) {
     traverse(node.getExpr());
@@ -213,7 +213,7 @@ void RecursiveVisitor::visit(ast::statements::LabelledStatement& node) {
     traverse(node.getStatement());
 }
 
-void RecursiveVisitor::visit(ast::statements::LoopControlStatement& node) {}
+void RecursiveVisitor::visit(ast::statements::LoopControlStatement& /* node */) {}
 
 void RecursiveVisitor::visit(ast::statements::ReturnStatement& node) {
     traverse(node.getExpr());

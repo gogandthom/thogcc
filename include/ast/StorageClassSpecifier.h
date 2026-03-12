@@ -11,7 +11,6 @@ namespace thogcc::ast {
     X(AUTO)                     \
     X(REGISTER)
 
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define X(VAL) VAL,
 enum class StorageClassSpecifier : std::uint8_t { STORAGE_CLASS_SPECIFIER };
 #undef X
