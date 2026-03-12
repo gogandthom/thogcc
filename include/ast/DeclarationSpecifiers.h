@@ -20,9 +20,11 @@ class DeclarationSpecifiers : public VisitableNode<DeclarationSpecifiers> {
         if (storageClassSpecifier) {
             _storageClassSpecifiers->pushBack(std::move(storageClassSpecifier));
         }
+
         if (typeSpecifier) {
             _typeSpecifiers->pushBack(std::move(typeSpecifier));
         }
+
         if (typeQualifier) {
             _typeQualifiers->pushBack(std::move(typeQualifier));
         }
@@ -34,6 +36,10 @@ class DeclarationSpecifiers : public VisitableNode<DeclarationSpecifiers> {
     void pushBackTypeSpecifier(std::unique_ptr<Node> typeSpecifier) {
         _typeSpecifiers->pushBack(std::move(typeSpecifier));
     }
+    void pushBackTypeQualifier(std::unique_ptr<ValueNode<TypeQualifier>> typeQualifier) {
+        _typeQualifiers->pushBack(std::move(typeQualifier));
+    }
+
     void pushBackTypeQualifier(std::unique_ptr<ValueNode<TypeQualifier>> typeQualifier) {
         _typeQualifiers->pushBack(std::move(typeQualifier));
     }
@@ -52,6 +58,10 @@ class DeclarationSpecifiers : public VisitableNode<DeclarationSpecifiers> {
     auto* getTypeSpecifier() const {
         return _typeSpecifiers.get();
     };
+
+    auto* getTypeQualifier() const {
+        return _typeQualifiers.get();
+    }
 
    private:
     std::unique_ptr<NodeList<ValueNode<StorageClassSpecifier>>> _storageClassSpecifiers;

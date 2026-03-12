@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "ast/StorageClassSpecifier.h"
+#include "ast/TypeQualifier.h"
 #include "ast/TypeSpecifier.h"
 #include "ast/utils.h"
 #include "visitors/Visitor.h"
@@ -114,7 +115,7 @@ template <typename E>
 class ValueNode
     : public ValueNodeBase {  // Same as NodeList, we will override getKind, accept ourselves
    public:
-    ValueNode(E value) : _value(value){};
+    ValueNode(E value) : _value(value) {};
     std::string getLabel() override {
         if constexpr (std::is_same_v<E, TypeSpecifier>) {
             switch (_value) {
@@ -131,6 +132,13 @@ class ValueNode
         return #VAL;
                 STORAGE_CLASS_SPECIFIER
 #undef X
+            }
+        } else if constexpr (std::is_same_v<E, TypeQualifier>) {
+            switch (_value) {
+#define X(VAL)   \
+    case E::VAL: \
+        return #VAL;
+                TYPE_QUALIFIER
             }
         } else if constexpr (std::is_convertible_v<E, std::string>) {
             return _value;
