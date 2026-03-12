@@ -5,7 +5,7 @@ build/c_compiler: build/Makefile
 
 build/Makefile: CMakeLists.txt
 	mkdir -p build
-	cmake -S . -B build
+	cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
 
 test: build/c_compiler
 	ctest --test-dir build/

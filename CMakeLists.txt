@@ -14,12 +14,20 @@ endif()
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
+# Dockerfile has old CMake, so cannot use OPTIONS and generator expressions,
+# must instead do this bullshit.
+set(BISON_FLAGS "-v")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(BISON_FLAGS "${BISON_FLAGS} -t")
+endif()
+
 BISON_TARGET(
     ThogParser
     ${CMAKE_CURRENT_SOURCE_DIR}/src/parser.y
     ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.cpp
-    # generate parser.output
-    COMPILE_FLAGS "-v"
+    # Generate parser.output always,
+    # parse.trace only for debug builds
+    COMPILE_FLAGS "${BISON_FLAGS}"
 )
 
 FLEX_TARGET(
