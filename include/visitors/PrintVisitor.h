@@ -23,21 +23,35 @@ class PrintVisitor : public DefaultVisitor {
     void visit(ast::declarations::FunctionDefinition& node) override;
 
     // declarators
-    void visit(ast::declarators::ArrayDeclarator& node);
+    void visit(ast::declarators::ArrayDeclarator& node) override;
     void visit(ast::declarators::FunctionDeclarator& node) override;
     void visit(ast::declarators::IdentifierDeclarator& node) override;
     void visit(ast::declarators::InitDeclarator& node) override;
+    void visit(ast::declarators::EnumValueDeclarator& node) override;
 
     // expressions
+    void visit(ast::expressions::CastExpression& node) override;
+    void visit(ast::expressions::ConditionalExpression& node) override;
+    void visit(ast::expressions::ConstantExpression& node) override;
     void visit(ast::expressions::IdentifierExpression& node) override;
+    void visit(ast::expressions::IncDecExpression& node) override;
+    void visit(ast::expressions::Initializer& node) override;
     void visit(ast::expressions::ListExpression& node) override;
     void visit(ast::expressions::PrimaryExpression& node) override;
+
+    void visit(ast::expressions::postfix::ArrayAccessExpression& node) override;
+    void visit(ast::expressions::postfix::FunctionCallExpression& node) override;
+    void visit(ast::expressions::postfix::MemberAccessExpression& node) override;
+
     void visit(ast::expressions::prefix::SizeofExpression& node) override;
-    void visit(ast::expressions::Initializer& node) override;
+    void visit(ast::expressions::prefix::UnaryOperatorExpression& node) override;
 
     // statements
     void visit(ast::statements::CompoundStatement& node) override;
     void visit(ast::statements::ReturnStatement& node) override;
+
+    // specifiers
+    void visit(ast::EnumSpecifier& node) override;
 
    private:
     void printNode(int id, ast::Node& node);

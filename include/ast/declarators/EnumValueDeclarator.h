@@ -17,11 +17,12 @@ class EnumValueDeclarator : public VisitableNode<EnumValueDeclarator, Declarator
    public:
     EnumValueDeclarator(std::string identifier,
                         std::unique_ptr<expressions::ConstantExpression> expr = nullptr)
-        : _identifier(std::move(identifier)), _expr(std::move(expr)){};
+        : _identifier(std::move(identifier)), _expr(std::move(expr)) {};
 
     std::string_view getIdentifier() const override {
         throw std::runtime_error(
-            "getIdentifier() called on EnumValueDeclarator. This shouldn't happen.");
+            "getIdentifier() called on EnumValueDeclarator. This shouldn't happen.");  // TODO:
+                                                                                       // why??
     };
 
     auto* getExpr() const {

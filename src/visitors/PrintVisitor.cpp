@@ -110,11 +110,47 @@ void PrintVisitor::visit(ast::declarators::InitDeclarator& node) {
     visitChild(cur, "Initializer", node.getInitializer());
 }
 
+void PrintVisitor::visit(ast::declarators::EnumValueDeclarator& node) {
+    const int cur = _id;
+    _out << std::format(
+        "  n{}[{}]\n", cur,
+        "an identifier" /*node.getIdentifier()*/);  // TODO: why is this marked as not used??
+    visitChild(cur, "ConstExpr", node.getExpr());
+}
+
+void PrintVisitor::visit(ast::expressions::CastExpression& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "CastType", node.getTypeName());
+    visitChild(cur, "Expr", node.getExpr());
+}
+
+void PrintVisitor::visit(ast::expressions::ConditionalExpression& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "Condition", node.getCond());
+    visitChild(cur, "If", node.getIfExpr());
+    visitChild(cur, "Else", node.getElseExpr());
+}
+
+void PrintVisitor::visit(ast::expressions::ConstantExpression& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "Expr", node.getExpr());
+}
+
 void PrintVisitor::visit(ast::expressions::IdentifierExpression& node) {
     const int cur = _id;
     printNode(cur, node);
     _out << std::format("  n{} -->|Identifier| n{}[{}]\n", cur, ++_id, node.getIdentifier());
 };
+
+void PrintVisitor::visit(ast::expressions::IncDecExpression& node) {
+    const int cur = _id;
+    _out << std::format("  n{}[\"{}{} ({})\"]\n", cur, node.getIsPrefix() ? "Prefix" : "Postfix",
+                        ast::nodeKindName(node.getKind()), node.getIsDecrement() ? "Dec" : "Inc");
+    visitChild(cur, "Expr", node.getExpr());
+}
 
 void PrintVisitor::visit(ast::expressions::ListExpression& node) {
     const int cur = _id;
@@ -131,12 +167,60 @@ void PrintVisitor::visit(ast::expressions::PrimaryExpression& node) {
         value);
 };
 
+void PrintVisitor::visit(ast::expressions::postfix::ArrayAccessExpression& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "Array", node.getArray());
+    visitChild(cur, "Index", node.getIndex());
+}
+
+void PrintVisitor::visit(ast::expressions::postfix::FunctionCallExpression& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "Function", node.getExpr());
+    visitChild(cur, "Args", node.getArgs());
+}
+
+void PrintVisitor::visit(ast::expressions::postfix::MemberAccessExpression& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "Parent", node.getExpr());
+    _out << std::format("  n{} -->|Identifier| n{}[{}]\n", cur, ++_id, node.getIdentifier());
+}
+
 void PrintVisitor::visit(ast::expressions::prefix::SizeofExpression& node) {
     const int cur = _id;
     printNode(cur, node);
     std::visit([this, cur](const auto& ptr) { visitChild(cur, "Expr", ptr.get()); },
                node.getExpr());
 };
+
+void PrintVisitor::visit(ast::expressions::prefix::UnaryOperatorExpression& node) {
+    const int cur = _id;
+    char symbol = '?';
+    switch (node.getType()) {
+        case ast::expressions::prefix::UnaryOperatorType::ADDRESSOF:
+            symbol = '&';
+            break;
+        case ast::expressions::prefix::UnaryOperatorType::INDIRECTION:
+            symbol = '*';
+            break;
+        case ast::expressions::prefix::UnaryOperatorType::PLUS:
+            symbol = '+';
+            break;
+        case ast::expressions::prefix::UnaryOperatorType::MINUS:
+            symbol = '-';
+            break;
+        case ast::expressions::prefix::UnaryOperatorType::BITWISE_NOT:
+            symbol = '~';
+            break;
+        case ast::expressions::prefix::UnaryOperatorType::LOGICAL_NOT:
+            symbol = '!';
+            break;
+    }
+    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), symbol);
+    visitChild(cur, "Expr", node.getExpr());
+}
 
 void PrintVisitor::visit(ast::expressions::Initializer& node) {
     const int cur = _id;
@@ -166,5 +250,11 @@ void PrintVisitor::visit(ast::statements::ReturnStatement& node) {
     printNode(cur, node);
     visitChild(cur, "Expr", node.getExpr());
 };
+
+void PrintVisitor::visit(ast::EnumSpecifier& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "Declarators", node.getDeclarators());
+}
 
 }  // namespace thogcc::visitors
