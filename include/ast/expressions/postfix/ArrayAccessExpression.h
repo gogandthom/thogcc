@@ -10,19 +10,19 @@ namespace thogcc::ast::expressions::postfix {
 
 class ArrayAccessExpression : public VisitableNode<ArrayAccessExpression, ExpressionBase> {
    public:
-    ArrayAccessExpression(std::unique_ptr<ExpressionBase> expr,
-                          std::unique_ptr<ExpressionBase> arrayExpr)
-        : _expr(std::move(expr)), _arrayExpr(std::move(arrayExpr)){};
+    ArrayAccessExpression(std::unique_ptr<ExpressionBase> array,
+                          std::unique_ptr<ExpressionBase> index)
+        : _array(std::move(array)), _index(std::move(index)) {};
 
-    auto* getExpr() const {
-        return _expr.get();
+    auto* getArray() const {
+        return _array.get();
     }
-    auto* getArrayExpr() const {
-        return _arrayExpr.get();
+    auto* getIndex() const {
+        return _index.get();
     }
 
    private:
-    std::unique_ptr<ExpressionBase> _expr, _arrayExpr;
+    std::unique_ptr<ExpressionBase> _array, _index;
 };
 
 }  // namespace thogcc::ast::expressions::postfix

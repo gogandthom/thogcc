@@ -162,8 +162,8 @@ void RecursiveVisitor::visit(ast::expressions::binary::ShiftExpression& node) {
 }
 
 void RecursiveVisitor::visit(ast::expressions::postfix::ArrayAccessExpression& node) {
-    traverse(node.getArrayExpr());
-    traverse(node.getExpr());
+    traverse(node.getIndex());
+    traverse(node.getArray());
 }
 
 void RecursiveVisitor::visit(ast::expressions::postfix::FunctionCallExpression& node) {
