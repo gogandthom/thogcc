@@ -167,6 +167,147 @@ void PrintVisitor::visit(ast::expressions::PrimaryExpression& node) {
         value);
 };
 
+void PrintVisitor::visit(ast::expressions::binary::AddMultExpression& node) {
+    const int cur = _id;
+    char op = '?';
+    switch (node.getOp()) {
+        case ast::expressions::binary::AddMultExpressionType::ADD:
+            op = '+';
+            break;
+        case ast::expressions::binary::AddMultExpressionType::SUB:
+            op = '-';
+            break;
+        case ast::expressions::binary::AddMultExpressionType::MUL:
+            op = '*';
+            break;
+        case ast::expressions::binary::AddMultExpressionType::DIV:
+            op = '/';
+            break;
+        case ast::expressions::binary::AddMultExpressionType::REM:
+            op = '%';
+            break;
+    }
+    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
+    visitChild(cur, "LHS", node.getLhs());
+    visitChild(cur, "RHS", node.getRhs());
+}
+
+void PrintVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
+    const int cur = _id;
+    std::string op = "?";
+    switch (node.getOp()) {
+        case ast::expressions::binary::AssignmentExpressionType::ASSIGN:
+            op = "=";
+            break;
+        case ast::expressions::binary::AssignmentExpressionType::MUL_ASSIGN:
+            op = "*=";
+            break;
+        case ast::expressions::binary::AssignmentExpressionType::DIV_ASSIGN:
+            op = "/=";
+            break;
+        case ast::expressions::binary::AssignmentExpressionType::MOD_ASSIGN:
+            op = "%=";
+            break;
+        case ast::expressions::binary::AssignmentExpressionType::ADD_ASSIGN:
+            op = "+=";
+            break;
+        case ast::expressions::binary::AssignmentExpressionType::SUB_ASSIGN:
+            op = "-=";
+            break;
+        case ast::expressions::binary::AssignmentExpressionType::LEFT_ASSIGN:
+            op = "<<=";
+            break;
+        case ast::expressions::binary::AssignmentExpressionType::RIGHT_ASSIGN:
+            op = ">>=";
+            break;
+        case ast::expressions::binary::AssignmentExpressionType::AND_ASSIGN:
+            op = "&=";
+            break;
+        case ast::expressions::binary::AssignmentExpressionType::XOR_ASSIGN:
+            op = "^=";
+            break;
+        case ast::expressions::binary::AssignmentExpressionType::OR_ASSIGN:
+            op = "|=";
+            break;
+    }
+    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
+    visitChild(cur, "LHS", node.getLhs());
+    visitChild(cur, "RHS", node.getRhs());
+}
+
+void PrintVisitor::visit(ast::expressions::binary::BitwiseExpression& node) {
+    const int cur = _id;
+    char op = '?';
+    switch (node.getOp()) {
+        case ast::expressions::binary::BitwiseExpressionType::AND:
+            op = '&';
+            break;
+        case ast::expressions::binary::BitwiseExpressionType::OR:
+            op = '|';
+            break;
+        case ast::expressions::binary::BitwiseExpressionType::XOR:
+            op = '^';
+            break;
+    }
+    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
+    visitChild(cur, "LHS", node.getLhs());
+    visitChild(cur, "RHS", node.getRhs());
+}
+
+void PrintVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
+    const int cur = _id;
+    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()),
+                        node.getIsNe() ? "!=" : "==");
+    visitChild(cur, "LHS", node.getLhs());
+    visitChild(cur, "RHS", node.getRhs());
+}
+
+void PrintVisitor::visit(ast::expressions::binary::LogicalExpression& node) {
+    const int cur = _id;
+    std::string op = "??";
+    switch (node.getOp()) {
+        case ast::expressions::binary::LogicalExpressionType::AND:
+            op = '&&';
+            break;
+        case ast::expressions::binary::LogicalExpressionType::OR:
+            op = '||';
+            break;
+    }
+    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
+    visitChild(cur, "LHS", node.getLhs());
+    visitChild(cur, "RHS", node.getRhs());
+}
+
+void PrintVisitor::visit(ast::expressions::binary::RelationalExpression& node) {
+    const int cur = _id;
+    std::string op = "??";
+    switch (node.getOp()) {
+        case ast::expressions::binary::RelationalExpressionType::L:
+            op = '<';
+            break;
+        case ast::expressions::binary::RelationalExpressionType::G:
+            op = '>';
+            break;
+        case ast::expressions::binary::RelationalExpressionType::LE:
+            op = '<=';
+            break;
+        case ast::expressions::binary::RelationalExpressionType::GE:
+            op = '>=';
+            break;
+    }
+    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
+    visitChild(cur, "LHS", node.getLhs());
+    visitChild(cur, "RHS", node.getRhs());
+}
+
+void PrintVisitor::visit(ast::expressions::binary::ShiftExpression& node) {
+    const int cur = _id;
+    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()),
+                        node.getIsRightShift() ? ">>" : "<<");
+    visitChild(cur, "LHS", node.getLhs());
+    visitChild(cur, "RHS", node.getRhs());
+}
+
 void PrintVisitor::visit(ast::expressions::postfix::ArrayAccessExpression& node) {
     const int cur = _id;
     printNode(cur, node);

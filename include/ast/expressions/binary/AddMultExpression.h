@@ -23,7 +23,11 @@ class AddMultExpression : public VisitableNode<AddMultExpression, BinaryExpressi
     AddMultExpression(std::unique_ptr<ExpressionBase> lhs, std::unique_ptr<ExpressionBase> rhs,
                       AddMultExpressionType op)
         : VisitableNode(std::move(lhs), std::move(rhs)),  // Must call direct parent's constructor
-          _op(op){};
+          _op(op) {};
+
+    AddMultExpressionType getOp() {
+        return _op;
+    }
 
    private:
     AddMultExpressionType _op;

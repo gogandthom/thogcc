@@ -39,6 +39,14 @@ class PrintVisitor : public DefaultVisitor {
     void visit(ast::expressions::ListExpression& node) override;
     void visit(ast::expressions::PrimaryExpression& node) override;
 
+    void visit(ast::expressions::binary::AddMultExpression& node) override;
+    void visit(ast::expressions::binary::AssignmentExpression& node) override;
+    void visit(ast::expressions::binary::BitwiseExpression& node) override;
+    void visit(ast::expressions::binary::EqualityExpression& node) override;
+    void visit(ast::expressions::binary::LogicalExpression& node) override;
+    void visit(ast::expressions::binary::RelationalExpression& node) override;
+    void visit(ast::expressions::binary::ShiftExpression& node) override;
+
     void visit(ast::expressions::postfix::ArrayAccessExpression& node) override;
     void visit(ast::expressions::postfix::FunctionCallExpression& node) override;
     void visit(ast::expressions::postfix::MemberAccessExpression& node) override;
