@@ -27,7 +27,7 @@ class UnaryOperatorExpression : public VisitableNode<UnaryOperatorExpression, Ex
         return _expr.get();
     }
 
-    UnaryOperatorType getType() {
+    UnaryOperatorType getType() const {
         return _op;
     }
 

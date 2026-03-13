@@ -24,7 +24,7 @@ class RelationalExpression : public VisitableNode<RelationalExpression, BinaryEx
         : VisitableNode(std::move(lhs), std::move(rhs)),  // Must call direct parent's constructor
           _op(op) {};
 
-    RelationalExpressionType getOp() {
+    RelationalExpressionType getOp() const {
         return _op;
     }
 

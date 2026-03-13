@@ -22,7 +22,7 @@ class LogicalExpression : public VisitableNode<LogicalExpression, BinaryExpressi
         : VisitableNode(std::move(lhs), std::move(rhs)),  // Must call direct parent's constructor
           _op(op) {};
 
-    LogicalExpressionType getOp() {
+    LogicalExpressionType getOp() const {
         return _op;
     }
 

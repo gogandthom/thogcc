@@ -23,7 +23,7 @@ class BitwiseExpression : public VisitableNode<BitwiseExpression, BinaryExpressi
         : VisitableNode(std::move(lhs), std::move(rhs)),  // Must call direct parent's constructor
           _op(op) {};
 
-    BitwiseExpressionType getOp() {
+    BitwiseExpressionType getOp() const {
         return _op;
     }
 

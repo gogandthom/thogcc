@@ -32,7 +32,7 @@ class AssignmentExpression : public VisitableNode<AssignmentExpression, BinaryEx
                         std::move(rhs)),  // Must call direct parent's constructor
           _op(op) {};
 
-    AssignmentExpressionType getOp() {
+    AssignmentExpressionType getOp() const {
         return _op;
     }
 

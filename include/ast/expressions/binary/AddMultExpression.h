@@ -25,7 +25,7 @@ class AddMultExpression : public VisitableNode<AddMultExpression, BinaryExpressi
         : VisitableNode(std::move(lhs), std::move(rhs)),  // Must call direct parent's constructor
           _op(op) {};
 
-    AddMultExpressionType getOp() {
+    AddMultExpressionType getOp() const {
         return _op;
     }
 
