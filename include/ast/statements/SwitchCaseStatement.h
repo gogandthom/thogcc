@@ -3,21 +3,33 @@
 #include <memory>
 #include <utility>
 
+#include "ast/Node.h"
 #include "ast/expressions/ConstantExpression.h"
 #include "ast/statements/StatementBase.h"
 
 namespace thogcc::ast::statements {
 
-class SwitchCaseStatement : public StatementBase {
+class SwitchCaseStatement : public VisitableNode<SwitchCaseStatement, StatementBase> {
    public:
-    SwitchCaseStatement(std::unique_ptr<expressions::ConstantExpression> expr,
+    SwitchCaseStatement(std::unique_ptr<expressions::ConstantExpression> cond,
                         std::unique_ptr<StatementBase> statement)
-        : _expr(std::move(expr)), _statement(std::move(statement)), _isDefault(false){};
+        : _cond(std::move(cond)), _statement(std::move(statement)), _isDefault(false) {};
     SwitchCaseStatement(std::unique_ptr<StatementBase> statement)
-        : _expr(nullptr), _statement(std::move(statement)), _isDefault(true){};
+        : _cond(nullptr), _statement(std::move(statement)), _isDefault(true) {};
+
+    auto* getCond() const {
+        return _cond.get();
+    }
+    auto* getStatement() const {
+        return _statement.get();
+    }
+
+    bool getIsDefault() const {
+        return _isDefault;
+    }
 
    private:
-    std::unique_ptr<expressions::ConstantExpression> _expr;
+    std::unique_ptr<expressions::ConstantExpression> _cond;
     std::unique_ptr<StatementBase> _statement;
     bool _isDefault;
 };

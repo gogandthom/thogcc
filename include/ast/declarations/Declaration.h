@@ -10,11 +10,18 @@
 
 namespace thogcc::ast::declarations {
 
-class Declaration : public DeclarationBase {
+class Declaration : public VisitableNode<Declaration, DeclarationBase> {
    public:
     Declaration(std::unique_ptr<DeclarationSpecifiers> specifiers,
                 std::unique_ptr<NodeList<declarators::DeclaratorBase>> initDeclarators = nullptr)
         : _specifiers(std::move(specifiers)), _initDeclarators(std::move(initDeclarators)){};
+
+    auto* getSpecifiers() const {
+        return _specifiers.get();
+    };
+    auto* getDeclarators() const {
+        return _initDeclarators.get();
+    };
 
    private:
     std::unique_ptr<DeclarationSpecifiers> _specifiers;

@@ -4,6 +4,6 @@
 
 namespace thogcc::ast::expressions {
 
-class ExpressionBase : public Node {};
+class ExpressionBase : public VisitableNode<ExpressionBase> {};
 
 }  // namespace thogcc::ast::expressions

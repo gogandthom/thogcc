@@ -11,8 +11,8 @@ namespace thogcc::ast::statements {
 
 IterationStatement::IterationStatement(IterationStatementType type,
                                        std::unique_ptr<StatementBase> statement,
-                                       std::unique_ptr<expressions::ExpressionBase> initExpr,
-                                       std::unique_ptr<expressions::ExpressionBase> condExpr,
+                                       std::unique_ptr<ExpressionStatement> initExpr,
+                                       std::unique_ptr<ExpressionStatement> condExpr,
                                        std::unique_ptr<expressions::ExpressionBase> updateExpr)
     : _type(type),
       _statement(std::move(statement)),
@@ -22,14 +22,16 @@ IterationStatement::IterationStatement(IterationStatementType type,
 
 std::unique_ptr<IterationStatement> IterationStatement::While(
     std::unique_ptr<expressions::ExpressionBase> expr, std::unique_ptr<StatementBase> statement) {
-    return std::make_unique<IterationStatement>(IterationStatementType::WHILE, std::move(statement),
-                                                nullptr, std::move(expr), nullptr);
+    return std::make_unique<IterationStatement>(
+        IterationStatementType::WHILE, std::move(statement), nullptr,
+        std::make_unique<ExpressionStatement>(std::move(expr)), nullptr);
 };
 
 std::unique_ptr<IterationStatement> IterationStatement::DoWhile(
     std::unique_ptr<expressions::ExpressionBase> expr, std::unique_ptr<StatementBase> statement) {
     return std::make_unique<IterationStatement>(
-        IterationStatementType::DOWHILE, std::move(statement), nullptr, std::move(expr), nullptr);
+        IterationStatementType::DOWHILE, std::move(statement), nullptr,
+        std::make_unique<ExpressionStatement>(std::move(expr)), nullptr);
 };
 
 std::unique_ptr<IterationStatement> IterationStatement::For(

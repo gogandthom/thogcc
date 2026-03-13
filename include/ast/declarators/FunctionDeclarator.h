@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string_view>
 #include <utility>
 
 #include "ast/Node.h"
@@ -13,7 +14,7 @@ namespace thogcc::ast::declarators {
 
 enum class FunctionDeclaratorForm : std::uint8_t { Prototype, KAndR };
 
-class FunctionDeclarator : public DeclaratorBase {
+class FunctionDeclarator : public VisitableNode<FunctionDeclarator, DeclaratorBase> {
    public:
     FunctionDeclarator(
         std::unique_ptr<DeclaratorBase> base = nullptr,
@@ -26,6 +27,23 @@ class FunctionDeclarator : public DeclaratorBase {
         : _form(FunctionDeclaratorForm::KAndR),
           _base(std::move(base)),
           _identifiers(std::move(identifiers)){};
+
+    std::string_view getIdentifier() const override {
+        return _base->getIdentifier();
+    };
+
+    auto getForm() const {
+        return _form;
+    };
+    auto* getBase() const {
+        return _base.get();
+    };
+    auto* getParams() const {
+        return _params.get();
+    };
+    auto* getIdentifiers() const {
+        return _identifiers.get();
+    };
 
    private:
     FunctionDeclaratorForm _form;

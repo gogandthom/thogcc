@@ -4,6 +4,6 @@
 
 namespace thogcc::ast::declarations {
 
-class DeclarationBase : public Node {};
+class DeclarationBase : public VisitableNode<DeclarationBase> {};
 
 }  // namespace thogcc::ast::declarations

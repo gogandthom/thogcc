@@ -1,7 +1,9 @@
 // Adapted from: https://www.lysator.liu.se/c/ANSI-C-grammar-y.html
 
 %code requires {
-    #include "ast/ast.h"
+    #include <memory>
+
+    #include "ast/all.h"
     #include "TypedefTable.h"
 
     // Avoid recursive includes
@@ -294,16 +296,19 @@ constant_expression
     ;
 
 declaration
-    : declaration_specifiers ';'                        { $$ = std::make_unique<Declaration>(std::move($1)); }
-    | declaration_specifiers init_declarator_list ';'   {
-                                                            if (/* TODO $1->isTypedef()*/) {
-                                                                for (auto& decl : *$2) {
-                                                                    auto name = decl/*->getIdentifier() TODO implement*/;
-                                                                    typedefTable.add(name);
-                                                                }
+    : declaration_specifiers ';'                    { $$ = std::make_unique<Declaration>(std::move($1)); }
+    | declaration_specifiers init_declarator_list   {
+                                                        if ($1->isTypedef()) {
+                                                            for (const auto& decl : *$2) {
+                                                                auto name = decl->getIdentifier();
+                                                                typedefTable.addType(std::string{name});
                                                             }
-                                                            $$ = std::make_unique<Declaration>(std::move($1), std::move($2));
                                                         }
+                                                    } // Lexer always looks ahead, so must update typedefTable mid-rule
+                                            ';'
+                                                    {
+                                                        $$ = std::make_unique<Declaration>(std::move($1), std::move($2));
+                                                    }
     ;
 
 declaration_specifiers
@@ -382,7 +387,7 @@ struct_declarator
     ;
 
 enum_specifier
-    : ENUM '{' enumerator_list '}'              { $$ = std::make_unique<EnumSpecifier>(nullptr, std::move($3)); }
+    : ENUM '{' enumerator_list '}'              { $$ = std::make_unique<EnumSpecifier>("", std::move($3)); }    // TODO: check this - nullptr cannot be case to a string so has been replaced with ""
     | ENUM IDENTIFIER '{' enumerator_list '}'   { $$ = std::make_unique<EnumSpecifier>($2, std::move($4)); }
     | ENUM IDENTIFIER                           { $$ = std::make_unique<EnumSpecifier>($2); }
     ;

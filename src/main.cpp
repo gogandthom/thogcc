@@ -5,9 +5,11 @@
 #include <string_view>
 #include <vector>
 
+#include "ast/Node.h"
 #include "cli.h"
 #include "errors/errors.h"
 #include "parse.h"
+#include "visitors/PrintVisitor.h"
 
 int main(int argc, char** argv) {
     try {
@@ -23,7 +25,13 @@ int main(int argc, char** argv) {
         }
 
         // Parse source file
-        thogcc::ParseC(input, args);
+        auto root = thogcc::ParseC(input, args);
+
+        // Print AST
+        if (args.printGraph) {
+            auto printer = thogcc::visitors::PrintVisitor(std::cout);
+            root->accept(printer);
+        }
     } catch (const std::exception& e) {
         std::cerr << "thogcc: " << e.what() << '\n';
         return 1;

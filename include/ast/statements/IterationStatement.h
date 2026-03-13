@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 
+#include "ast/Node.h"
 #include "ast/expressions/ExpressionBase.h"
 #include "ast/statements/ExpressionStatement.h"
 #include "ast/statements/StatementBase.h"
@@ -15,11 +16,11 @@ enum class IterationStatementType : std::uint8_t {
     FOR,
 };
 
-class IterationStatement : public StatementBase {
+class IterationStatement : public VisitableNode<IterationStatement, StatementBase> {
    public:
     IterationStatement(IterationStatementType type, std::unique_ptr<StatementBase> statement,
-                       std::unique_ptr<expressions::ExpressionBase> initExpr = nullptr,
-                       std::unique_ptr<expressions::ExpressionBase> condExpr = nullptr,
+                       std::unique_ptr<ExpressionStatement> initExpr = nullptr,
+                       std::unique_ptr<ExpressionStatement> condExpr = nullptr,
                        std::unique_ptr<expressions::ExpressionBase> updateExpr = nullptr);
 
     static std::unique_ptr<IterationStatement> While(
@@ -34,11 +35,28 @@ class IterationStatement : public StatementBase {
         std::unique_ptr<expressions::ExpressionBase> updateExpr,
         std::unique_ptr<StatementBase> statement);
 
+    auto* getStatement() const {
+        return _statement.get();
+    }
+    auto* getInitExpr() const {
+        return _initExpr.get();
+    }
+    auto* getCondExpr() const {
+        return _initExpr.get();
+    }
+    auto* getUpdateExpr() const {
+        return _updateExpr.get();
+    }
+
+    IterationStatementType getType() const {
+        return _type;
+    }
+
    private:
     IterationStatementType _type;
     std::unique_ptr<StatementBase> _statement;
-    std::unique_ptr<expressions::ExpressionBase> _initExpr;
-    std::unique_ptr<expressions::ExpressionBase> _condExpr;
+    std::unique_ptr<ExpressionStatement> _initExpr;
+    std::unique_ptr<ExpressionStatement> _condExpr;
     std::unique_ptr<expressions::ExpressionBase> _updateExpr;
 };
 

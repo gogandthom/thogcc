@@ -4,6 +4,6 @@
 
 namespace thogcc::ast::statements {
 
-class StatementBase : public Node {};
+class StatementBase : public VisitableNode<StatementBase> {};
 
 }  // namespace thogcc::ast::statements

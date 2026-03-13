@@ -1,7 +1,6 @@
 #pragma once
 
-// NOLINTBEGIN(misc-include-cleaner)
-// IWYU pragma: begin_keep
+// IWYU pragma: begin_exports
 
 #include "ast/DeclarationSpecifiers.h"
 #include "ast/EnumSpecifier.h"
@@ -43,7 +42,6 @@
 #include "ast/expressions/postfix/ArrayAccessExpression.h"
 #include "ast/expressions/postfix/FunctionCallExpression.h"
 #include "ast/expressions/postfix/MemberAccessExpression.h"
-#include "ast/expressions/prefix/IncDecExpression.h"
 #include "ast/expressions/prefix/SizeofExpression.h"
 #include "ast/expressions/prefix/UnaryOperatorExpression.h"
 #include "ast/statements/CompoundStatement.h"
@@ -58,5 +56,4 @@
 #include "ast/statements/SwitchCaseStatement.h"
 #include "ast/statements/SwitchStatement.h"
 
-// NOLINTEND(misc-include-cleaner)
-// IWYU pragma: end_keep
+// IWYU pragma: end_exports

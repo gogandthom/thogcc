@@ -4,6 +4,7 @@
 #include <memory>
 #include <utility>
 
+#include "ast/Node.h"
 #include "ast/expressions/ExpressionBase.h"
 #include "ast/expressions/binary/BinaryExpressionBase.h"
 
@@ -17,11 +18,16 @@ enum class AddMultExpressionType : std::uint8_t {
     REM,
 };
 
-class AddMultExpression : public BinaryExpressionBase {
+class AddMultExpression : public VisitableNode<AddMultExpression, BinaryExpressionBase> {
    public:
     AddMultExpression(std::unique_ptr<ExpressionBase> lhs, std::unique_ptr<ExpressionBase> rhs,
                       AddMultExpressionType op)
-        : BinaryExpressionBase(std::move(lhs), std::move(rhs)), _op(op){};
+        : VisitableNode(std::move(lhs), std::move(rhs)),  // Must call direct parent's constructor
+          _op(op) {};
+
+    AddMultExpressionType getOp() const {
+        return _op;
+    }
 
    private:
     AddMultExpressionType _op;

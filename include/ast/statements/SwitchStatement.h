@@ -3,16 +3,24 @@
 #include <memory>
 #include <utility>
 
+#include "ast/Node.h"
 #include "ast/expressions/ExpressionBase.h"
 #include "ast/statements/StatementBase.h"
 
 namespace thogcc::ast::statements {
 
-class SwitchStatement : public StatementBase {
+class SwitchStatement : public VisitableNode<SwitchStatement, StatementBase> {
    public:
     SwitchStatement(std::unique_ptr<expressions::ExpressionBase> expr,
                     std::unique_ptr<StatementBase> statement)
         : _expr(std::move(expr)), _statement(std::move(statement)){};
+
+    auto* getExpr() const {
+        return _expr.get();
+    }
+    auto* getStatement() const {
+        return _statement.get();
+    }
 
    private:
     std::unique_ptr<expressions::ExpressionBase> _expr;
