@@ -1,5 +1,6 @@
 #include "visitors/PrintVisitor.h"
 
+#include <cassert>
 #include <cstddef>
 #include <format>
 #include <iostream>
@@ -38,10 +39,31 @@ void PrintVisitor::visitChild(int cur, std::string_view label, T* child) {
     child->accept(*this);
 }
 
+// Base classes
+
 void PrintVisitor::visit(ast::Node& node) {
+    assert(false);
     _out << std::format("  n{}[Unimplemented]\n", _id)
          << std::format("%%Unimplemented: {}\n", ast::nodeKindName(node.getKind()));
 };
+
+void PrintVisitor::visit(ast::declarations::DeclarationBase& node) {
+    visit(static_cast<ast::Node&>(node));
+};
+
+void PrintVisitor::visit(ast::declarators::DeclaratorBase& node) {
+    visit(static_cast<ast::Node&>(node));
+};
+
+void PrintVisitor::visit(ast::expressions::ExpressionBase& node) {
+    visit(static_cast<ast::Node&>(node));
+};
+
+void PrintVisitor::visit(ast::statements::StatementBase& node) {
+    visit(static_cast<ast::Node&>(node));
+};
+
+// Special nodes
 
 void PrintVisitor::visit(ast::NodeListBase& node) {
     const int cur = _id;
@@ -55,6 +77,8 @@ void PrintVisitor::visit(ast::NodeListBase& node) {
 void PrintVisitor::visit(ast::ValueNodeBase& node) {
     _out << std::format("  n{}[{}]\n", _id, node.getLabel());
 };
+
+// Leaf nodes
 
 void PrintVisitor::visit(ast::DeclarationSpecifiers& node) {
     const int cur = _id;
@@ -103,16 +127,16 @@ void PrintVisitor::visit(ast::declarators::ArrayDeclarator& node) {
 
 void PrintVisitor::visit(ast::declarators::EnumValueDeclarator& node) {
     const int cur = _id;
-    _out << std::format("  n{}[{}]\n", cur, node.getIdentifier());
+    printNode(cur, node);
+    _out << std::format("  n{} -->|Identifier| n{}([{}])\n", cur, ++_id, node.getIdentifier());
     visitChild(cur, "ConstExpr", node.getExpr());
 }
 
 void PrintVisitor::visit(ast::declarators::FunctionDeclarator& node) {
     const int cur = _id;
     auto form = node.getForm();
-    printNode(cur, node);
     _out << std::format(
-        "  n{} -->|Form| n{}[{}]\n", cur, ++_id,
+        "  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()),
         form == ast::declarators::FunctionDeclaratorForm::KAndR ? "K&R" : "prototype");
     visitChild(cur, "Base", node.getBase());
     visitChild(cur, "Identifiers", node.getIdentifiers());
@@ -175,8 +199,9 @@ void PrintVisitor::visit(ast::expressions::IdentifierExpression& node) {
 
 void PrintVisitor::visit(ast::expressions::IncDecExpression& node) {
     const int cur = _id;
-    _out << std::format("  n{}[\"{}{} ({})\"]\n", cur, node.getIsPrefix() ? "Prefix" : "Postfix",
-                        ast::nodeKindName(node.getKind()), node.getIsDecrement() ? "Dec" : "Inc");
+    _out << std::format("  n{}[\"{} ({} {})\"]\n", cur, ast::nodeKindName(node.getKind()),
+                        node.getIsPrefix() ? "Prefix" : "Postfix",
+                        node.getIsDecrement() ? "Dec" : "Inc");
     visitChild(cur, "Expr", node.getExpr());
 }
 
@@ -191,8 +216,17 @@ void PrintVisitor::visit(ast::expressions::PrimaryExpression& node) {
     printNode(cur, node);
     const auto value = node.getValue();
     std::visit(
-        [this, cur](auto&& v) { _out << std::format("  n{} -->|Value| n{}[{}]\n", cur, ++_id, v); },
+        [this, cur](auto&& v) {
+            _out << std::format("  n{} -->|Value| n{}([\"{}{}\"])\n", cur, ++_id, v,
+                                typeid(v).name());
+        },
         value);
+};
+
+void PrintVisitor::visit(ast::expressions::binary::BinaryExpressionBase& node) {
+    const int cur = _id;
+    visitChild(cur, "LHS", node.getLhs());
+    visitChild(cur, "RHS", node.getRhs());
 };
 
 void PrintVisitor::visit(ast::expressions::binary::AddMultExpression& node) {
@@ -216,8 +250,7 @@ void PrintVisitor::visit(ast::expressions::binary::AddMultExpression& node) {
             break;
     }
     _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
-    visitChild(cur, "LHS", node.getLhs());
-    visitChild(cur, "RHS", node.getRhs());
+    visit(static_cast<ast::expressions::binary::BinaryExpressionBase&>(node));
 }
 
 void PrintVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
@@ -259,8 +292,7 @@ void PrintVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             break;
     }
     _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
-    visitChild(cur, "LHS", node.getLhs());
-    visitChild(cur, "RHS", node.getRhs());
+    visit(static_cast<ast::expressions::binary::BinaryExpressionBase&>(node));
 }
 
 void PrintVisitor::visit(ast::expressions::binary::BitwiseExpression& node) {
@@ -278,16 +310,14 @@ void PrintVisitor::visit(ast::expressions::binary::BitwiseExpression& node) {
             break;
     }
     _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
-    visitChild(cur, "LHS", node.getLhs());
-    visitChild(cur, "RHS", node.getRhs());
+    visit(static_cast<ast::expressions::binary::BinaryExpressionBase&>(node));
 }
 
 void PrintVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
     const int cur = _id;
     _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()),
                         node.getIsNe() ? "!=" : "==");
-    visitChild(cur, "LHS", node.getLhs());
-    visitChild(cur, "RHS", node.getRhs());
+    visit(static_cast<ast::expressions::binary::BinaryExpressionBase&>(node));
 }
 
 void PrintVisitor::visit(ast::expressions::binary::LogicalExpression& node) {
@@ -302,8 +332,7 @@ void PrintVisitor::visit(ast::expressions::binary::LogicalExpression& node) {
             break;
     }
     _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
-    visitChild(cur, "LHS", node.getLhs());
-    visitChild(cur, "RHS", node.getRhs());
+    visit(static_cast<ast::expressions::binary::BinaryExpressionBase&>(node));
 }
 
 void PrintVisitor::visit(ast::expressions::binary::RelationalExpression& node) {
@@ -324,16 +353,14 @@ void PrintVisitor::visit(ast::expressions::binary::RelationalExpression& node) {
             break;
     }
     _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
-    visitChild(cur, "LHS", node.getLhs());
-    visitChild(cur, "RHS", node.getRhs());
+    visit(static_cast<ast::expressions::binary::BinaryExpressionBase&>(node));
 }
 
 void PrintVisitor::visit(ast::expressions::binary::ShiftExpression& node) {
     const int cur = _id;
     _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()),
                         node.getIsRightShift() ? ">>" : "<<");
-    visitChild(cur, "LHS", node.getLhs());
-    visitChild(cur, "RHS", node.getRhs());
+    visit(static_cast<ast::expressions::binary::BinaryExpressionBase&>(node));
 }
 
 void PrintVisitor::visit(ast::expressions::postfix::ArrayAccessExpression& node) {
