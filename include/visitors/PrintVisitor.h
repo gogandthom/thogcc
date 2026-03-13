@@ -24,10 +24,12 @@ class PrintVisitor : public DefaultVisitor {
 
     // declarators
     void visit(ast::declarators::ArrayDeclarator& node) override;
+    void visit(ast::declarators::EnumValueDeclarator& node) override;
     void visit(ast::declarators::FunctionDeclarator& node) override;
     void visit(ast::declarators::IdentifierDeclarator& node) override;
     void visit(ast::declarators::InitDeclarator& node) override;
-    void visit(ast::declarators::EnumValueDeclarator& node) override;
+    void visit(ast::declarators::PointerDeclarator& node) override;
+    void visit(ast::declarators::StructMemberDeclarator& node) override;
 
     // expressions
     void visit(ast::expressions::CastExpression& node) override;

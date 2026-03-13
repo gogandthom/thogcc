@@ -86,6 +86,14 @@ void PrintVisitor::visit(ast::declarators::ArrayDeclarator& node) {
     visitChild(cur, "Expression", node.getExpr());
 }
 
+void PrintVisitor::visit(ast::declarators::EnumValueDeclarator& node) {
+    const int cur = _id;
+    _out << std::format(
+        "  n{}[{}]\n", cur,
+        "an identifier" /*node.getIdentifier()*/);  // TODO: why is this marked as not used??
+    visitChild(cur, "ConstExpr", node.getExpr());
+}
+
 void PrintVisitor::visit(ast::declarators::FunctionDeclarator& node) {
     const int cur = _id;
     auto form = node.getForm();
@@ -111,12 +119,18 @@ void PrintVisitor::visit(ast::declarators::InitDeclarator& node) {
     visitChild(cur, "Initializer", node.getInitializer());
 }
 
-void PrintVisitor::visit(ast::declarators::EnumValueDeclarator& node) {
+void PrintVisitor::visit(ast::declarators::PointerDeclarator& node) {
     const int cur = _id;
-    _out << std::format(
-        "  n{}[{}]\n", cur,
-        "an identifier" /*node.getIdentifier()*/);  // TODO: why is this marked as not used??
-    visitChild(cur, "ConstExpr", node.getExpr());
+    printNode(cur, node);
+    visitChild(cur, "TypeQualifiers", node.getTypeQualifiers());
+    visitChild(cur, "Pointer", node.getPtr());
+}
+
+void PrintVisitor::visit(ast::declarators::StructMemberDeclarator& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "Declarator", node.getDecl());
+    visitChild(cur, "Expr", node.getExpr());
 }
 
 void PrintVisitor::visit(ast::expressions::CastExpression& node) {
