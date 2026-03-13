@@ -18,7 +18,7 @@ class LabelledStatement : public VisitableNode<LabelledStatement, StatementBase>
         return _statement.get();
     }
 
-    std::string getIdentifier() const {
+    std::string_view getIdentifier() const {
         return _identifier;
     }
 

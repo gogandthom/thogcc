@@ -60,7 +60,7 @@ void PrintVisitor::visit(ast::DeclarationSpecifiers& node) {
     const int cur = _id;
     printNode(cur, node);
     visitChild(cur, "StorageClassSpecifier", node.getStorageClassSpecifier());
-    visitChild(cur, "TypeSpecifier", node.getTypeSpecifier());
+    visitChild(cur, "TypeSpecifier", node.getTypeSpecifiers());
 }
 
 void PrintVisitor::visit(ast::declarations::Declaration& node) {
@@ -122,7 +122,7 @@ void PrintVisitor::visit(ast::declarators::FunctionDeclarator& node) {
 void PrintVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
     const int cur = _id;
     printNode(cur, node);
-    _out << std::format("  n{} -->|Identifier| n{}[{}]\n", cur, ++_id, node.getIdentifier());
+    _out << std::format("  n{} -->|Identifier| n{}([{}])\n", cur, ++_id, node.getIdentifier());
 };
 
 void PrintVisitor::visit(ast::declarators::InitDeclarator& node) {
@@ -170,7 +170,7 @@ void PrintVisitor::visit(ast::expressions::ConstantExpression& node) {
 void PrintVisitor::visit(ast::expressions::IdentifierExpression& node) {
     const int cur = _id;
     printNode(cur, node);
-    _out << std::format("  n{} -->|Identifier| n{}[{}]\n", cur, ++_id, node.getIdentifier());
+    _out << std::format("  n{} -->|Identifier| n{}([{}])\n", cur, ++_id, node.getIdentifier());
 };
 
 void PrintVisitor::visit(ast::expressions::IncDecExpression& node) {
@@ -354,7 +354,7 @@ void PrintVisitor::visit(ast::expressions::postfix::MemberAccessExpression& node
     const int cur = _id;
     printNode(cur, node);
     visitChild(cur, "Parent", node.getExpr());
-    _out << std::format("  n{} -->|Identifier| n{}[{}]\n", cur, ++_id, node.getIdentifier());
+    _out << std::format("  n{} -->|Identifier| n{}([{}])\n", cur, ++_id, node.getIdentifier());
 }
 
 void PrintVisitor::visit(ast::expressions::prefix::SizeofExpression& node) {
@@ -423,7 +423,7 @@ void PrintVisitor::visit(ast::statements::ExpressionStatement& node) {
 void PrintVisitor::visit(ast::statements::GotoStatement& node) {
     const int cur = _id;
     printNode(cur, node);
-    _out << std::format("  n{} -->|Identifier| n{}[{}]\n", cur, ++_id, node.getIdentifier());
+    _out << std::format("  n{} -->|Identifier| n{}([{}])\n", cur, ++_id, node.getIdentifier());
 }
 
 void PrintVisitor::visit(ast::statements::IfStatement& node) {
@@ -458,7 +458,7 @@ void PrintVisitor::visit(ast::statements::IterationStatement& node) {
 void PrintVisitor::visit(ast::statements::LabelledStatement& node) {
     const int cur = _id;
     printNode(cur, node);
-    _out << std::format("  n{} -->|Identifier| n{}[{}]\n", cur, ++_id, node.getIdentifier());
+    _out << std::format("  n{} -->|Identifier| n{}([{}])\n", cur, ++_id, node.getIdentifier());
     visitChild(cur, "Statement", node.getStatement());
 }
 
@@ -497,7 +497,7 @@ void PrintVisitor::visit(ast::EnumSpecifier& node) {
 void PrintVisitor::visit(ast::StructSpecifier& node) {
     const int cur = _id;
     printNode(cur, node);
-    _out << std::format("  n{} -->|Identifier| n{}[{}]\n", cur, ++_id, node.getIdentifier());
+    _out << std::format("  n{} -->|Identifier| n{}([{}])\n", cur, ++_id, node.getIdentifier());
     visitChild(cur, "Declarations", node.getDeclarations());
 }
 

@@ -19,7 +19,7 @@ class MemberAccessExpression : public VisitableNode<MemberAccessExpression, Expr
         return _expr.get();
     }
 
-    std::string getIdentifier() const {
+    std::string_view getIdentifier() const {
         return _identifier;
     }
 

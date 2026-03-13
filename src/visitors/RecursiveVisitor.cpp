@@ -22,7 +22,7 @@ void RecursiveVisitor::visit(ast::ValueNodeBase& /* node */) {}
 
 void RecursiveVisitor::visit(ast::DeclarationSpecifiers& node) {
     traverse(node.getStorageClassSpecifier());
-    traverse(node.getTypeSpecifier());
+    traverse(node.getTypeSpecifiers());
 }
 
 void RecursiveVisitor::visit(ast::EnumSpecifier& node) {

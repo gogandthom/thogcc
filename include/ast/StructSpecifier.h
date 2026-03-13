@@ -19,7 +19,7 @@ class StructSpecifier : public VisitableNode<StructSpecifier> {
         return _declarations.get();
     }
 
-    std::string getIdentifier() const {
+    std::string_view getIdentifier() const {
         return _identifier;
     }
 

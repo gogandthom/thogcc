@@ -12,7 +12,7 @@ class GotoStatement : public VisitableNode<GotoStatement, StatementBase> {
    public:
     GotoStatement(std::string identifier) : _identifier(std::move(identifier)) {};
 
-    std::string getIdentifier() const {
+    std::string_view getIdentifier() const {
         return _identifier;
     }
 
