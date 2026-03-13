@@ -387,7 +387,7 @@ struct_declarator
     ;
 
 enum_specifier
-    : ENUM '{' enumerator_list '}'              { $$ = std::make_unique<EnumSpecifier>(nullptr, std::move($3)); }
+    : ENUM '{' enumerator_list '}'              { $$ = std::make_unique<EnumSpecifier>("", std::move($3)); }    // TODO: check this - nullptr cannot be case to a string so has been replaced with ""
     | ENUM IDENTIFIER '{' enumerator_list '}'   { $$ = std::make_unique<EnumSpecifier>($2, std::move($4)); }
     | ENUM IDENTIFIER                           { $$ = std::make_unique<EnumSpecifier>($2); }
     ;
