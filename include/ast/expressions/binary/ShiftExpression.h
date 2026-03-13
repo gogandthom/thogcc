@@ -16,7 +16,7 @@ class ShiftExpression : public VisitableNode<ShiftExpression, BinaryExpressionBa
         : VisitableNode(std::move(lhs), std::move(rhs)),  // Must call direct parent's constructor
           _isRightShift(isRightShift) {};
 
-    bool getIsRightShift() {
+    bool getIsRightShift() const {
         return _isRightShift;
     }
 

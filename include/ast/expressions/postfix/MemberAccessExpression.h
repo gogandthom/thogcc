@@ -19,11 +19,11 @@ class MemberAccessExpression : public VisitableNode<MemberAccessExpression, Expr
         return _expr.get();
     }
 
-    std::string getIdentifier() {
+    std::string getIdentifier() const {
         return _identifier;
     }
 
-    bool getExprIsPtr() {
+    bool getExprIsPtr() const {
         return _exprIsPtr;
     }
 

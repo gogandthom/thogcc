@@ -16,7 +16,7 @@ class EqualityExpression : public VisitableNode<EqualityExpression, BinaryExpres
         : VisitableNode(std::move(lhs), std::move(rhs)),  // Must call direct parent's constructor
           _isNe(isNe) {};
 
-    bool getIsNe() {
+    bool getIsNe() const {
         return _isNe;
     }
 
