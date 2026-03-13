@@ -103,9 +103,7 @@ void PrintVisitor::visit(ast::declarators::ArrayDeclarator& node) {
 
 void PrintVisitor::visit(ast::declarators::EnumValueDeclarator& node) {
     const int cur = _id;
-    _out << std::format(
-        "  n{}[{}]\n", cur,
-        "an identifier" /*node.getIdentifier()*/);  // TODO: why is this marked as not used??
+    _out << std::format("  n{}[{}]\n", cur, node.getIdentifier());
     visitChild(cur, "ConstExpr", node.getExpr());
 }
 

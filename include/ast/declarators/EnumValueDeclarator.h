@@ -20,9 +20,7 @@ class EnumValueDeclarator : public VisitableNode<EnumValueDeclarator, Declarator
         : _identifier(std::move(identifier)), _expr(std::move(expr)) {};
 
     std::string_view getIdentifier() const override {
-        throw std::runtime_error(
-            "getIdentifier() called on EnumValueDeclarator. This shouldn't happen.");  // TODO:
-                                                                                       // why??
+        return _identifier;
     };
 
     auto* getExpr() const {
