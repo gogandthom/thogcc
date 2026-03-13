@@ -18,9 +18,12 @@ class PrintVisitor : public DefaultVisitor {
     void visit(ast::NodeListBase& node) override;
     void visit(ast::ValueNodeBase& node) override;
 
+    // declarations
     void visit(ast::DeclarationSpecifiers& node) override;
     void visit(ast::declarations::Declaration& node) override;
     void visit(ast::declarations::FunctionDefinition& node) override;
+    void visit(ast::declarations::ParameterDeclaration& node) override;
+    void visit(ast::declarations::StructDeclaration& node) override;
 
     // declarators
     void visit(ast::declarators::ArrayDeclarator& node) override;

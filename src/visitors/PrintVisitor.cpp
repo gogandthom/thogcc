@@ -78,6 +78,20 @@ void PrintVisitor::visit(ast::declarations::FunctionDefinition& node) {
     visitChild(cur, "Statement", node.getStatement());
 };
 
+void PrintVisitor::visit(ast::declarations::ParameterDeclaration& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "Specifiers", node.getSpecifiers());
+    visitChild(cur, "Declarator", node.getDecl());
+}
+
+void PrintVisitor::visit(ast::declarations::StructDeclaration& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "Qualifiers", node.getQualifiers());
+    visitChild(cur, "Declarators", node.getDeclarators());
+}
+
 void PrintVisitor::visit(ast::declarators::ArrayDeclarator& node) {
     const int cur = _id;
     printNode(cur, node);
