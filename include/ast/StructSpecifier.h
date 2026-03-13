@@ -13,10 +13,14 @@ class StructSpecifier : public VisitableNode<StructSpecifier> {
    public:
     StructSpecifier(std::unique_ptr<NodeList<declarations::StructDeclaration>> declarations,
                     std::string identifier = {})
-        : _declarations(std::move(declarations)), _identifier(std::move(identifier)){};
+        : _declarations(std::move(declarations)), _identifier(std::move(identifier)) {};
 
     auto* getDeclarations() const {
         return _declarations.get();
+    }
+
+    std::string getIdentifier() const {
+        return _identifier;
     }
 
    private:

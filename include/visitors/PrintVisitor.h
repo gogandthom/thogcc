@@ -19,7 +19,6 @@ class PrintVisitor : public DefaultVisitor {
     void visit(ast::ValueNodeBase& node) override;
 
     // declarations
-    void visit(ast::DeclarationSpecifiers& node) override;
     void visit(ast::declarations::Declaration& node) override;
     void visit(ast::declarations::FunctionDefinition& node) override;
     void visit(ast::declarations::ParameterDeclaration& node) override;
@@ -73,6 +72,11 @@ class PrintVisitor : public DefaultVisitor {
 
     // specifiers
     void visit(ast::EnumSpecifier& node) override;
+    void visit(ast::DeclarationSpecifiers& node) override;
+    void visit(ast::StructSpecifier& node) override;
+
+    // assorted things
+    void visit(ast::TypeName& node) override;
 
    private:
     void printNode(int id, ast::Node& node);

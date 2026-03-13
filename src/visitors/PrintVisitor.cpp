@@ -495,4 +495,18 @@ void PrintVisitor::visit(ast::EnumSpecifier& node) {
     visitChild(cur, "Declarators", node.getDeclarators());
 }
 
+void PrintVisitor::visit(ast::StructSpecifier& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    _out << std::format("  n{} -->|Identifier| n{}[{}]\n", cur, ++_id, node.getIdentifier());
+    visitChild(cur, "Declarations", node.getDeclarations());
+}
+
+void PrintVisitor::visit(ast::TypeName& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "Specifiers", node.getSpecifiers());
+    visitChild(cur, "Declarator", node.getDeclarator());
+}
+
 }  // namespace thogcc::visitors
