@@ -56,6 +56,14 @@ class PrintVisitor : public DefaultVisitor {
 
     // statements
     void visit(ast::statements::CompoundStatement& node) override;
+    void visit(ast::statements::ExpressionStatement& node) override;
+    void visit(ast::statements::GotoStatement& node) override;
+    void visit(ast::statements::IfStatement& node) override;
+    void visit(ast::statements::IterationStatement& node) override;
+    void visit(ast::statements::LabelledStatement& node) override;
+    void visit(ast::statements::LoopControlStatement& node) override;
+    void visit(ast::statements::SwitchCaseStatement& node) override;
+    void visit(ast::statements::SwitchStatement& node) override;
     void visit(ast::statements::ReturnStatement& node) override;
 
     // specifiers

@@ -10,7 +10,11 @@ namespace thogcc::ast::statements {
 
 class GotoStatement : public VisitableNode<GotoStatement, StatementBase> {
    public:
-    GotoStatement(std::string identifier) : _identifier(std::move(identifier)){};
+    GotoStatement(std::string identifier) : _identifier(std::move(identifier)) {};
+
+    std::string getIdentifier() {
+        return _identifier;
+    }
 
    private:
     std::string _identifier;

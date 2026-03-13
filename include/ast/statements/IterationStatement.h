@@ -48,6 +48,10 @@ class IterationStatement : public VisitableNode<IterationStatement, StatementBas
         return _updateExpr.get();
     }
 
+    IterationStatementType getType() const {
+        return _type;
+    }
+
    private:
     IterationStatementType _type;
     std::unique_ptr<StatementBase> _statement;

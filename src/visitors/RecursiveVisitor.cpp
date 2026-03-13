@@ -197,7 +197,7 @@ void RecursiveVisitor::visit(ast::statements::ExpressionStatement& node) {
 void RecursiveVisitor::visit(ast::statements::GotoStatement& /* node */) {}
 
 void RecursiveVisitor::visit(ast::statements::IfStatement& node) {
-    traverse(node.getExpr());
+    traverse(node.getCond());
     traverse(node.getIfStatement());
     traverse(node.getElseStatement());
 }
@@ -220,7 +220,7 @@ void RecursiveVisitor::visit(ast::statements::ReturnStatement& node) {
 }
 
 void RecursiveVisitor::visit(ast::statements::SwitchCaseStatement& node) {
-    traverse(node.getExpr());
+    traverse(node.getCond());
     traverse(node.getStatement());
 }
 

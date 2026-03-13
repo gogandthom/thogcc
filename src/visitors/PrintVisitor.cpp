@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <format>
 #include <iostream>
+#include <memory>
 #include <string_view>
 #include <variant>
 
@@ -267,10 +268,10 @@ void PrintVisitor::visit(ast::expressions::binary::LogicalExpression& node) {
     std::string op = "??";
     switch (node.getOp()) {
         case ast::expressions::binary::LogicalExpressionType::AND:
-            op = '&&';
+            op = "&&";
             break;
         case ast::expressions::binary::LogicalExpressionType::OR:
-            op = '||';
+            op = "||";
             break;
     }
     _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
@@ -283,16 +284,16 @@ void PrintVisitor::visit(ast::expressions::binary::RelationalExpression& node) {
     std::string op = "??";
     switch (node.getOp()) {
         case ast::expressions::binary::RelationalExpressionType::L:
-            op = '<';
+            op = "<";
             break;
         case ast::expressions::binary::RelationalExpressionType::G:
-            op = '>';
+            op = ">";
             break;
         case ast::expressions::binary::RelationalExpressionType::LE:
-            op = '<=';
+            op = "<=";
             break;
         case ast::expressions::binary::RelationalExpressionType::GE:
-            op = '>=';
+            op = ">=";
             break;
     }
     _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
@@ -385,6 +386,74 @@ void PrintVisitor::visit(ast::statements::CompoundStatement& node) {
     visitChild(cur, "StatementList", node.getStatementList());
     visitChild(cur, "DeclarationList", node.getDeclarationList());
 };
+
+void PrintVisitor::visit(ast::statements::ExpressionStatement& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "Expr", node.getExpr());
+}
+
+void PrintVisitor::visit(ast::statements::GotoStatement& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    _out << std::format("  n{} -->|Identifier| n{}[{}]\n", cur, ++_id, node.getIdentifier());
+}
+
+void PrintVisitor::visit(ast::statements::IfStatement& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "Cond", node.getCond());
+    visitChild(cur, "If", node.getIfStatement());
+    visitChild(cur, "Else", node.getElseStatement());
+}
+
+void PrintVisitor::visit(ast::statements::IterationStatement& node) {
+    const int cur = _id;
+    std::string type = "??";
+    switch (node.getType()) {
+        case ast::statements::IterationStatementType::WHILE:
+            type = "while";
+            break;
+        case ast::statements::IterationStatementType::DOWHILE:
+            type = "do while";
+            break;
+        case ast::statements::IterationStatementType::FOR:
+            type = "for";
+            break;
+    }
+    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), type);
+    visitChild(cur, "Statement", node.getStatement());
+    visitChild(cur, "InitExpr", node.getInitExpr());
+    visitChild(cur, "CondExpr", node.getCondExpr());
+    visitChild(cur, "UpdateExpr", node.getUpdateExpr());
+}
+
+void PrintVisitor::visit(ast::statements::LabelledStatement& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    _out << std::format("  n{} -->|Identifier| n{}[{}]\n", cur, ++_id, node.getIdentifier());
+    visitChild(cur, "Statement", node.getStatement());
+}
+
+void PrintVisitor::visit(ast::statements::LoopControlStatement& node) {
+    const int cur = _id;
+    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()),
+                        node.getIsBreak() ? "break" : "continue");
+}
+
+void PrintVisitor::visit(ast::statements::SwitchCaseStatement& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "Cond", node.getCond());
+    visitChild(cur, "Statement", node.getStatement());
+}
+
+void PrintVisitor::visit(ast::statements::SwitchStatement& node) {
+    const int cur = _id;
+    printNode(cur, node);
+    visitChild(cur, "SwitchOn", node.getExpr());
+    visitChild(cur, "Statement", node.getStatement());
+}
 
 void PrintVisitor::visit(ast::statements::ReturnStatement& node) {
     const int cur = _id;

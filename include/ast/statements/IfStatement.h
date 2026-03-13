@@ -11,15 +11,15 @@ namespace thogcc::ast::statements {
 
 class IfStatement : public VisitableNode<IfStatement, StatementBase> {
    public:
-    IfStatement(std::unique_ptr<expressions::ExpressionBase> expr,
+    IfStatement(std::unique_ptr<expressions::ExpressionBase> cond,
                 std::unique_ptr<StatementBase> ifStatement,
                 std::unique_ptr<StatementBase> elseStatement = nullptr)
-        : _expr(std::move(expr)),
+        : _cond(std::move(cond)),
           _ifStatement(std::move(ifStatement)),
-          _elseStatement(std::move(elseStatement)){};
+          _elseStatement(std::move(elseStatement)) {};
 
-    auto* getExpr() const {
-        return _expr.get();
+    auto* getCond() const {
+        return _cond.get();
     }
     auto* getIfStatement() const {
         return _ifStatement.get();
@@ -29,7 +29,7 @@ class IfStatement : public VisitableNode<IfStatement, StatementBase> {
     }
 
    private:
-    std::unique_ptr<expressions::ExpressionBase> _expr;
+    std::unique_ptr<expressions::ExpressionBase> _cond;
     std::unique_ptr<StatementBase> _ifStatement;
     std::unique_ptr<StatementBase> _elseStatement;
 };
