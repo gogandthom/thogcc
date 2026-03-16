@@ -32,6 +32,16 @@ int main(int argc, char** argv) {
             auto printer = thogcc::visitors::PrintVisitor(std::cout);
             root->accept(printer);
         }
+
+        if (!args.llvmDestPath.empty()) {
+            std::ofstream llvmOut(args.llvmDestPath);
+            if (!input.is_open()) {
+                throw thogcc::errors::CommandLineError(
+                    std::format("Couldn't open llvm output file: {}", args.srcPath));
+            }
+            thogcc::ir::IREmitter emitter(llvmOut);
+        }
+
     } catch (const std::exception& e) {
         std::cerr << "thogcc: " << e.what() << '\n';
         return 1;

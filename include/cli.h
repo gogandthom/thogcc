@@ -7,8 +7,7 @@
 namespace thogcc {
 
 struct CommandLineArgs {
-    std::string srcPath;
-    std::string destPath;
+    std::string srcPath, destPath, llvmDestPath;
     bool verbose = false;
     bool printGraph = false;
 };
