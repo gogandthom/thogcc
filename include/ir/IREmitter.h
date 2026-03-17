@@ -16,7 +16,7 @@ class IREmitter {
    private:
     void emitInstruction(const LLVMFunction& func, LLVMInstrID instrID);
 
-    std::ostream& _out;
+    std::ostream& _out;  // NOLINT
 };
 
 }  // namespace thogcc::ir

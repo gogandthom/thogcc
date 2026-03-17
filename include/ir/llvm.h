@@ -29,28 +29,34 @@ struct LLVMBlockID {
     int id;
 };
 
-#define LLVM_OPCODE      \
-    /* basic maths */    \
-    X(ADD, "add")        \
-    X(FADD, "fadd")      \
-    X(SUB, "sub")        \
-    X(FSUB, "fsub")      \
-    X(MUL, "mul")        \
-    X(FMUL, "fmul")      \
-    X(UDIV, "udiv")      \
-    X(SDIV, "sdiv")      \
-    X(FDIV, "fdiv")      \
-    X(UREM, "urem")      \
-    X(SREM, "srem")      \
-    /* compare things */ \
-    X(ICMP, "icmp")      \
-    /* memory */         \
-    X(ALLOCA, "alloca")  \
-    X(LOAD, "load")      \
-    X(STORE, "store")    \
-    /* control flow */   \
-    X(BR, "br")          \
-    X(CALL, "call")      \
+#define LLVM_OPCODE                              \
+    /* binary operations */                      \
+    X(ADD, "add")                                \
+    X(FADD, "fadd")                              \
+    X(SUB, "sub")                                \
+    X(FSUB, "fsub")                              \
+    X(MUL, "mul")                                \
+    X(FMUL, "fmul")                              \
+    X(UDIV, "udiv")                              \
+    X(SDIV, "sdiv")                              \
+    X(FDIV, "fdiv")                              \
+    X(UREM, "urem")                              \
+    X(SREM, "srem")                              \
+    X(FREM, "frem") /* TODO do we need?*/        \
+                                                 \
+    /* compare things */                         \
+    X(ICMP, "icmp")                              \
+    X(FCMP, "fcmp")                              \
+                                                 \
+    /* memory */                                 \
+    X(ALLOCA, "alloca")                          \
+    X(LOAD, "load")                              \
+    X(STORE, "store")                            \
+    X(GETELEMENTPTR, "getelementptr") /* TODO */ \
+                                                 \
+    /* control flow */                           \
+    X(BR, "br")                                  \
+    X(CALL, "call")                              \
     X(RET, "ret")
 
 enum class LLVMOpcode {

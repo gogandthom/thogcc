@@ -13,48 +13,74 @@ namespace thogcc::ir {
 void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
     const LLVMInstruction& instr = func.getInstr(instrID);
 
-    std::stringstream res;
-    res << "  ";  // indent
+    _out << "  ";  // indent
 
     // Destination register
     bool hasDest = (instr.type.type != LLVMBasicType::VOID) &&
                    (instr.opcode != LLVMOpcode::RET);  // TODO is this correct?
     if (hasDest) {
-        res << "%" << instrID.id << " = ";
+        _out << std::format("%ins{} = ", instrID.id);
     }
 
-    // opcode and type
-    res << printOpcode(instr.opcode) << " " << printType(instr.type);
-
-    // operands
     switch (instr.opcode) {
+        // Binary operations
         case LLVMOpcode::ADD:
         case LLVMOpcode::FADD:
-            res << " " << func.getValueLabel(instr.operands.at(0)) << ", "
-                << func.getValueLabel(instr.operands.at(0));
-            break;
         case LLVMOpcode::SUB:
-        case LLVMOpcode::MUL:
-        case LLVMOpcode::ALLOCA:
         case LLVMOpcode::FSUB:
+        case LLVMOpcode::MUL:
         case LLVMOpcode::FMUL:
         case LLVMOpcode::UDIV:
         case LLVMOpcode::SDIV:
         case LLVMOpcode::FDIV:
         case LLVMOpcode::UREM:
         case LLVMOpcode::SREM:
+        case LLVMOpcode::FREM: {
+            // opcode and type
+            _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
+            // operands
+            _out << std::format(" {}, {}", func.getValueLabel(instr.operands.at(0)),
+                                func.getValueLabel(instr.operands.at(1)));
+            break;
+        }
+
+        // CMP
         case LLVMOpcode::ICMP:
+        case LLVMOpcode::FCMP:
+            break;
+
+        // Memory
+        case LLVMOpcode::ALLOCA:
+            // opcode and type
+            _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
+            break;
         case LLVMOpcode::LOAD:
+            _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
+            _out << std::format(", ptr {}", func.getValueLabel(instr.operands.at(0)));
+            break;
         case LLVMOpcode::STORE:
+            _out << std::format("{} {} {}, ptr {}", printOpcode(instr.opcode),
+                                func.getTypeOf(instr.operands.at(0)).printType(),
+                                func.getValueLabel(instr.operands.at(0)),
+                                func.getValueLabel(instr.operands.at(1)));
+            break;
+        case LLVMOpcode::GETELEMENTPTR:
+            break;
+
+        // Control flow
         case LLVMOpcode::BR:
         case LLVMOpcode::CALL:
             break;
         case LLVMOpcode::RET:
-            res << " " << func.getValueLabel(instr.operands.at(0));
+            // opcode and type
+            _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
+            if (instr.type.type != LLVMBasicType::VOID) {
+                _out << " " << func.getValueLabel(instr.operands.at(0));
+            }
             break;
     }
 
-    return res.str();
+    _out << "\n";
 }
 
 void IREmitter::emitFunction(const LLVMFunction& func) {
@@ -76,6 +102,7 @@ void IREmitter::emitFunction(const LLVMFunction& func) {
     for (const auto& block : func.blocks) {
         // First block can be unnamed
         if (block.label.empty() && !first) {
+            // TODO this should go in IRChecker
             throw std::runtime_error(
                 std::format("Unlabelled non-entry block in function {}", func.name));
         }
