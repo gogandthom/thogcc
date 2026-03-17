@@ -16,8 +16,8 @@ void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
     _out << "  ";  // indent
 
     // Destination register
-    bool hasDest = (instr.type.type != LLVMBasicType::VOID) &&
-                   (instr.opcode != LLVMOpcode::RET);  // TODO is this correct?
+    const bool hasDest = (instr.type.type != LLVMBasicType::VOID) &&
+                         (instr.opcode != LLVMOpcode::RET);  // TODO is this correct?
     if (hasDest) {
         _out << std::format("%ins{} = ", instrID.id);
     }

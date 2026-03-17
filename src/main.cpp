@@ -8,6 +8,7 @@
 #include "ast/Node.h"
 #include "cli.h"
 #include "errors/errors.h"
+#include "ir/IREmitter.h"
 #include "parse.h"
 #include "visitors/PrintVisitor.h"
 

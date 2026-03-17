@@ -1,9 +1,11 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 #include <format>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <variant>
 #include <vector>
 
@@ -11,7 +13,7 @@
 
 namespace thogcc::ir {
 
-enum class LLVMValueKind {
+enum class LLVMValueKind : std::uint8_t {
     PARAM,
     INSTR,
     CONST,
@@ -60,7 +62,7 @@ struct LLVMBlockID {
     X(CALL, "call")                              \
     X(RET, "ret")
 
-enum class LLVMOpcode {
+enum class LLVMOpcode : std::uint8_t {
 #define X(VAL, NAME) VAL,
     LLVM_OPCODE
 #undef X
@@ -75,6 +77,8 @@ inline std::string_view printOpcode(const LLVMOpcode& op) {
         LLVM_OPCODE
 #undef X
     }
+    assert(false && "Unhandled LLVMOpcode");
+    __builtin_unreachable();
 };
 
 /// A set of instructions that runs start to finish without branching

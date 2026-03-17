@@ -1,11 +1,18 @@
 #pragma once
 
+#include <cstdint>
 #include <format>
 #include <string>
 
 namespace thogcc::ir {
 
-enum class LLVMBasicType { VOID, INT, FLOAT, DOUBLE, PTR };
+enum class LLVMBasicType : std::uint8_t {
+    VOID,
+    INT,
+    FLOAT,
+    DOUBLE,
+    PTR,
+};
 
 struct LLVMType {
     LLVMBasicType type;
