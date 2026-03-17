@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <format>
+#include <stdexcept>
 #include <string>
 #include <variant>
 #include <vector>
@@ -95,6 +96,12 @@ struct LLVMParameter {
     std::string name;
 };
 
+/// Constants
+struct LLVMConstant {
+    LLVMType type;
+    std::variant<uint64_t, double> value;
+};
+
 struct LLVMFunction {
     std::string name;
     LLVMType returnType;
@@ -103,17 +110,19 @@ struct LLVMFunction {
     // value pools
     std::vector<LLVMInstruction> instructions;
     std::vector<LLVMParameter> params;
-    std::vector<uint64_t> consts;
+    std::vector<LLVMConstant> consts;
 
     std::string getValueLabel(const LLVMValueID& id) const {
         switch (id.kind) {
             case LLVMValueKind::INSTR:
-                return std::format("%{}", id.id);
+                return std::format("%ins{}", id.id);
             case LLVMValueKind::PARAM:
                 return std::format("%{}", params.at(id.id).name);
             case LLVMValueKind::CONST:
-                return std::format("{}", consts.at(id.id));
+                return std::visit([](const auto& c) { return std::to_string(c); },
+                                  consts.at(id.id).value);
         }
+        throw std::runtime_error("Invalid ValueID");
     }
 
     const LLVMInstruction& getInstr(LLVMInstrID id) const {
@@ -127,8 +136,9 @@ struct LLVMFunction {
             case LLVMValueKind::INSTR:
                 return instructions.at(id.id).type;
             case LLVMValueKind::CONST:
-                return {LLVMBasicType::INT, 32};
+                return consts.at(id.id).type;
         }
+        throw std::runtime_error("Invalid ValueID");
     }
 };
 
