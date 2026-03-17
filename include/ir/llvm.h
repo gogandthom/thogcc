@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <format>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "ir/LLVMType.h"
@@ -58,6 +59,17 @@ enum class LLVMOpcode {
 #undef X
 };
 
+/// helper to get opcode
+inline std::string_view printOpcode(const LLVMOpcode& op) {
+    switch (op) {
+#define X(VAL, NAME)      \
+    case LLVMOpcode::VAL: \
+        return NAME;
+        LLVM_OPCODE
+#undef X
+    }
+};
+
 /// A set of instructions that runs start to finish without branching
 struct LLVMBasicBlock {
     std::string label;
@@ -100,6 +112,17 @@ struct LLVMFunction {
 
     const LLVMInstruction& getInstr(LLVMInstrID id) const {
         return instructions.at(id.id);
+    }
+
+    LLVMType getTypeOf(const LLVMValueID& id) const {
+        switch (id.kind) {
+            case LLVMValueKind::PARAM:
+                return params.at(id.id).type;
+            case LLVMValueKind::INSTR:
+                return instructions.at(id.id).type;
+            case LLVMValueKind::CONST:
+                return {LLVMBasicType::INT, 32};
+        }
     }
 };
 

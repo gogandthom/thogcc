@@ -11,9 +11,11 @@ class IREmitter {
    public:
     IREmitter(std::ostream& out) : _out(out) {}
 
-    void printFunction(const LLVMFunction& func);
+    void emitFunction(const LLVMFunction& func);
 
    private:
+    void emitInstruction(const LLVMFunction& func, LLVMInstrID instrID);
+
     std::ostream& _out;
 };
 
