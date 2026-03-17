@@ -145,6 +145,7 @@ class ValueNode
     case E::VAL: \
         return #VAL;
                 TYPE_QUALIFIER
+#undef X
             }
             assert(false && "Invalid _value for TypeQualifier");
             __builtin_unreachable();
