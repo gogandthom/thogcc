@@ -11,9 +11,10 @@ class IREmitter {
    public:
     IREmitter(std::ostream& out) : _out(out) {}
 
-    void emitFunction(const LLVMFunction& func);
+    void emit(const LLVMModule& module);
 
    private:
+    void emitFunction(const LLVMFunction& func);
     void emitInstruction(const LLVMFunction& func, LLVMInstrID instrID);
 
     std::ostream& _out;  // NOLINT

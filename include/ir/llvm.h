@@ -106,6 +106,8 @@ struct LLVMConstant {
     std::variant<uint64_t, double> value;
 };
 
+/// A single function.
+/// Each LLVMFunction also contains its own instructions, params, consts arenas.
 struct LLVMFunction {
     std::string name;
     LLVMType returnType;
@@ -144,6 +146,13 @@ struct LLVMFunction {
         }
         throw std::runtime_error("Invalid ValueID");
     }
+};
+
+/// The LLVM equivalent of a translational unit
+struct LLVMModule {
+    std::string srcFileName;
+    std::vector<LLVMFunction> functions;
+    // std::vector</*TODO*/> globals;
 };
 
 }  // namespace thogcc::ir

@@ -38,9 +38,9 @@ int main(int argc, char** argv) {
             std::ofstream llvmOut(args.llvmDestPath);
             if (!input.is_open()) {
                 throw thogcc::errors::CommandLineError(
-                    std::format("Couldn't open llvm output file: {}", args.srcPath));
+                    std::format("Couldn't open llvm output file: {}", args.llvmDestPath));
             }
-            thogcc::ir::IREmitter emitter(llvmOut);
+            thogcc::ir::IREmitter llvmEmitter(llvmOut);
         }
 
     } catch (const std::exception& e) {

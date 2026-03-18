@@ -9,7 +9,14 @@
 
 namespace thogcc::ir {
 
-// helper to get a single instruction
+void IREmitter::emit(const LLVMModule& module) {
+    _out << std::format("source_filename = \"{}\"\n\n", module.srcFileName);
+
+    for (const auto& func : module.functions) {
+        emitFunction(func);
+    }
+}
+
 void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
     const LLVMInstruction& instr = func.getInstr(instrID);
 
