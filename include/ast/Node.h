@@ -1,9 +1,11 @@
 #pragma once
 
+#include <cassert>
 #include <concepts>
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "ast/StorageClassSpecifier.h"
@@ -115,7 +117,7 @@ template <typename E>
 class ValueNode
     : public ValueNodeBase {  // Same as NodeList, we will override getKind, accept ourselves
    public:
-    ValueNode(E value) : _value(value) {};
+    ValueNode(E value) : _value(value){};
     std::string getLabel() override {
         if constexpr (std::is_same_v<E, TypeSpecifier>) {
             switch (_value) {
@@ -152,6 +154,7 @@ class ValueNode
         return NodeKind::ValueNodeBase;
     }
     void accept(visitors::Visitor& v) override {
+        v.visitVal(*this);
         v.visit(static_cast<ValueNodeBase&>(*this));
     }
 
