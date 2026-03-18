@@ -5,6 +5,7 @@
 
 #include "ast/Node.h"
 #include "ast/fwd.h"
+#include "ast/nodes.h"
 #include "visitors/Visitor.h"
 
 namespace thogcc::visitors {
