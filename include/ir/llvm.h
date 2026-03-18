@@ -106,6 +106,13 @@ struct LLVMConstant {
     std::variant<uint64_t, double> value;
 };
 
+/// Global variable
+struct LLVMGlobal {
+    LLVMType type;
+    std::string name;
+    std::variant<uint64_t, double> initValue;
+};
+
 /// A single function.
 /// Each LLVMFunction also contains its own instructions, params, consts arenas.
 struct LLVMFunction {
@@ -152,7 +159,7 @@ struct LLVMFunction {
 struct LLVMModule {
     std::string srcFileName;
     std::vector<LLVMFunction> functions;
-    // std::vector</*TODO*/> globals;
+    std::vector<LLVMGlobal> globals;
 };
 
 }  // namespace thogcc::ir

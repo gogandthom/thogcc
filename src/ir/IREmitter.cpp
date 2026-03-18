@@ -3,6 +3,8 @@
 #include <format>
 #include <iterator>
 #include <stdexcept>
+#include <string>
+#include <variant>
 
 #include "ir/LLVMType.h"
 #include "ir/llvm.h"
@@ -11,6 +13,13 @@ namespace thogcc::ir {
 
 void IREmitter::emit(const LLVMModule& module) {
     _out << std::format("source_filename = \"{}\"\n\n", module.srcFileName);
+
+    for (const auto& global : module.globals) {
+        _out << std::format(
+            "@{} = global {} {}\n", global.name, global.type.printType(),
+            std::visit([](auto& val) { return std::to_string(val); }, global.initValue));
+    }
+    _out << "\n";
 
     for (const auto& func : module.functions) {
         emitFunction(func);
