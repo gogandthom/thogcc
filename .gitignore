@@ -3,3 +3,9 @@ build/
 
 # clangd things
 .cache
+
+# testing
+a.out
+/*.s
+/*.ll
+/*.c
