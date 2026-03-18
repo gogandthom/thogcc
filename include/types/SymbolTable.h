@@ -29,13 +29,18 @@ struct StructField {
     std::shared_ptr<Type> type;
 };
 
+struct UnionField {
+    std::string name;
+    std::shared_ptr<Type> type;
+};
+
 struct StructSymbol {
     std::vector<StructField> members;
     bool isDefinition;
 };
 
 struct UnionSymbol {
-    std::vector<VarSymbol> members;
+    std::vector<UnionField> members;
     bool isDefinition;
 };
 

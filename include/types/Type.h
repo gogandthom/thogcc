@@ -7,7 +7,7 @@
 namespace thogcc::types {
 
 struct BasicType {
-    enum {
+    enum class Kind {
         VOID,
         CHAR,
         SHORT,
@@ -33,8 +33,20 @@ struct FuncType {
     std::vector<std::shared_ptr<struct Type>> params;
 };
 
+struct StructType {
+    std::shared_ptr<struct StructSymbol> symbol;
+};
+
+struct UnionType {
+    std::shared_ptr<struct UnionSymbol> symbol;
+};
+
+struct EnumType {
+    std::shared_ptr<struct EnumSymbol> symbol;
+};
+
 struct Type {
-    std::variant<BasicType, PointerType, ArrayType, FuncType> data;
+    std::variant<BasicType, PointerType, ArrayType, FuncType, StructType, UnionType, EnumType> data;
     bool isConst, isVolatile;  // type_qualifier can apply to any level
 };
 
