@@ -118,6 +118,9 @@ void SemaVisitor::visit(ast::declarations::FunctionDefinition& node) {
     }
 
     _table.popScope();
+
+    auto funcSymb = std::get<types::FuncSymbol>(*_table.getBack().ordinarySymbols.end()->second);
+    node.setSymbol(std::make_shared<types::FuncSymbol>(funcSymb));
 }
 
 void SemaVisitor::visit(ast::declarations::ParameterDeclaration& node) {
