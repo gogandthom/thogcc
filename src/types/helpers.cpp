@@ -1,5 +1,6 @@
 #include "types/helpers.h"
 
+#include <format>
 #include <variant>
 
 #include "errors/errors.h"
@@ -44,6 +45,24 @@ ir::LLVMType toLLVMType(const Type& type) {
             [](const EnumType&) -> ir::LLVMType { return {ir::LLVMBasicType::INT, 32}; },
         },
         type.data);
+}
+
+std::string printType(const Type& type) {
+    std::string res;
+    res = std::format("{}{}", type.isConst ? "const " : "", type.isVolatile ? "volatile " : "");
+
+    res += std::visit(overload{
+                          [type](const BasicType&) { return "BasicType"; },
+                          [type](const PointerType&) { return "PointerType"; },
+                          [type](const ArrayType&) { return "ArrayType"; },
+                          [type](const FuncType&) { return "FuncType"; },
+                          [type](const StructType&) { return "StructType"; },
+                          [type](const UnionType&) { return "UnionType"; },
+                          [type](const EnumType&) { return "EnumType"; },
+                      },
+                      type.data);
+
+    return res;
 }
 
 }  // namespace thogcc::types
