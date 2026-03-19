@@ -15,6 +15,7 @@
 #include "types/Scope.h"
 #include "types/SymbolTable.h"
 #include "types/Type.h"
+#include "utils.h"
 #include "visitors/RecursiveVisitor.h"
 
 namespace thogcc::visitors {
@@ -183,6 +184,21 @@ void SemaVisitor::visit(ast::expressions::IdentifierExpression& node) {
     node.setSymbol(symb);
     node.setEvaluatedType(resolvedType);
     node.setIsLvalue(true);  // should always be an lvalue I think?
+}
+
+void SemaVisitor::visit(ast::expressions::PrimaryExpression& node) {
+    std::shared_ptr<types::Type> type{};
+    std::visit(
+        overload{
+            [&type](int& /* x */) { type->data = types::BasicType{types::BasicType::Kind::INT}; },
+            [&type](double& /* x */) {
+                type->data = types::BasicType{types::BasicType::Kind::DOUBLE};
+            },
+            [](auto& /* x */) { assert(false && "TODO: strings"); },
+        },
+        node.getValue());
+    node.setEvaluatedType(type);
+    node.setIsLvalue(false);
 }
 
 void SemaVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
