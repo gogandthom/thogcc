@@ -21,8 +21,13 @@ class SemaVisitor : public RecursiveVisitor {
 
     void visit(ast::statements::CompoundStatement& node) override;
     void visit(ast::declarations::Declaration& node) override;
+    void visit(ast::declarations::FunctionDefinition& node) override;
+    void visit(ast::declarations::ParameterDeclaration& node) override;
+    void visit(ast::declarators::FunctionDeclarator& node) override;
     void visit(ast::declarators::IdentifierDeclarator& node) override;
+    void visit(ast::declarators::PointerDeclarator& node) override;
     void visit(ast::expressions::IdentifierExpression& node) override;
+    void visit(ast::expressions::binary::AssignmentExpression& node) override;
 
    private:
     types::SymbolTable _table;

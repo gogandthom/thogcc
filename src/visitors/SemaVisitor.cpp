@@ -1,11 +1,18 @@
 #include "visitors/SemaVisitor.h"
 
+#include <cassert>
+#include <memory>
+#include <string>
+#include <variant>
+#include <vector>
+
 #include "ast/Node.h"
 #include "ast/StorageClassSpecifier.h"
 #include "ast/TypeQualifier.h"
 #include "ast/TypeSpecifier.h"
 #include "ast/all.h"
-#include "ast/declarators/IdentifierDeclarator.h"
+#include "errors/errors.h"
+#include "types/Scope.h"
 #include "types/SymbolTable.h"
 #include "types/Type.h"
 #include "visitors/RecursiveVisitor.h"
@@ -14,6 +21,9 @@ namespace thogcc::visitors {
 
 void SemaVisitor::visitVal(ast::ValueNode<ast::TypeSpecifier>& valNode) {
     types::BasicType basicType;
+    if (auto* b = std::get_if<types::BasicType>(&_curType.data)) {
+        basicType = *b;
+    }
 
     switch (valNode.getValue()) {
         case ast::TypeSpecifier::VOID:
@@ -42,6 +52,7 @@ void SemaVisitor::visitVal(ast::ValueNode<ast::TypeSpecifier>& valNode) {
             break;
         case ast::TypeSpecifier::UNSIGNED:
             basicType.isUnsigned = true;
+            break;
         case ast::TypeSpecifier::STRUCT:
         case ast::TypeSpecifier::ENUM:
         case ast::TypeSpecifier::TYPE_NAME:
@@ -84,15 +95,116 @@ void SemaVisitor::visit(ast::declarations::Declaration& node) {
     node.getDeclarators()->accept(*this);
 }
 
+void SemaVisitor::visit(ast::declarations::FunctionDefinition& node) {
+    _curType = types::Type{};
+
+    _table.pushScope();
+
+    node.getSpecifiers()->accept(*this);
+    node.getDeclarator()->accept(*this);
+
+    if (node.getDeclarations() != nullptr) {
+        throw errors::SemaError("K&R FunctionDefinition not supported.");
+    }
+
+    // Must do this here to avoid CompountStatement pushing an extra scope
+    if (node.getStatement()->getDeclarationList() != nullptr) {
+        node.getStatement()->getDeclarationList()->accept(*this);
+    }
+
+    if (node.getStatement()->getStatementList() != nullptr) {
+        node.getStatement()->getStatementList()->accept(*this);
+    }
+
+    _table.popScope();
+}
+
+void SemaVisitor::visit(ast::declarations::ParameterDeclaration& node) {
+    _curType = types::Type{};
+    node.getSpecifiers()->accept(*this);
+
+    if (node.getDecl() != nullptr) node.getDecl()->accept(*this);
+
+    // TODO holds_alternative<ArrayType>
+
+    auto varSymb = types::VarSymbol{std::make_shared<types::Type>(_curType)};
+    auto sharedSymb = std::make_shared<types::VarSymbol>(varSymb);
+    node.setSymbol(sharedSymb);
+    // TODO add to _table here or elsewhere?
+}
+
+void SemaVisitor::visit(ast::declarators::FunctionDeclarator& node) {
+    auto returnType = std::make_shared<types::Type>(_curType);
+
+    if (node.getForm() == ast::declarators::FunctionDeclaratorForm::KAndR) {
+        throw errors::SemaError("Unimplemented: K&R");
+    }
+
+    std::vector<std::shared_ptr<types::Type>> params;
+    if (node.getParams() != nullptr) {
+        for (const auto& p : node.getParams()->getNodes()) {
+            p->accept(*this);
+            params.push_back(std::make_shared<types::Type>(_curType));
+        }
+    }
+
+    types::FuncType funcType{returnType, params};
+    types::OrdSymbol symb{types::FuncSymbol{
+        std::make_shared<types::Type>(funcType),
+        true  // TODO fix
+    }};
+    auto sharedSymb = std::make_shared<types::OrdSymbol>(symb);
+
+    // Do not call node.getBase()->accept(*this) I think?
+    _table.addToParentScope(std::string{node.getIdentifier()}, sharedSymb);
+}
+
 void SemaVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
-    types::OrdSymbol symbol{types::VarSymbol{std::make_shared<types::Type>(_curType)}};
-    _table.addToScope(std::string{node.getIdentifier()}, symbol);
+    auto varSymb = types::VarSymbol{std::make_shared<types::Type>(_curType)};
+    auto sharedSymb = std::make_shared<types::OrdSymbol>(varSymb);
+    _table.addToScope(std::string{node.getIdentifier()}, sharedSymb);
+}
+
+void SemaVisitor::visit(ast::declarators::PointerDeclarator& node) {
+    auto ptrType = types::Type{};
+    ptrType.data = types::PointerType{std::make_shared<types::Type>(_curType)};
+
+    auto baseType = _curType;
+    _curType = ptrType;
+
+    RecursiveVisitor::visit(node);
+
+    _curType = baseType;
 }
 
 void SemaVisitor::visit(ast::expressions::IdentifierExpression& node) {
     auto symb = _table.getOrd(std::string{node.getIdentifier()});
-    auto varSymb = std::get<types::VarSymbol>(symb);
-    node.setSymbol(varSymb);
+    auto resolvedType = std::visit([](auto& s) { return s.type; }, *symb);
+    node.setSymbol(symb);
+    node.setEvaluatedType(resolvedType);
+    node.setIsLvalue(true);  // should always be an lvalue I think?
+}
+
+void SemaVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
+    node.getLhs()->accept(*this);
+    auto lhsType = node.getLhs()->getEvaluatedType();
+    bool lhsIsLval = node.getLhs()->isLvalue();
+
+    node.getRhs()->accept(*this);
+    auto rhsType = node.getRhs()->getEvaluatedType();
+
+    if (!lhsIsLval) {
+        throw errors::SemaError("AssignmentExpression LHS is not lvalue");
+    }
+
+    if (lhsType->isConst) {
+        throw errors::SemaError("Assignment to constant variable");
+    }
+
+    // TODO implicit conversion and type checking lhs = rhs
+
+    node.setEvaluatedType(lhsType);
+    node.setIsLvalue(false);
 }
 
 void SemaVisitor::visit(ast::statements::CompoundStatement& node) {

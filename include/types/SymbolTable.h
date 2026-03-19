@@ -29,11 +29,33 @@ class SymbolTable {
         _scopes.pop_back();
     };
 
-    void addToScope(std::string identifier, OrdSymbol symbol) {
-        _scopes.back().ordinarySymbols.insert({identifier, symbol});
+    void addToScope(std::string identifier, std::shared_ptr<OrdSymbol> symbol) {
+        std::visit(
+            [identifier](const auto& s) {
+                if (s.type) {
+                    std::cout << identifier << " (type: " << printType(*s.type) << ")" << std::endl;
+                } else {
+                    std::cout << "fuck" << std::endl;
+                }
+            },
+            *symbol);
+        _scopes.back().ordinarySymbols.insert({identifier, std::move(symbol)});
     }
 
-    OrdSymbol getOrd(const std::string& identifier) {
+    void addToParentScope(std::string identifier, std::shared_ptr<OrdSymbol> symbol) {
+        std::visit(
+            [identifier](const auto& s) {
+                if (s.type) {
+                    std::cout << identifier << " (type: " << printType(*s.type) << ")" << std::endl;
+                } else {
+                    std::cout << "fuck" << std::endl;
+                }
+            },
+            *symbol);
+        _scopes.at(_scopes.size() - 2).ordinarySymbols.insert({identifier, std::move(symbol)});
+    }
+
+    std::shared_ptr<OrdSymbol> getOrd(const std::string& identifier) {
         for (auto it = _scopes.rbegin(); it != _scopes.rend(); ++it) {
             auto a = it->ordinarySymbols.find(identifier);
             if (a != it->ordinarySymbols.end()) {

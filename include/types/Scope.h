@@ -49,8 +49,8 @@ typedef std::variant<VarSymbol, FuncSymbol, TypedefSymbol> OrdSymbol;
 typedef std::variant<StructSymbol, UnionSymbol, EnumSymbol> TagSymbol;
 
 struct Scope {
-    std::map<std::string, TagSymbol> tagSymbols;
-    std::map<std::string, OrdSymbol> ordinarySymbols;
+    std::map<std::string, std::shared_ptr<TagSymbol>> tagSymbols;
+    std::map<std::string, std::shared_ptr<OrdSymbol>> ordinarySymbols;
 };
 
 }  // namespace thogcc::types
