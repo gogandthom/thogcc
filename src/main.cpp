@@ -10,6 +10,7 @@
 #include "errors/errors.h"
 #include "ir/IREmitter.h"
 #include "parse.h"
+#include "visitors/IRGenVisitor.h"
 #include "visitors/PrintVisitor.h"
 
 int main(int argc, char** argv) {
@@ -34,6 +35,10 @@ int main(int argc, char** argv) {
             root->accept(printer);
         }
 
+        // Generate IR
+        auto irGenerator = thogcc::visitors::IRGenVisitor(args.srcPath);
+        root->accept(irGenerator);
+
         if (!args.llvmDestPath.empty()) {
             std::ofstream llvmOut(args.llvmDestPath);
             if (!input.is_open()) {
@@ -41,6 +46,8 @@ int main(int argc, char** argv) {
                     std::format("Couldn't open llvm output file: {}", args.llvmDestPath));
             }
             thogcc::ir::IREmitter llvmEmitter(llvmOut);
+
+            llvmEmitter.emit(irGenerator.getModule());
         }
 
     } catch (const std::exception& e) {
