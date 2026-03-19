@@ -4,7 +4,6 @@
 #include <format>
 #include <iostream>
 #include <memory>
-#include <optional>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -12,7 +11,7 @@
 #include "ast/Node.h"
 #include "ast/all.h"
 #include "ast/utils.h"
-#include "types/SymbolTable.h"
+#include "types/Scope.h"
 #include "utils.h"
 
 namespace thogcc::visitors {
@@ -26,8 +25,8 @@ void PrintVisitor::printNode(int id, ast::Node& node) {
     _out << std::format("  n{}[{}]\n", id, ast::nodeKindName(node.getKind()));
 }
 
-void PrintVisitor::printSymbol(int id, const std::optional<types::OrdSymbol>& symb) {
-    if (!symb.has_value()) return;
+void PrintVisitor::printSymbol(int id, const std::shared_ptr<types::OrdSymbol>& symb) {
+    if (!symb) return;
 
     // TODO print more details
     std::visit(overload{
@@ -41,7 +40,7 @@ void PrintVisitor::printSymbol(int id, const std::optional<types::OrdSymbol>& sy
                        _out << std::format("  n{} --> n{}{{{{{}}}}}\n", id, ++_id, "TypedefSymbol");
                    },
                },
-               symb.value());
+               *symb);
 }
 
 template <typename T>
@@ -91,6 +90,9 @@ void PrintVisitor::visit(ast::declarations::FunctionDefinition& node) {
     visitChild(cur, "Declarator", node.getDeclarator());
     visitChild(cur, "Declarations", node.getDeclarations());
     visitChild(cur, "Statement", node.getStatement());
+    if (node.getSymbol()) {
+        _out << std::format("  n{} --> n{}{{{{{}}}}}\n", cur, ++_id, "FuncSymbol");
+    }
 };
 
 void PrintVisitor::visit(ast::declarations::ParameterDeclaration& node) {
@@ -98,6 +100,9 @@ void PrintVisitor::visit(ast::declarations::ParameterDeclaration& node) {
     printNode(cur, node);
     visitChild(cur, "Specifiers", node.getSpecifiers());
     visitChild(cur, "Declarator", node.getDecl());
+    if (node.getSymbol()) {
+        _out << std::format("  n{} --> n{}{{{{{}}}}}\n", cur, ++_id, "VarSymbol");
+    }
 }
 
 void PrintVisitor::visit(ast::declarations::StructDeclaration& node) {
