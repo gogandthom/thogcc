@@ -21,6 +21,8 @@ std::unique_ptr<ast::Node> ParseC(std::ifstream& file, const CommandLineArgs& ar
 #ifndef NDEBUG
     // parse.trace only set for debug builds
     parse.set_debug_level((int)args.verbose);
+#else
+    (void)args;
 #endif
 
     parse();
