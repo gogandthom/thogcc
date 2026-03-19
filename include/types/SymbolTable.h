@@ -7,11 +7,11 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
 #include "types/Scope.h"
-#include "types/Type.h"
 
 namespace thogcc::types {
 
@@ -39,7 +39,7 @@ class SymbolTable {
                 }
             },
             *symbol);
-        _scopes.back().ordinarySymbols.insert({identifier, std::move(symbol)});
+        _scopes.back().ordinarySymbols.insert({std::move(identifier), std::move(symbol)});
     }
 
     void addToParentScope(std::string identifier, std::shared_ptr<OrdSymbol> symbol) {
@@ -52,7 +52,8 @@ class SymbolTable {
                 }
             },
             *symbol);
-        _scopes.at(_scopes.size() - 2).ordinarySymbols.insert({identifier, std::move(symbol)});
+        _scopes.at(_scopes.size() - 2)
+            .ordinarySymbols.insert({std::move(identifier), std::move(symbol)});
     }
 
     std::shared_ptr<OrdSymbol> getOrd(const std::string& identifier) {

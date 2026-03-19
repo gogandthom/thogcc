@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <variant>
 #include <vector>
@@ -7,7 +8,7 @@
 namespace thogcc::types {
 
 struct BasicType {
-    enum class Kind {
+    enum class Kind : std::uint8_t {
         VOID,
         CHAR,
         SHORT,
@@ -15,7 +16,7 @@ struct BasicType {
         LONG,
         FLOAT,
         DOUBLE,
-    } kind;
+    } kind = BasicType::Kind::VOID;
     bool isUnsigned = false;
 };
 
@@ -47,7 +48,7 @@ struct EnumType {
 
 struct Type {
     std::variant<BasicType, PointerType, ArrayType, FuncType, StructType, UnionType, EnumType> data;
-    bool isConst, isVolatile;  // type_qualifier can apply to any level
+    bool isConst = false, isVolatile = false;  // type_qualifier can apply to any level
 };
 
 }  // namespace thogcc::types

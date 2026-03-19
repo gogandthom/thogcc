@@ -188,7 +188,7 @@ void SemaVisitor::visit(ast::expressions::IdentifierExpression& node) {
 void SemaVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
     node.getLhs()->accept(*this);
     auto lhsType = node.getLhs()->getEvaluatedType();
-    bool lhsIsLval = node.getLhs()->isLvalue();
+    const bool lhsIsLval = node.getLhs()->isLvalue();
 
     node.getRhs()->accept(*this);
     auto rhsType = node.getRhs()->getEvaluatedType();

@@ -2,6 +2,9 @@
 
 #include <map>
 #include <memory>
+#include <string>
+#include <variant>
+#include <vector>
 
 #include "types/Type.h"
 

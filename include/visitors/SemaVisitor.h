@@ -1,9 +1,11 @@
 #pragma once
 
+#include <string>
+
 #include "ast/Node.h"
 #include "ast/TypeQualifier.h"
 #include "ast/TypeSpecifier.h"
-#include "ast/declarations/Declaration.h"
+#include "ast/all.h"
 #include "types/SymbolTable.h"
 #include "types/Type.h"
 #include "visitors/RecursiveVisitor.h"
