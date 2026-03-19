@@ -16,6 +16,7 @@ jobs:
           apt_packages: bison,flex
           cmake_command: cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=YES
           build_dir: build
+          config_file: ".clang-tidy"
 
       # Uploads an artefact containing clang_fixes.json
       - uses: ZedThree/clang-tidy-review/upload@v0.23.0

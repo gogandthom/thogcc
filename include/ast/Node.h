@@ -127,6 +127,9 @@ class ValueNode
                 TYPE_SPECIFIER
 #undef X
             }
+            assert(false && "Invalid _value for TypeSpecifier");
+            __builtin_unreachable();
+
         } else if constexpr (std::is_same_v<E, StorageClassSpecifier>) {
             switch (_value) {
 #define X(VAL)   \
@@ -135,13 +138,18 @@ class ValueNode
                 STORAGE_CLASS_SPECIFIER
 #undef X
             }
+            assert(false && "Invalid _value for StorageClassSpecifier");
+            __builtin_unreachable();
         } else if constexpr (std::is_same_v<E, TypeQualifier>) {
             switch (_value) {
 #define X(VAL)   \
     case E::VAL: \
         return #VAL;
                 TYPE_QUALIFIER
+#undef X
             }
+            assert(false && "Invalid _value for TypeQualifier");
+            __builtin_unreachable();
         } else if constexpr (std::is_convertible_v<E, std::string>) {
             return _value;
         } else {
