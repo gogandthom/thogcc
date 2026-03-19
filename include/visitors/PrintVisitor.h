@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <ostream>
 #include <string_view>
 
@@ -23,7 +22,7 @@ class PrintVisitor : public Visitor {
 
    private:
     void printNode(int id, ast::Node& node);
-    void printSymbol(int id, const std::shared_ptr<types::OrdSymbol>& symb);
+    void printSymbol(int id, const types::OrdSymbol& symb);
 
     template <typename T>
     void visitChild(int cur, std::string_view label, T* child);

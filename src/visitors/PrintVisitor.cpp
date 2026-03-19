@@ -26,22 +26,23 @@ void PrintVisitor::printNode(int id, ast::Node& node) {
     _out << std::format("  n{}[{}]\n", id, ast::nodeKindName(node.getKind()));
 }
 
-void PrintVisitor::printSymbol(int id, const std::shared_ptr<types::OrdSymbol>& symb) {
-    if (!symb) return;
-
+void PrintVisitor::printSymbol(int id, const types::OrdSymbol& symb) {
     // TODO print more details
     std::visit(overload{
-                   [this, id](const types::VarSymbol& /*s*/) {
+                   [this, id](const std::shared_ptr<types::VarSymbol>& s) {
+                       if (!s) return;
                        _out << std::format("  n{} --> n{}{{{{{}}}}}\n", id, ++_id, "VarSymbol");
                    },
-                   [this, id](const types::FuncSymbol& /*s*/) {
+                   [this, id](const std::shared_ptr<types::FuncSymbol>& s) {
+                       if (!s) return;
                        _out << std::format("  n{} --> n{}{{{{{}}}}}\n", id, ++_id, "FuncSymbol");
                    },
-                   [this, id](const types::TypedefSymbol& /*s*/) {
+                   [this, id](const std::shared_ptr<types::TypedefSymbol>& s) {
+                       if (!s) return;
                        _out << std::format("  n{} --> n{}{{{{{}}}}}\n", id, ++_id, "TypedefSymbol");
                    },
                },
-               *symb);
+               symb);
 }
 
 template <typename T>

@@ -122,8 +122,8 @@ void SemaVisitor::visit(ast::declarations::FunctionDefinition& node) {
     _table.popScope();
 
     auto ordSymb = _table.getOrd(funcName);
-    auto funcSymb = std::get<types::FuncSymbol>(*ordSymb);
-    node.setSymbol(std::make_shared<types::FuncSymbol>(funcSymb));
+    auto funcSymb = std::get<std::shared_ptr<types::FuncSymbol>>(ordSymb);
+    node.setSymbol(funcSymb);
 }
 
 void SemaVisitor::visit(ast::declarations::ParameterDeclaration& node) {
@@ -156,20 +156,18 @@ void SemaVisitor::visit(ast::declarators::FunctionDeclarator& node) {
     }
 
     types::FuncType funcType{returnType, params};
-    types::OrdSymbol symb{types::FuncSymbol{
-        std::make_shared<types::Type>(funcType),
-        true  // TODO fix
-    }};
-    auto sharedSymb = std::make_shared<types::OrdSymbol>(symb);
+    auto sharedSymb = std::make_shared<types::FuncSymbol>(std::make_shared<types::Type>(funcType),
+                                                          true  // TODO fix
+    );
 
     // Do not call node.getBase()->accept(*this) I think?
-    _table.addToParentScope(std::string{node.getIdentifier()}, sharedSymb);
+    _table.addToParentScope(std::string{node.getIdentifier()}, {sharedSymb});
 }
 
 void SemaVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
     auto varSymb = types::VarSymbol{std::make_shared<types::Type>(_curType)};
-    auto sharedSymb = std::make_shared<types::OrdSymbol>(varSymb);
-    _table.addToScope(std::string{node.getIdentifier()}, sharedSymb);
+    auto sharedSymb = std::make_shared<types::VarSymbol>(varSymb);
+    _table.addToScope(std::string{node.getIdentifier()}, {sharedSymb});
 }
 
 void SemaVisitor::visit(ast::declarators::PointerDeclarator& node) {
@@ -186,23 +184,24 @@ void SemaVisitor::visit(ast::declarators::PointerDeclarator& node) {
 
 void SemaVisitor::visit(ast::expressions::IdentifierExpression& node) {
     auto symb = _table.getOrd(std::string{node.getIdentifier()});
-    auto resolvedType = std::visit([](auto& s) { return s.type; }, *symb);
+    auto resolvedType = std::visit([](auto& s) { return s.get()->type; }, symb);
     node.setSymbol(symb);
     node.setEvaluatedType(resolvedType);
     node.setIsLvalue(true);  // should always be an lvalue I think?
 }
 
 void SemaVisitor::visit(ast::expressions::PrimaryExpression& node) {
-    std::shared_ptr<types::Type> type{};
-    std::visit(
-        overload{
-            [&type](int& /* x */) { type->data = types::BasicType{types::BasicType::Kind::INT}; },
-            [&type](double& /* x */) {
-                type->data = types::BasicType{types::BasicType::Kind::DOUBLE};
-            },
-            [](auto& /* x */) { assert(false && "TODO: strings"); },
-        },
-        node.getValue());
+    auto type = std::make_shared<types::Type>();
+    std::visit(overload{
+                   [&type](const int& /* x */) {
+                       type->data = types::BasicType{types::BasicType::Kind::INT};
+                   },
+                   [&type](const double& /* x */) {
+                       type->data = types::BasicType{types::BasicType::Kind::DOUBLE};
+                   },
+                   [](const auto& /* x */) { assert(false && "TODO: strings"); },
+               },
+               node.getValue());
     node.setEvaluatedType(type);
     node.setIsLvalue(false);
 }
