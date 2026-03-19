@@ -104,6 +104,8 @@ void SemaVisitor::visit(ast::declarations::FunctionDefinition& node) {
     node.getSpecifiers()->accept(*this);
     node.getDeclarator()->accept(*this);
 
+    std::string funcName{node.getDeclarator()->getIdentifier()};
+
     if (node.getDeclarations() != nullptr) {
         throw errors::SemaError("K&R FunctionDefinition not supported.");
     }
@@ -119,7 +121,8 @@ void SemaVisitor::visit(ast::declarations::FunctionDefinition& node) {
 
     _table.popScope();
 
-    auto funcSymb = std::get<types::FuncSymbol>(*_table.getBack().ordinarySymbols.end()->second);
+    auto ordSymb = _table.getOrd(funcName);
+    auto funcSymb = std::get<types::FuncSymbol>(*ordSymb);
     node.setSymbol(std::make_shared<types::FuncSymbol>(funcSymb));
 }
 
