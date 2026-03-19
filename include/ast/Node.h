@@ -1,9 +1,11 @@
 #pragma once
 
+#include <cassert>
 #include <concepts>
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "ast/StorageClassSpecifier.h"
@@ -115,7 +117,7 @@ template <typename E>
 class ValueNode
     : public ValueNodeBase {  // Same as NodeList, we will override getKind, accept ourselves
    public:
-    ValueNode(E value) : _value(value) {};
+    ValueNode(E value) : _value(value){};
     std::string getLabel() override {
         if constexpr (std::is_same_v<E, TypeSpecifier>) {
             switch (_value) {
@@ -125,6 +127,9 @@ class ValueNode
                 TYPE_SPECIFIER
 #undef X
             }
+            assert(false && "Invalid _value for TypeSpecifier");
+            __builtin_unreachable();
+
         } else if constexpr (std::is_same_v<E, StorageClassSpecifier>) {
             switch (_value) {
 #define X(VAL)   \
@@ -133,13 +138,18 @@ class ValueNode
                 STORAGE_CLASS_SPECIFIER
 #undef X
             }
+            assert(false && "Invalid _value for StorageClassSpecifier");
+            __builtin_unreachable();
         } else if constexpr (std::is_same_v<E, TypeQualifier>) {
             switch (_value) {
 #define X(VAL)   \
     case E::VAL: \
         return #VAL;
                 TYPE_QUALIFIER
+#undef X
             }
+            assert(false && "Invalid _value for TypeQualifier");
+            __builtin_unreachable();
         } else if constexpr (std::is_convertible_v<E, std::string>) {
             return _value;
         } else {
@@ -152,6 +162,7 @@ class ValueNode
         return NodeKind::ValueNodeBase;
     }
     void accept(visitors::Visitor& v) override {
+        v.visitVal(*this);
         v.visit(static_cast<ValueNodeBase&>(*this));
     }
 

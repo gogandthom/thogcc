@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 #include <string_view>
 
@@ -38,6 +39,8 @@ constexpr std::string_view nodeKindName(NodeKind kind) {
         AST_NODES_ALL(V)
 #undef V
     }
+    assert(false && "Invalid kind for NodeKind");
+    __builtin_unreachable();
 };
 
 }  // namespace thogcc::ast

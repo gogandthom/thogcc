@@ -18,7 +18,7 @@ class PrimaryExpression : public VisitableNode<PrimaryExpression, ExpressionBase
     };
 
    private:
-    std::variant<int, unsigned, long, unsigned long, float, double, std::string> _value;
+    std::variant<int, double, std::string> _value;
 };
 
 }  // namespace thogcc::ast::expressions

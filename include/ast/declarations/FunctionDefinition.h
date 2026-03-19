@@ -8,6 +8,7 @@
 #include "ast/declarations/DeclarationBase.h"
 #include "ast/declarators/DeclaratorBase.h"
 #include "ast/statements/CompoundStatement.h"
+#include "types/Scope.h"
 
 namespace thogcc::ast::declarations {
 
@@ -40,11 +41,19 @@ class FunctionDefinition
         return _statement.get();
     };
 
+    void setSymbol(std::shared_ptr<types::FuncSymbol> symb) {
+        _symb = std::move(symb);
+    }
+    auto getSymbol() const {
+        return _symb;
+    }
+
    private:
     std::unique_ptr<DeclarationSpecifiers> _specifiers;
     std::unique_ptr<declarators::DeclaratorBase> _declarator;
     std::unique_ptr<NodeList<DeclarationBase>> _declarations;
     std::unique_ptr<statements::CompoundStatement> _statement;
+    std::shared_ptr<types::FuncSymbol> _symb;
 };
 
 }  // namespace thogcc::ast::declarations
