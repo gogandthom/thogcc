@@ -8,6 +8,7 @@
 #include "ast/Node.h"
 #include "cli.h"
 #include "errors/errors.h"
+#include "ir/IREmitter.h"
 #include "parse.h"
 #include "visitors/PrintVisitor.h"
 
@@ -32,6 +33,16 @@ int main(int argc, char** argv) {
             auto printer = thogcc::visitors::PrintVisitor(std::cout);
             root->accept(printer);
         }
+
+        if (!args.llvmDestPath.empty()) {
+            std::ofstream llvmOut(args.llvmDestPath);
+            if (!input.is_open()) {
+                throw thogcc::errors::CommandLineError(
+                    std::format("Couldn't open llvm output file: {}", args.llvmDestPath));
+            }
+            thogcc::ir::IREmitter llvmEmitter(llvmOut);
+        }
+
     } catch (const std::exception& e) {
         std::cerr << "thogcc: " << e.what() << '\n';
         return 1;

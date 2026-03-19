@@ -1,0 +1,140 @@
+#include "ir/IREmitter.h"
+
+#include <format>
+#include <iterator>
+#include <stdexcept>
+#include <string>
+#include <variant>
+
+#include "ir/LLVMType.h"
+#include "ir/llvm.h"
+
+namespace thogcc::ir {
+
+void IREmitter::emit(const LLVMModule& module) {
+    _out << std::format("source_filename = \"{}\"\n\n", module.srcFileName);
+
+    for (const auto& global : module.globals) {
+        _out << std::format(
+            "@{} = global {} {}\n", global.name, global.type.printType(),
+            std::visit([](auto& val) { return std::to_string(val); }, global.initValue));
+    }
+    _out << "\n";
+
+    for (const auto& func : module.functions) {
+        emitFunction(func);
+    }
+}
+
+void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
+    const LLVMInstruction& instr = func.getInstr(instrID);
+
+    _out << "  ";  // indent
+
+    // Destination register
+    const bool hasDest = (instr.type.type != LLVMBasicType::VOID) &&
+                         (instr.opcode != LLVMOpcode::RET);  // TODO is this correct?
+    if (hasDest) {
+        _out << std::format("%ins{} = ", instrID.id);
+    }
+
+    switch (instr.opcode) {
+        // Binary operations
+        case LLVMOpcode::ADD:
+        case LLVMOpcode::FADD:
+        case LLVMOpcode::SUB:
+        case LLVMOpcode::FSUB:
+        case LLVMOpcode::MUL:
+        case LLVMOpcode::FMUL:
+        case LLVMOpcode::UDIV:
+        case LLVMOpcode::SDIV:
+        case LLVMOpcode::FDIV:
+        case LLVMOpcode::UREM:
+        case LLVMOpcode::SREM:
+        case LLVMOpcode::FREM: {
+            // opcode and type
+            _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
+            // operands
+            _out << std::format(" {}, {}", func.getValueLabel(instr.operands.at(0)),
+                                func.getValueLabel(instr.operands.at(1)));
+            break;
+        }
+
+        // CMP
+        case LLVMOpcode::ICMP:
+        case LLVMOpcode::FCMP:
+            break;
+
+        // Memory
+        case LLVMOpcode::ALLOCA:
+            // opcode and type
+            _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
+            break;
+        case LLVMOpcode::LOAD:
+            _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
+            _out << std::format(", ptr {}", func.getValueLabel(instr.operands.at(0)));
+            break;
+        case LLVMOpcode::STORE:
+            _out << std::format("{} {} {}, ptr {}", printOpcode(instr.opcode),
+                                func.getTypeOf(instr.operands.at(0)).printType(),
+                                func.getValueLabel(instr.operands.at(0)),
+                                func.getValueLabel(instr.operands.at(1)));
+            break;
+        case LLVMOpcode::GETELEMENTPTR:
+            break;
+
+        // Control flow
+        case LLVMOpcode::BR:
+        case LLVMOpcode::CALL:
+            break;
+        case LLVMOpcode::RET:
+            // opcode and type
+            _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
+            if (instr.type.type != LLVMBasicType::VOID) {
+                _out << " " << func.getValueLabel(instr.operands.at(0));
+            }
+            break;
+    }
+
+    _out << "\n";
+}
+
+void IREmitter::emitFunction(const LLVMFunction& func) {
+    // Name and return type
+    _out << "define " << func.returnType.printType() << " @" << func.name << "(";
+
+    // Parameters
+    for (auto it = func.params.begin(); it != func.params.end(); ++it) {
+        _out << it->type.printType() << " %" << it->name;
+        if (std::next(it) != func.params.end()) {
+            _out << ", ";
+        }
+    }
+
+    _out << ") {\n";
+
+    // Blocks
+    bool first = true;
+    for (const auto& block : func.blocks) {
+        // First block can be unnamed
+        if (block.label.empty() && !first) {
+            // TODO this should go in IRChecker
+            throw std::runtime_error(
+                std::format("Unlabelled non-entry block in function {}", func.name));
+        }
+        first = false;
+
+        // Labels for subsequent blocks
+        if (!block.label.empty()) {
+            _out << block.label << ":\n";
+        }
+
+        for (const auto& id : block.instrIDs) {
+            emitInstruction(func, id);
+        }
+    }
+
+    _out << "}\n";
+}
+
+}  // namespace thogcc::ir

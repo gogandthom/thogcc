@@ -25,6 +25,11 @@ CommandLineArgs parseArgs(const std::vector<std::string_view>& args) {
             res.verbose = true;
         } else if (arg == "-g" || arg == "--graph") {
             res.printGraph = true;
+        } else if (arg == "-l" || arg == "--emit-llvm") {
+            if (++it == args.end()) {
+                throw errors::CommandLineError("--emit-llvm requires a filename");
+            }
+            res.llvmDestPath = *it;
         } else {
             throw errors::CommandLineError("Unknown argument: " + std::string(arg));
         }
