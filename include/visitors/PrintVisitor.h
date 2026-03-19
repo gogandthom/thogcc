@@ -80,6 +80,7 @@ class PrintVisitor : public DefaultVisitor {
 
    private:
     void printNode(int id, ast::Node& node);
+    void printSymbol(int id, const std::optional<types::OrdSymbol>& symb);
 
     template <typename T>
     void visitChild(int cur, std::string_view label, T* child);

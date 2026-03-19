@@ -4,6 +4,7 @@
 #include <format>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -11,6 +12,7 @@
 #include "ast/Node.h"
 #include "ast/all.h"
 #include "ast/utils.h"
+#include "types/SymbolTable.h"
 
 namespace thogcc::visitors {
 
@@ -28,6 +30,24 @@ PrintVisitor::PrintVisitor(std::ostream& out) : _out(out) {
 
 void PrintVisitor::printNode(int id, ast::Node& node) {
     _out << std::format("  n{}[{}]\n", id, ast::nodeKindName(node.getKind()));
+}
+
+void PrintVisitor::printSymbol(int id, const std::optional<types::OrdSymbol>& symb) {
+    if (!symb.has_value()) return;
+
+    // TODO print more details
+    std::visit(overload{
+                   [this, id](const types::VarSymbol& /*s*/) {
+                       _out << std::format("  n{} --> n{}{{{{{}}}}}\n", id, ++_id, "VarSymbol");
+                   },
+                   [this, id](const types::FuncSymbol& /*s*/) {
+                       _out << std::format("  n{} --> n{}{{{{{}}}}}\n", id, ++_id, "FuncSymbol");
+                   },
+                   [this, id](const types::TypedefSymbol& /*s*/) {
+                       _out << std::format("  n{} --> n{}{{{{{}}}}}\n", id, ++_id, "TypedefSymbol");
+                   },
+               },
+               symb.value());
 }
 
 template <typename T>
@@ -171,6 +191,7 @@ void PrintVisitor::visit(ast::expressions::IdentifierExpression& node) {
     const int cur = _id;
     printNode(cur, node);
     _out << std::format("  n{} -->|Identifier| n{}([{}])\n", cur, ++_id, node.getIdentifier());
+    printSymbol(cur, node.getSymbol());
 };
 
 void PrintVisitor::visit(ast::expressions::IncDecExpression& node) {
