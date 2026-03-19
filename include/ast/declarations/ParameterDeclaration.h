@@ -7,6 +7,7 @@
 #include "ast/Node.h"
 #include "ast/declarations/DeclarationBase.h"
 #include "ast/declarators/DeclaratorBase.h"
+#include "types/Scope.h"
 
 namespace thogcc::ast::declarations {
 
@@ -23,9 +24,17 @@ class ParameterDeclaration : public VisitableNode<ParameterDeclaration, Declarat
         return _decl.get();
     }
 
+    void setSymbol(std::shared_ptr<types::VarSymbol> symb) {
+        _symb = std::move(symb);
+    }
+    auto getSymbol() const {
+        return _symb;
+    }
+
    private:
     std::unique_ptr<DeclarationSpecifiers> _specifiers;
     std::unique_ptr<declarators::DeclaratorBase> _decl;
+    std::shared_ptr<types::VarSymbol> _symb;
 };
 
 }  // namespace thogcc::ast::declarations
