@@ -12,15 +12,10 @@
 #include "ast/Node.h"
 #include "ast/all.h"
 #include "ast/utils.h"
+#include "types/Scope.h"
+#include "utils.h"
 
 namespace thogcc::visitors {
-
-template <class... Ts>
-struct overload : Ts... {
-    using Ts::operator()...;
-};
-template <class... Ts>
-overload(Ts...) -> overload<Ts...>;
 
 PrintVisitor::PrintVisitor(std::ostream& out) : _out(out) {
     _out << "%%{init: {\"flowchart\": {\"defaultRenderer\": \"elk\"}} }%%\n";
@@ -29,6 +24,24 @@ PrintVisitor::PrintVisitor(std::ostream& out) : _out(out) {
 
 void PrintVisitor::printNode(int id, ast::Node& node) {
     _out << std::format("  n{}[{}]\n", id, ast::nodeKindName(node.getKind()));
+}
+
+void PrintVisitor::printSymbol(int id, const std::shared_ptr<types::OrdSymbol>& symb) {
+    if (!symb) return;
+
+    // TODO print more details
+    std::visit(overload{
+                   [this, id](const types::VarSymbol& /*s*/) {
+                       _out << std::format("  n{} --> n{}{{{{{}}}}}\n", id, ++_id, "VarSymbol");
+                   },
+                   [this, id](const types::FuncSymbol& /*s*/) {
+                       _out << std::format("  n{} --> n{}{{{{{}}}}}\n", id, ++_id, "FuncSymbol");
+                   },
+                   [this, id](const types::TypedefSymbol& /*s*/) {
+                       _out << std::format("  n{} --> n{}{{{{{}}}}}\n", id, ++_id, "TypedefSymbol");
+                   },
+               },
+               *symb);
 }
 
 template <typename T>
@@ -101,6 +114,9 @@ void PrintVisitor::visit(ast::declarations::FunctionDefinition& node) {
     visitChild(cur, "Declarator", node.getDeclarator());
     visitChild(cur, "Declarations", node.getDeclarations());
     visitChild(cur, "Statement", node.getStatement());
+    if (node.getSymbol()) {
+        _out << std::format("  n{} --> n{}{{{{{}}}}}\n", cur, ++_id, "FuncSymbol");
+    }
 };
 
 void PrintVisitor::visit(ast::declarations::ParameterDeclaration& node) {
@@ -108,6 +124,9 @@ void PrintVisitor::visit(ast::declarations::ParameterDeclaration& node) {
     printNode(cur, node);
     visitChild(cur, "Specifiers", node.getSpecifiers());
     visitChild(cur, "Declarator", node.getDecl());
+    if (node.getSymbol()) {
+        _out << std::format("  n{} --> n{}{{{{{}}}}}\n", cur, ++_id, "VarSymbol");
+    }
 }
 
 void PrintVisitor::visit(ast::declarations::StructDeclaration& node) {
@@ -195,6 +214,7 @@ void PrintVisitor::visit(ast::expressions::IdentifierExpression& node) {
     const int cur = _id;
     printNode(cur, node);
     _out << std::format("  n{} -->|Identifier| n{}([{}])\n", cur, ++_id, node.getIdentifier());
+    printSymbol(cur, node.getSymbol());
 };
 
 void PrintVisitor::visit(ast::expressions::IncDecExpression& node) {

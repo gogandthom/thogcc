@@ -186,8 +186,8 @@ void RecursiveVisitor::visit(ast::expressions::prefix::UnaryOperatorExpression& 
 void RecursiveVisitor::visit(ast::statements::StatementBase& /* node */) {}
 
 void RecursiveVisitor::visit(ast::statements::CompoundStatement& node) {
-    traverse(node.getStatementList());
     traverse(node.getDeclarationList());
+    traverse(node.getStatementList());
 }
 
 void RecursiveVisitor::visit(ast::statements::ExpressionStatement& node) {

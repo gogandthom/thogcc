@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "ast/StorageClassSpecifier.h"
@@ -161,6 +162,7 @@ class ValueNode
         return NodeKind::ValueNodeBase;
     }
     void accept(visitors::Visitor& v) override {
+        v.visitVal(*this);
         v.visit(static_cast<ValueNodeBase&>(*this));
     }
 
