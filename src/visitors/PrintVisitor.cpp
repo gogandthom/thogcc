@@ -13,15 +13,9 @@
 #include "ast/all.h"
 #include "ast/utils.h"
 #include "types/SymbolTable.h"
+#include "utils.h"
 
 namespace thogcc::visitors {
-
-template <class... Ts>
-struct overload : Ts... {
-    using Ts::operator()...;
-};
-template <class... Ts>
-overload(Ts...) -> overload<Ts...>;
 
 PrintVisitor::PrintVisitor(std::ostream& out) : _out(out) {
     _out << "%%{init: {\"flowchart\": {\"defaultRenderer\": \"elk\"}} }%%\n";
