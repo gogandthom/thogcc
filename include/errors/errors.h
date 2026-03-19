@@ -19,4 +19,8 @@ struct ParseError : public ErrorBase {
     ParseError(const std::string& msg) : ErrorBase(std::format("ParseError: {}", msg)){};
 };
 
+struct SemaError : public ErrorBase {
+    SemaError(const std::string& msg) : ErrorBase(std::format("SemanticAnalysisError: {}", msg)) {}
+};
+
 }  // namespace thogcc::errors
