@@ -27,10 +27,10 @@ class Visitor {
     AST_NODES_ALL(V)
 #undef V
 
-    virtual void visitVal(ast::ValueNode<ast::TypeSpecifier>& valNode) {}
-    virtual void visitVal(ast::ValueNode<ast::StorageClassSpecifier>& valNode) {}
-    virtual void visitVal(ast::ValueNode<ast::TypeQualifier>& valNode) {}
-    virtual void visitVal(ast::ValueNode<std::string>& valNode) {}
+    virtual void visitVal(ast::ValueNode<ast::TypeSpecifier>& /* valNode */) {}
+    virtual void visitVal(ast::ValueNode<ast::StorageClassSpecifier>& /* valNode */) {}
+    virtual void visitVal(ast::ValueNode<ast::TypeQualifier>& /* valNode */) {}
+    virtual void visitVal(ast::ValueNode<std::string>& /* valNode */) {}
 };
 
 };  // namespace thogcc::visitors
