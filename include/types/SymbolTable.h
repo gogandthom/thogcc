@@ -1,8 +1,10 @@
 #pragma once
 
 #include <cassert>
+#include <format>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <variant>
 #include <vector>
@@ -71,7 +73,19 @@ class SymbolTable {
         _scopes.pop_back();
     };
 
-    void addToScope(std::string identifier, BasicType type);
+    void addToScope(std::string identifier, OrdSymbol symbol) {
+        _scopes.back().ordinarySymbols.insert({identifier, symbol});
+    }
+
+    OrdSymbol getOrd(const std::string& identifier) {
+        for (auto it = _scopes.rbegin(); it != _scopes.rend(); ++it) {
+            auto a = it->ordinarySymbols.find(identifier);
+            if (a != it->ordinarySymbols.end()) {
+                return a->second;
+            }
+        }
+        throw std::runtime_error(std::format("Symbol {} doesn't exist.", identifier));
+    }
 
    private:
     std::vector<Scope> _scopes;

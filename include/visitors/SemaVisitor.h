@@ -5,6 +5,7 @@
 #include "ast/TypeSpecifier.h"
 #include "ast/declarations/Declaration.h"
 #include "types/SymbolTable.h"
+#include "types/Type.h"
 #include "visitors/RecursiveVisitor.h"
 
 namespace thogcc::visitors {
@@ -20,9 +21,12 @@ class SemaVisitor : public RecursiveVisitor {
 
     void visit(ast::statements::CompoundStatement& node) override;
     void visit(ast::declarations::Declaration& node) override;
+    void visit(ast::declarators::IdentifierDeclarator& node) override;
+    void visit(ast::expressions::IdentifierExpression& node) override;
 
    private:
-    types::SymbolTable& _table;
+    types::SymbolTable _table;
+    types::Type _curType;
 };
 
 };  // namespace thogcc::visitors
