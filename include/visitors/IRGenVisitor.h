@@ -16,12 +16,15 @@ class IRGenVisitor : public DefaultVisitor {
     void visit(ast::declarations::Declaration& node) override;
     void visit(ast::declarations::FunctionDefinition& node) override;
 
+    void visit(ast::declarations::ParameterDeclaration& node) override;
+
     void visit(ast::declarators::FunctionDeclarator& node) override;
     void visit(ast::declarators::InitDeclarator& node) override;
     void visit(ast::declarators::IdentifierDeclarator& node) override;
 
     void visit(ast::statements::CompoundStatement& node) override;
     void visit(ast::statements::ExpressionStatement& node) override;
+    void visit(ast::statements::ReturnStatement& node) override;
 
     void visit(ast::expressions::binary::AssignmentExpression& node) override;
     void visit(ast::expressions::ListExpression& node) override;

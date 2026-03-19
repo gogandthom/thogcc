@@ -63,9 +63,18 @@ void IRGenVisitor::visit(ast::declarations::FunctionDefinition& node) {
     this->_module.functions.push_back(func);
 }
 
+void IRGenVisitor::visit(ast::declarations::ParameterDeclaration& node) {
+    this->_function->params.push_back({
+        // TODO
+        .type = {},
+        .name = (std::string)node.getDecl()->getIdentifier(),
+    });
+}
+
 void IRGenVisitor::visit(ast::declarators::FunctionDeclarator& node) {
     this->_function->name = node.getIdentifier();
-    // TODO
+    node.getParams()->accept(*this);
+    if (node.getIdentifiers()) node.getIdentifiers()->accept(*this);
 }
 
 void IRGenVisitor::visit(ast::declarators::InitDeclarator& node) {
@@ -90,6 +99,24 @@ void IRGenVisitor::visit(ast::statements::ExpressionStatement& node) {
     node.getExpr()->accept(*this);
 }
 
+void IRGenVisitor::visit(ast::statements::ReturnStatement& node) {
+    node.getExpr()->accept(*this);
+    int ret = this->_function->instructions.size() - 1;
+
+    ir::LLVMInstruction instr = {
+        .opcode = ir::LLVMOpcode::RET,
+        .type = this->_function->instructions.at(ret).type,
+        .operands =
+            {
+                {
+                    .kind = ir::LLVMValueKind::INSTR,
+                    .id = ret,
+                },
+            },
+    };
+    this->_function->instructions.push_back(instr);
+}
+
 void IRGenVisitor::visit(ast::expressions::ListExpression& node) {
     for (size_t i = 0; i < node.getList()->size(); i++) {
         node.getList()->getRawNode(i).accept(*this);
@@ -112,7 +139,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
     // once typing things exist this can be fixed to respect the lhs type correctly,
     // currently always assumes lhs dereferenced is the same type as the rhs for loading
     switch (node.getOp()) {
-        case ast::expressions::binary::AssignmentExpressionType::MUL_ASSIGN:
+        case ast::expressions::binary::AssignmentExpressionType::MUL_ASSIGN: {
             instr = {
                 .opcode = ir::LLVMOpcode::LOAD,
                 .type = this->_function->instructions.at(rhs).type,
@@ -143,9 +170,9 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             };
             this->_function->instructions.push_back(instr);
             break;
-
-            // TODO: fix with signed/unsigned
-        case ast::expressions::binary::AssignmentExpressionType::DIV_ASSIGN:
+        }
+        // TODO: fix with signed/unsigned
+        case ast::expressions::binary::AssignmentExpressionType::DIV_ASSIGN: {
             instr = {
                 .opcode = ir::LLVMOpcode::LOAD,
                 .type = this->_function->instructions.at(rhs).type,
@@ -176,9 +203,9 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             };
             this->_function->instructions.push_back(instr);
             break;
-
+        }
             // TODO: same as above
-        case ast::expressions::binary::AssignmentExpressionType::MOD_ASSIGN:
+        case ast::expressions::binary::AssignmentExpressionType::MOD_ASSIGN: {
             instr = {
                 .opcode = ir::LLVMOpcode::LOAD,
                 .type = this->_function->instructions.at(rhs).type,
@@ -209,7 +236,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             };
             this->_function->instructions.push_back(instr);
             break;
-
+        }
         case ast::expressions::binary::AssignmentExpressionType::ADD_ASSIGN: {
             instr = {
                 .opcode = ir::LLVMOpcode::LOAD,
@@ -242,7 +269,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             this->_function->instructions.push_back(instr);
             break;
         }
-        case ast::expressions::binary::AssignmentExpressionType::SUB_ASSIGN:
+        case ast::expressions::binary::AssignmentExpressionType::SUB_ASSIGN: {
             instr = {
                 .opcode = ir::LLVMOpcode::LOAD,
                 .type = this->_function->instructions.at(rhs).type,
@@ -273,14 +300,15 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             };
             this->_function->instructions.push_back(instr);
             break;
-
-            // do these after signed things exist
-        case ast::expressions::binary::AssignmentExpressionType::LEFT_ASSIGN:
+        }
+        // do these after signed things exist
+        case ast::expressions::binary::AssignmentExpressionType::LEFT_ASSIGN: {
             break;
-        case ast::expressions::binary::AssignmentExpressionType::RIGHT_ASSIGN:
+        }
+        case ast::expressions::binary::AssignmentExpressionType::RIGHT_ASSIGN: {
             break;
-
-        case ast::expressions::binary::AssignmentExpressionType::AND_ASSIGN:
+        }
+        case ast::expressions::binary::AssignmentExpressionType::AND_ASSIGN: {
             // instr = {
             //     .opcode = ir::LLVMOpcode::LOAD,
             //     .type = this->_function->instructions.at(rhs).type,
@@ -311,7 +339,8 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             // };
             // this->_function->instructions.push_back(instr);
             break;
-        case ast::expressions::binary::AssignmentExpressionType::XOR_ASSIGN:
+        }
+        case ast::expressions::binary::AssignmentExpressionType::XOR_ASSIGN: {
             // instr = {
             //     .opcode = ir::LLVMOpcode::LOAD,
             //     .type = this->_function->instructions.at(rhs).type,
@@ -342,7 +371,8 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             // };
             // this->_function->instructions.push_back(instr);
             break;
-        case ast::expressions::binary::AssignmentExpressionType::OR_ASSIGN:
+        }
+        case ast::expressions::binary::AssignmentExpressionType::OR_ASSIGN: {
             // instr = {
             //     .opcode = ir::LLVMOpcode::LOAD,
             //     .type = this->_function->instructions.at(rhs).type,
@@ -373,10 +403,11 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             // };
             // this->_function->instructions.push_back(instr);
             break;
-
+        }
         case ast::expressions::binary::AssignmentExpressionType::ASSIGN:
-        default:
+        default: {
             break;
+        }
     }
 
     int out = this->_function->instructions.size() - 1;
