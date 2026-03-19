@@ -48,6 +48,10 @@ class SymbolTable {
         throw std::runtime_error(std::format("Symbol {} doesn't exist.", identifier));
     }
 
+    const Scope& getBack() const {
+        return _scopes.back();
+    }
+
    private:
     std::vector<Scope> _scopes;
 };
