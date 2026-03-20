@@ -1,13 +1,18 @@
 #include "codegen/RISCVEmitter.h"
 
 #include <cassert>
+#include <cstddef>
+#include <cstdint>
 #include <format>
+#include <stdexcept>
+#include <string>
 #include <string_view>
 #include <variant>
 #include <vector>
 
 #include "ir/LLVMType.h"
 #include "ir/llvm.h"
+#include "utils.h"
 
 namespace thogcc::codegen {
 
@@ -18,15 +23,33 @@ const int stackItemSize = 8;
 void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targetReg) {
     switch (valID.kind) {
         case ir::LLVMValueKind::PARAM:
-            // ????
+            if (valID.id < 8) {
+                _out << std::format("    mv {}, a{}\n", targetReg, valID.id);
+            } else {
+                throw std::runtime_error("Unimplemented: params > 7");
+            }
             break;
         case ir::LLVMValueKind::INSTR:
             loadFromStack(valID.id, targetReg);
             break;
         case ir::LLVMValueKind::CONST:
-            std::visit([this, targetReg](
-                           auto& c) { _out << std::format("    li {}, {}\n", targetReg, c); },
-                       _curFunc->consts.at(valID.id).value);
+            std::visit(
+                overload{
+                    [this, targetReg](const uint64_t& c) {
+                        _out << std::format("    li {}, {}\n", targetReg, c);
+                    },
+                    [this, targetReg, valID](const float&) {
+                        std::string label = std::format(".LC_{}_{}", _curFunc->name, valID.id);
+                        _out << std::format("    lla t0, {}\n", label);
+                        _out << std::format("    flw {}, 0(t0)\n", targetReg);
+                    },
+                    [this, targetReg, valID](const double&) {
+                        std::string label = std::format(".LC_{}_{}", _curFunc->name, valID.id);
+                        _out << std::format("    lla t0, {}\n", label);
+                        _out << std::format("    flw {}, 0(t0)\n", targetReg);
+                    },
+                },
+                _curFunc->consts.at(valID.id).value);
             break;
     }
 }
@@ -48,6 +71,44 @@ void RISCVEmitter::emit(const ir::LLVMModule& module) {
     _out << std::format(".file \"{}\"\n", module.srcFileName);
     _out << ".option nopic\n";  // static binary, not a shared library
     // TODO .attribute arch, unaligned_access, stack_align
+
+    // Float consts
+    if (!module.functions.empty()) {
+        _out << ".section .rodata\n";
+        for (const auto& func : module.functions) {
+            for (size_t i = 0; i < func.consts.size(); ++i) {
+                auto c = func.consts[i];
+                if (std::holds_alternative<float>(c.value)) {
+                    _out << std::format(".LC_{}_{}:\n", func.name, i);
+                    _out << std::format("  .float {}\n", std::get<float>(c.value));
+                } else if (std::holds_alternative<double>(c.value)) {
+                    _out << std::format(".LC_{}_{}:\n", func.name, i);
+                    _out << std::format("  .double {}\n", std::get<double>(c.value));
+                }
+            }
+        }
+    }
+
+    // Globals
+    if (!module.globals.empty()) {
+        _out << ".data\n";
+        for (const auto& global : module.globals) {
+            _out << std::format(".type {}, @object\n", global.name);
+            _out << std::format(".globl {}\n", global.name);
+            _out << std::format("{}:\n", global.name);
+            std::visit(overload{
+                           [this, &global](const uint64_t& val) {
+                               _out << std::format("    .word {}\n", val);
+                               _out << std::format("    .size {}, 4\n", global.name);
+                           },
+                           [this, &global](const double& val) {
+                               _out << std::format("    .double {:f}\n", val);
+                               _out << std::format("    .size {}, 8\n", global.name);
+                           },
+                       },
+                       global.initValue);
+        }
+    }
 
     _out << ".text\n";
     for (const auto& func : module.functions) {
