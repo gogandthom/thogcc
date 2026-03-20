@@ -1,12 +1,15 @@
 #pragma once
 
+#include <memory>
 #include <ostream>
+#include <string>
 #include <string_view>
 
 #include "ast/Node.h"
 #include "ast/fwd.h"
 #include "ast/nodes.h"
 #include "types/Scope.h"
+#include "types/Type.h"
 #include "visitors/Visitor.h"
 
 namespace thogcc::visitors {
@@ -22,6 +25,8 @@ class PrintVisitor : public Visitor {
 
    private:
     void printNode(int id, ast::Node& node);
+    static std::string getTypeLabel(const std::shared_ptr<types::Type>& type);
+    void printExprNode(int id, ast::expressions::ExpressionBase& node);
     void printSymbol(int id, const types::OrdSymbol& symb);
 
     template <typename T>

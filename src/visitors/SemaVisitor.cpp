@@ -1,6 +1,8 @@
 #include "visitors/SemaVisitor.h"
 
 #include <cassert>
+#include <cstddef>
+#include <format>
 #include <memory>
 #include <string>
 #include <variant>
@@ -141,7 +143,7 @@ void SemaVisitor::visit(ast::declarations::FunctionDefinition& node) {
     node.getSpecifiers()->accept(*this);
     node.getDeclarator()->accept(*this);
 
-    std::string funcName{node.getDeclarator()->getIdentifier()};
+    const std::string funcName{node.getDeclarator()->getIdentifier()};
 
     if (node.getDeclarations() != nullptr) {
         throw errors::SemaError("K&R FunctionDefinition not supported.");
@@ -171,7 +173,7 @@ void SemaVisitor::visit(ast::declarations::ParameterDeclaration& node) {
 
     // TODO holds_alternative<ArrayType>
 
-    auto varSymb = types::VarSymbol{std::make_shared<types::Type>(_curType)};
+    const auto varSymb = types::VarSymbol{std::make_shared<types::Type>(_curType)};
     auto sharedSymb = std::make_shared<types::VarSymbol>(varSymb);
     node.setSymbol(sharedSymb);
     // TODO add to _table here or elsewhere?
@@ -202,9 +204,17 @@ void SemaVisitor::visit(ast::declarators::FunctionDeclarator& node) {
 }
 
 void SemaVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
-    auto varSymb = types::VarSymbol{std::make_shared<types::Type>(_curType)};
+    const types::VarSymbol varSymb{std::make_shared<types::Type>(_curType)};
     auto sharedSymb = std::make_shared<types::VarSymbol>(varSymb);
     _table.addToScope(std::string{node.getIdentifier()}, {sharedSymb});
+    node.setSymbol(sharedSymb);
+}
+
+void SemaVisitor::visit(ast::declarators::InitDeclarator& node) {
+    RecursiveVisitor::visit(node);
+    auto name = node.getIdentifier();
+    auto symb = _table.getOrd(std::string{name});
+    node.setSymbol(symb);
 }
 
 void SemaVisitor::visit(ast::declarators::PointerDeclarator& node) {
@@ -294,6 +304,19 @@ void SemaVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
     node.setIsLvalue(false);
 }
 
+void SemaVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
+    node.getLhs()->accept(*this);
+    auto lhsType = node.getLhs()->getEvaluatedType();
+
+    node.getRhs()->accept(*this);
+    auto rhsType = node.getRhs()->getEvaluatedType();
+
+    auto resultType = std::make_shared<types::Type>(types::BasicType{types::BasicType::Kind::INT});
+
+    node.setEvaluatedType(resultType);
+    node.setIsLvalue(false);
+}
+
 void SemaVisitor::visit(ast::expressions::postfix::FunctionCallExpression& node) {
     node.getExpr()->accept(*this);
     auto calleeType = node.getExpr()->getEvaluatedType();
@@ -302,12 +325,16 @@ void SemaVisitor::visit(ast::expressions::postfix::FunctionCallExpression& node)
         throw errors::SemaError("Expected a FuncType");
     }
 
-    if (node.getArgs()->size() != funcType->params.size()) {
+    size_t funcArgs = 0;
+    if (node.getArgs() != nullptr) {
+        funcArgs = node.getArgs()->size();
+        node.getArgs()->accept(*this);
+    }
+
+    if ((funcArgs != funcType->params.size())) {
         throw errors::SemaError(std::format("Function expected {} arguments, got {}",
                                             funcType->params.size(), node.getArgs()->size()));
     }
-
-    node.getArgs()->accept(*this);
 
     node.setEvaluatedType(funcType->returnType);
     node.setIsLvalue(false);

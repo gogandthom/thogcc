@@ -2,13 +2,10 @@
 
 #include <cassert>
 #include <format>
-#include <iostream>
 #include <map>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include "types/Scope.h"
