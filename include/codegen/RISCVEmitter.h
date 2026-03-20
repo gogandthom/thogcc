@@ -20,7 +20,7 @@ class RISCVEmitter {
 
     void loadValue(const ir::LLVMValueID& valID, std::string_view targetReg);
 
-    void pushStack(std::string_view srcReg);
+    void pushStack(int id, std::string_view srcReg);
     void loadFromStack(int id, std::string_view targetReg);
     void clearStack();
 
