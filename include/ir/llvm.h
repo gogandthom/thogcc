@@ -67,6 +67,23 @@ enum class LLVMOpcode : std::uint8_t {
 #undef X
 };
 
+#define LLVM_CMP_COND \
+    X(EQ, "eq")       \
+    X(NE, "ne")       \
+    X(UGT, "ugt")     \
+    X(UGE, "uge")     \
+    X(ULT, "ult")     \
+    X(SGT, "sgt")     \
+    X(SGE, "sge")     \
+    X(SLT, "slt")     \
+    X(SLE, "sle")
+
+enum class LLVMCmpCond : std::uint8_t {
+#define X(VAL, NAME) VAL,
+    LLVM_CMP_COND
+#undef X
+};
+
 /// helper to get opcode
 inline std::string_view printOpcode(const LLVMOpcode& op) {
     switch (op) {
@@ -80,6 +97,16 @@ inline std::string_view printOpcode(const LLVMOpcode& op) {
     __builtin_unreachable();
 };
 
+inline std::string_view printCmpCond(const LLVMCmpCond& op) {
+    switch (op) {
+#define X(VAL, NAME)       \
+    case LLVMCmpCond::VAL: \
+        return #NAME;
+        LLVM_CMP_COND
+#undef X
+    }
+}
+
 /// A set of instructions that runs start to finish without branching
 struct LLVMBasicBlock {
     std::string label;
@@ -91,6 +118,7 @@ struct LLVMInstruction {
     LLVMOpcode opcode;
     LLVMType type;
     std::vector<LLVMValueID> operands;
+    LLVMCmpCond cond;  // only for ICMP
 };
 
 // Function parameters (we only support named parameters)
