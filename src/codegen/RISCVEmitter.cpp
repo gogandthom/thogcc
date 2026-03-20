@@ -341,7 +341,6 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
         case ir::LLVMOpcode::CALL:
             break;
         case ir::LLVMOpcode::RET:
-            std::cout << instr.operands.at(0).id << std::endl;
             loadValue(instr.operands.at(0), "a0");
             pushStack(instrID.id, "zero");
             _out << std::format("    j .L_{}_epilogue\n", _curFunc->name);
