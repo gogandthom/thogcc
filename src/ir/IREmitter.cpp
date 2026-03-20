@@ -61,7 +61,7 @@ void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
         // CMP
         case LLVMOpcode::ICMP: {
             // opcode and cond
-            LLVMType opType = func.getTypeOf(instr.operands.at(0));
+            const LLVMType opType = func.getTypeOf(instr.operands.at(0));
             _out << std::format("icmp {} {}", printCmpCond(instr.cond), opType.printType());
             // operands
             _out << std::format(" {}, {}", func.getValueLabel(instr.operands.at(0)),
