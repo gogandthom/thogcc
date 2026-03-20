@@ -71,7 +71,7 @@ void RISCVEmitter::emitFunction(const ir::LLVMFunction& func) {
     _out << std::format("    addi s0, sp, {}\n", frameSize);    // set frame pointer
 
     for (const auto& block : func.blocks) {
-        if (!block.label.empty()) _out << std::format("{}:\n", block.label);
+        if (!block.label.empty()) _out << std::format(".L_{}_{}:\n", func.name, block.label);
 
         for (const auto& id : block.instrIDs) {
             emitInstruction(id);
@@ -196,7 +196,45 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             pushStack("t2");
             break;
         case ir::LLVMOpcode::ICMP:
-            // TODO
+            loadValue(instr.operands.at(0), "t0");
+            loadValue(instr.operands.at(1), "t1");
+            switch (instr.cond) {
+                case ir::LLVMCmpCond::EQ:
+                    _out << "    sub t2, t0, t1\n";
+                    _out << "    seqz t2, t2\n";
+                    break;
+                case ir::LLVMCmpCond::NE:
+                    _out << "    sub t2, t0, t1\n";
+                    _out << "    snez t2, t2\n";
+                    break;
+                case ir::LLVMCmpCond::UGT:
+                    _out << "    sltu t2, t1, t0\n";
+                    break;
+                case ir::LLVMCmpCond::UGE:
+                    _out << "    sltu t2, t0, t1\n";
+                    _out << "    xori t2, t2, 1\n";
+                    break;
+                case ir::LLVMCmpCond::ULT:
+                    _out << "    sltu t2, t0, t1\n";
+                    break;
+                case ir::LLVMCmpCond::SGT:
+                    _out << "    slt t2, t1, t0\n";
+                    break;
+                case ir::LLVMCmpCond::SGE:
+                    _out << "    slt t2, t0, t1\n";
+                    _out << "    xori t2, t2, 1\n";
+                    break;
+                case ir::LLVMCmpCond::SLT:
+                    _out << "    slt t2, t0, t1\n";
+                    break;
+                case ir::LLVMCmpCond::SLE:
+                    _out << "    slt t2, t1, t0\n";
+                    _out << "    xori t2, t2, 1\n";  // invert
+                    break;
+                default:
+                    assert(false && "Unimplemented ICMP instructionin RV backend");
+            }
+            pushStack("t2");
             break;
         case ir::LLVMOpcode::ALLOCA:
             // this almost definitely won't work
@@ -214,7 +252,17 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             _out << "    sw t0, 0(t1)\n";
             break;
         case ir::LLVMOpcode::BR:
-            // TODO
+            // unconditional jump
+            if (instr.operands.size() == 1) {
+                _out << std::format("    j .L_{}_{}\n", _curFunc->name,
+                                    _curFunc->getValueLabel(instr.operands.at(1)));
+            } else {
+                loadValue(instr.operands.at(0), "t0");
+                _out << std::format("    bnez t0, .L_{}_{}\n", _curFunc->name,
+                                    _curFunc->getValueLabel(instr.operands.at(1)));
+                _out << std::format("    j .L_{}_{}\n", _curFunc->name,
+                                    _curFunc->getValueLabel(instr.operands.at(2)));
+            }
             break;
         case ir::LLVMOpcode::CALL:
             break;
