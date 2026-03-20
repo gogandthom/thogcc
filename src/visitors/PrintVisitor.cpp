@@ -41,7 +41,7 @@ std::string PrintVisitor::getTypeLabel(const std::shared_ptr<types::Type>& type)
 
 void PrintVisitor::printExprNode(int id, ast::expressions::ExpressionBase& node) {
     std::string typeLabel = getTypeLabel(node.getEvaluatedType());
-    _out << std::format("  n{}[{}</br>{}]\n", id, ast::nodeKindName(node.getKind()), typeLabel);
+    _out << std::format("  n{}[\"{}</br>{}\"]\n", id, ast::nodeKindName(node.getKind()), typeLabel);
 }
 
 void PrintVisitor::printSymbol(int id, const types::OrdSymbol& symb) {
