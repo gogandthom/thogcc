@@ -294,6 +294,19 @@ void SemaVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
     node.setIsLvalue(false);
 }
 
+void SemaVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
+    node.getLhs()->accept(*this);
+    auto lhsType = node.getLhs()->getEvaluatedType();
+
+    node.getRhs()->accept(*this);
+    auto rhsType = node.getRhs()->getEvaluatedType();
+
+    auto resultType = std::make_shared<types::Type>(types::BasicType{types::BasicType::Kind::INT});
+
+    node.setEvaluatedType(resultType);
+    node.setIsLvalue(false);
+}
+
 void SemaVisitor::visit(ast::expressions::postfix::FunctionCallExpression& node) {
     node.getExpr()->accept(*this);
     auto calleeType = node.getExpr()->getEvaluatedType();
