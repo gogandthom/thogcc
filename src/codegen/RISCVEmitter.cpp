@@ -4,6 +4,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
+#include <stdexcept>
+#include <string>
 #include <string_view>
 #include <variant>
 #include <vector>
