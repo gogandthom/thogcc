@@ -20,7 +20,6 @@ void IREmitter::emit(const LLVMModule& module) {
             std::visit([](auto& val) { return std::to_string(val); }, global.initValue));
     }
     _out << "\n";
-
     for (const auto& func : module.functions) {
         emitFunction(func);
     }
@@ -50,8 +49,7 @@ void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
         case LLVMOpcode::SDIV:
         case LLVMOpcode::FDIV:
         case LLVMOpcode::UREM:
-        case LLVMOpcode::SREM:
-        case LLVMOpcode::FREM: {
+        case LLVMOpcode::SREM: {
             // opcode and type
             _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
             // operands

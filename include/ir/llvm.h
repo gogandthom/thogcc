@@ -45,7 +45,6 @@ struct LLVMBlockID {
     X(FDIV, "fdiv")                              \
     X(UREM, "urem")                              \
     X(SREM, "srem")                              \
-    X(FREM, "frem") /* TODO do we need?*/        \
                                                  \
     /* compare things */                         \
     X(ICMP, "icmp")                              \

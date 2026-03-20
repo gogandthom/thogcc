@@ -32,16 +32,16 @@ void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targ
 }
 
 void RISCVEmitter::pushStack(std::string_view srcReg) {
-    _out << std::format("   addi sp, sp, -{}\n", stackItemSize);
-    _out << std::format("   sw {}, {}(sp)\n", srcReg, stackItemSize);
+    _out << std::format("    addi sp, sp, -{}\n", stackItemSize);
+    _out << std::format("    sw {}, {}(sp)\n", srcReg, stackItemSize);
 }
 
 void RISCVEmitter::loadFromStack(int id, std::string_view targetReg) {
-    _out << std::format("   lw {}, {}(s0)\n", targetReg, prologueSize + (id * stackItemSize));
+    _out << std::format("    lw {}, -{}(s0)\n", targetReg, prologueSize + (id * stackItemSize));
 }
 
 void RISCVEmitter::clearStack() {
-    _out << std::format("   addi sp, s0, -{}\n", prologueSize);
+    _out << std::format("    addi sp, s0, -{}\n", prologueSize);
 }
 
 void RISCVEmitter::emit(const ir::LLVMModule& module) {
@@ -80,10 +80,11 @@ void RISCVEmitter::emitFunction(const ir::LLVMFunction& func) {
 
     // epilogue
     _out << std::format(".L_{}_epilogue:\n", func.name);
+    clearStack();
     _out << std::format("    lw ra, {}(sp)\n", frameSize - 4);  // restore old frame pointer
     _out << std::format("    lw s0, {}(sp)\n", frameSize - 8);  // restore old frame pointer
     _out << std::format("    addi sp, sp, {}\n", frameSize);    // deallocate frame
-    _out << "    jr ra\n";
+    _out << "    ret\n";
 
     _out << std::format("    .size {0}, .-{0}\n", func.name);
 }
@@ -96,9 +97,7 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
             _out << "    add t2, t0, t1\n";
-
             pushStack("t2");
-
             break;
         case ir::LLVMOpcode::FADD: {
             std::string precision;
@@ -112,7 +111,6 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "ft0");
             loadValue(instr.operands.at(1), "ft1");
             _out << std::format("    fadd.{} ft2, ft0, ft1\n", precision);
-
             pushStack("ft2");
             break;
         }
@@ -120,7 +118,6 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
             _out << "   sub t2, t0, t1\n";
-
             pushStack("t2");
             break;
         case ir::LLVMOpcode::FSUB: {
@@ -135,7 +132,6 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "ft0");
             loadValue(instr.operands.at(1), "ft1");
             _out << std::format("    fsub.{} ft2, ft0, ft1\n", precision);
-
             pushStack("ft2");
             break;
         }
@@ -143,7 +139,6 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
             _out << "   mul t2, t0, t1\n";
-
             pushStack("t2");
             break;
         case ir::LLVMOpcode::FMUL: {
@@ -158,7 +153,6 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "ft0");
             loadValue(instr.operands.at(1), "ft1");
             _out << std::format("    fmul.{} ft2, ft0, ft1\n", precision);
-
             pushStack("ft2");
             break;
         }
@@ -166,14 +160,12 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
             _out << "   divu t2, t0, t1\n";
-
             pushStack("t2");
             break;
         case ir::LLVMOpcode::SDIV:
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
             _out << "   div t2, t0, t1\n";
-
             pushStack("t2");
             break;
         case ir::LLVMOpcode::FDIV: {
@@ -188,7 +180,6 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "ft0");
             loadValue(instr.operands.at(1), "ft1");
             _out << std::format("    fdiv.{} ft2, ft0, ft1\n", precision);
-
             pushStack("ft2");
             break;
         }
@@ -196,14 +187,12 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
             _out << "   remu t2, t0, t1\n";
-
             pushStack("t2");
             break;
         case ir::LLVMOpcode::SREM:
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
             _out << "   rem t2, t0, t1\n";
-
             pushStack("t2");
             break;
         case ir::LLVMOpcode::ICMP:
@@ -211,18 +200,18 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             break;
         case ir::LLVMOpcode::ALLOCA:
             // this almost definitely won't work
-            _out << "   addi t0, sp, zero\n";
+            _out << "    addi t0, sp, zero\n";
             pushStack("t0");
             break;
         case ir::LLVMOpcode::LOAD:
             loadValue(instr.operands.at(0), "t0");
-            _out << "   lw t1, 0(t0)\n";
+            _out << "    lw t1, 0(t0)\n";
             pushStack("t1");
             break;
         case ir::LLVMOpcode::STORE:
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
-            _out << "   sw t0, 0(t1)\n";
+            _out << "    sw t0, 0(t1)\n";
             break;
         case ir::LLVMOpcode::BR:
             // TODO
@@ -230,12 +219,8 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
         case ir::LLVMOpcode::CALL:
             break;
         case ir::LLVMOpcode::RET:
-            // TODO load a0 retval
-            _out << std::format("    j L_{}_epilogue\n", _curFunc->name);
-            break;
-
-        // not present in riscv
-        case ir::LLVMOpcode::FREM:
+            loadValue(instr.operands.at(0), "a0");
+            _out << std::format("    j .L_{}_epilogue\n", _curFunc->name);
             break;
 
         case ir::LLVMOpcode::FCMP:
