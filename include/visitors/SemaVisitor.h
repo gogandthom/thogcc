@@ -1,7 +1,9 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <string>
+#include <variant>
 
 #include "ast/Node.h"
 #include "ast/TypeQualifier.h"
@@ -25,10 +27,12 @@ class SemaVisitor : public RecursiveVisitor {
     void visit(ast::declarations::Declaration& node) override;
     void visit(ast::declarations::FunctionDefinition& node) override;
     void visit(ast::declarations::ParameterDeclaration& node) override;
+    void visit(ast::declarators::ArrayDeclarator& node) override;
     void visit(ast::declarators::FunctionDeclarator& node) override;
     void visit(ast::declarators::IdentifierDeclarator& node) override;
     void visit(ast::declarators::InitDeclarator& node) override;
     void visit(ast::declarators::PointerDeclarator& node) override;
+    void visit(ast::expressions::ConstantExpression& node) override;
     void visit(ast::expressions::IdentifierExpression& node) override;
     void visit(ast::expressions::ListExpression& node) override;
     void visit(ast::expressions::PrimaryExpression& node) override;
@@ -44,6 +48,8 @@ class SemaVisitor : public RecursiveVisitor {
 
     types::SymbolTable _table;
     types::Type _curType;
+
+    std::optional<std::variant<int, float, double>> _lastConstVal;
 };
 
 };  // namespace thogcc::visitors
