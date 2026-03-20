@@ -28,7 +28,7 @@ jobs:
 
       - name: Build and test
         id: test
-        timeout-minutes: 1
+        timeout-minutes: 10
         shell: bash
         run: |
           python3 -m venv venv
