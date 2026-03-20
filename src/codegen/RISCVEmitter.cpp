@@ -31,8 +31,6 @@ void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targ
             break;
         case ir::LLVMValueKind::INSTR:
             if (this->_allocaInsts.contains(valID.id)) {
-                _out << std::format("  # wahey: {} should be stored at -{}(s0) hopefully?\n",
-                                    targetReg, this->_allocaInsts[valID.id]);
                 _out << std::format("    addi {}, s0, -{}\n", targetReg,
                                     this->_allocaInsts[valID.id]);
             } else {
@@ -326,7 +324,7 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             // unconditional jump
             if (instr.operands.size() == 1) {
                 _out << std::format("    j .L_{}_{}\n", _curFunc->name,
-                                    _curFunc->getValueLabel(instr.operands.at(1)));
+                                    _curFunc->getValueLabel(instr.operands.at(0)));
             } else {
                 loadValue(instr.operands.at(0), "t0");
                 _out << std::format("    bnez t0, .L_{}_{}\n", _curFunc->name,

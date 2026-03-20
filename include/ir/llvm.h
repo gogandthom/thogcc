@@ -163,7 +163,7 @@ struct LLVMFunction {
                 return std::visit([](const auto& c) { return std::to_string(c); },
                                   consts.at(id.id).value);
             case LLVMValueKind::BLOCK:
-                return std::format("%{}", blocks.at(id.id).label);
+                return std::format("{}", blocks.at(id.id).label);
                 break;
         }
         throw std::runtime_error("Invalid ValueID");

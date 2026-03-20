@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <string>
 #include <utility>
 
@@ -155,6 +156,134 @@ void IRGenVisitor::visit(ast::statements::CompoundStatement& node) {
 
 void IRGenVisitor::visit(ast::statements::ExpressionStatement& node) {
     node.getExpr()->accept(*this);
+}
+
+void IRGenVisitor::visit(ast::statements::IfStatement& node) {
+    node.getCond()->accept(*this);
+    int ifID = this->_function->instructions.size();
+
+    ir::LLVMInstruction instr = {
+        .opcode = ir::LLVMOpcode::BR,
+        .operands =
+            {
+                {
+                    .kind = ir::LLVMValueKind::INSTR,
+                    .id = (int)this->_function->instructions.size() - 1,
+                },
+                {
+                    .kind = ir::LLVMValueKind::BLOCK,
+                    .id = (int)this->_function->blocks.size(),
+                },
+                {
+                    .kind = ir::LLVMValueKind::BLOCK,
+                    .id = 0,
+                },
+            },
+    };
+
+    int index = this->_function->instructions.size();
+
+    this->_function->blocks.at(this->_function->blocks.size() - 1)
+        .instrIDs.push_back({
+            .id = (int)this->_function->instructions.size(),
+        });
+    this->_function->instructions.push_back(instr);
+
+    ir::LLVMInstruction jumpEnd = {
+        .opcode = ir::LLVMOpcode::BR,
+        .operands =
+            {
+                {
+                    .kind = ir::LLVMValueKind::BLOCK,
+                    .id = 0,
+                },
+            },
+    };
+
+    int startJumpEnd = this->_function->instructions.size();
+    this->_function->instructions.push_back(jumpEnd);
+
+    this->_function->blocks.push_back({
+        .label = std::format("if_true_{}", ifID),
+    });
+
+    node.getIfStatement()->accept(*this);
+
+    int endIndex = this->_function->instructions.size();
+    this->_function->blocks.at(this->_function->blocks.size() - 1)
+        .instrIDs.push_back({
+            .id = (int)this->_function->instructions.size(),
+        });
+    this->_function->instructions.push_back(jumpEnd);
+
+    if (node.getElseStatement()) {
+        this->_function->blocks.push_back({
+            .label = std::format("if_false_{}", ifID),
+        });
+
+        this->_function->instructions[index].operands[2].id = this->_function->blocks.size() - 1;
+
+        node.getElseStatement()->accept(*this);
+    }
+
+    this->_function->blocks.push_back({
+        .label = std::format("if_end_{}", ifID),
+    });
+
+    if (this->_function->instructions[index].operands[2].id == 0)
+        this->_function->instructions[index].operands[2].id = this->_function->blocks.size() - 1;
+    this->_function->instructions[endIndex].operands[0].id = this->_function->blocks.size() - 1;
+    this->_function->instructions[startJumpEnd].operands[0].id = this->_function->blocks.size() - 1;
+}
+
+void IRGenVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
+    node.getLhs()->accept(*this);
+    int lhs = this->_function->instructions.size() - 1;
+    node.getRhs()->accept(*this);
+    int rhs = this->_function->instructions.size() - 1;
+
+    ir::LLVMInstruction instr = {
+        .opcode = ir::LLVMOpcode::LOAD,
+        .type = types::toLLVMType(*node.getRhs()->getEvaluatedType()),
+        .operands =
+            {
+                {
+                    .kind = ir::LLVMValueKind::INSTR,
+                    .id = lhs,
+                },
+            },
+    };
+    this->_function->blocks.at(this->_function->blocks.size() - 1)
+        .instrIDs.push_back({
+            .id = (int)this->_function->instructions.size(),
+        });
+    this->_function->instructions.push_back(instr);
+
+    instr = {
+        .opcode = ir::LLVMOpcode::ICMP,
+        .type =
+            {
+                .type = ir::LLVMBasicType::INT,
+                .intSize = 1,
+            },
+        .cond = node.getIsNe() ? ir::LLVMCmpCond::NE : ir::LLVMCmpCond::EQ,
+        .operands =
+            {
+                {
+                    .kind = ir::LLVMValueKind::INSTR,
+                    .id = (int)this->_function->instructions.size() - 1,
+                },
+                {
+                    .kind = ir::LLVMValueKind::INSTR,
+                    .id = rhs,
+                },
+            },
+    };
+    this->_function->blocks.at(this->_function->blocks.size() - 1)
+        .instrIDs.push_back({
+            .id = (int)this->_function->instructions.size(),
+        });
+    this->_function->instructions.push_back(instr);
 }
 
 void IRGenVisitor::visit(ast::statements::ReturnStatement& node) {

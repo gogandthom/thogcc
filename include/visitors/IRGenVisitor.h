@@ -24,11 +24,13 @@ class IRGenVisitor : public DefaultVisitor {
 
     void visit(ast::statements::CompoundStatement& node) override;
     void visit(ast::statements::ExpressionStatement& node) override;
+    void visit(ast::statements::IfStatement& node) override;
     void visit(ast::statements::ReturnStatement& node) override;
 
     void visit(ast::expressions::binary::AssignmentExpression& node) override;
     void visit(ast::expressions::IdentifierExpression& node) override;
     void visit(ast::expressions::Initializer& node) override;
+    void visit(ast::expressions::binary::EqualityExpression& node) override;
     void visit(ast::expressions::ListExpression& node) override;
     void visit(ast::expressions::PrimaryExpression& node) override;
 
