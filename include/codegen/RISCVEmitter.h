@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ostream>
+#include <string_view>
 
 #include "ir/llvm.h"
 

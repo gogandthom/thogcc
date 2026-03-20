@@ -1,5 +1,7 @@
 #include "types/helpers.h"
 
+#include <format>
+#include <iterator>
 #include <variant>
 
 #include "errors/errors.h"
@@ -44,6 +46,54 @@ ir::LLVMType toLLVMType(const Type& type) {
             [](const EnumType&) -> ir::LLVMType { return {ir::LLVMBasicType::INT, 32}; },
         },
         type.data);
+}
+
+std::string printType(const Type& type) {
+    std::string res;
+    if (type.isConst) res += "const ";
+    if (type.isVolatile) res += "volatile ";
+
+    res += std::visit(overload{
+                          [type](const BasicType& b) -> std::string {
+                              const std::string unsignedLabel = b.isUnsigned ? "unsigned " : "";
+                              switch (b.kind) {
+                                  case BasicType::Kind::VOID:
+                                      return "void";
+                                  case BasicType::Kind::CHAR:
+                                      return "char";
+                                  case BasicType::Kind::SHORT:
+                                      return unsignedLabel + "short";
+                                  case BasicType::Kind::INT:
+                                      return unsignedLabel + "int";
+                                  case BasicType::Kind::LONG:
+                                      return unsignedLabel + "long";
+                                  case BasicType::Kind::FLOAT:
+                                      return "float";
+                                  case BasicType::Kind::DOUBLE:
+                                      return "double";
+                              };
+                          },
+                          [type](const PointerType& p) { return printType(*p.pointsTo) + "*"; },
+                          [type](const ArrayType& a) {
+                              return std::format("{}[{}]", printType(*a.elementType), a.size);
+                          },
+                          [type](const FuncType& f) {
+                              std::string paramLabel;
+                              for (auto it = f.params.begin(); it != f.params.end(); ++it) {
+                                  paramLabel += printType(**it);
+                                  if (std::next(it) != f.params.end()) {
+                                      paramLabel += ", ";
+                                  }
+                              }
+                              return std::format("{}({})", printType(*f.returnType), paramLabel);
+                          },
+                          [type](const StructType&) -> std::string { return "struct"; },
+                          [type](const UnionType&) -> std::string { return "union"; },
+                          [type](const EnumType&) -> std::string { return "enum"; },
+                      },
+                      type.data);
+
+    return res;
 }
 
 }  // namespace thogcc::types

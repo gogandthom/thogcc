@@ -19,16 +19,16 @@ class IdentifierExpression : public VisitableNode<IdentifierExpression, Expressi
         return _identifier;
     }
 
-    void setSymbol(std::shared_ptr<types::OrdSymbol> symb) {
+    void setSymbol(types::OrdSymbol symb) {
         _symb = std::move(symb);
     }
-    auto getSymbol() const {
+    const auto& getSymbol() const {
         return _symb;
     }
 
    private:
     std::string _identifier;
-    std::shared_ptr<types::OrdSymbol> _symb;
+    types::OrdSymbol _symb;
 };
 
 }  // namespace thogcc::ast::expressions

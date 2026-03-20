@@ -5,14 +5,18 @@
 #include <format>
 #include <iostream>
 #include <memory>
+#include <ostream>
 #include <string>
 #include <string_view>
 #include <variant>
 
 #include "ast/Node.h"
 #include "ast/all.h"
+#include "ast/expressions/ExpressionBase.h"
 #include "ast/utils.h"
 #include "types/Scope.h"
+#include "types/Type.h"
+#include "types/helpers.h"
 #include "utils.h"
 
 namespace thogcc::visitors {
@@ -26,22 +30,41 @@ void PrintVisitor::printNode(int id, ast::Node& node) {
     _out << std::format("  n{}[{}]\n", id, ast::nodeKindName(node.getKind()));
 }
 
-void PrintVisitor::printSymbol(int id, const std::shared_ptr<types::OrdSymbol>& symb) {
-    if (!symb) return;
+std::string PrintVisitor::getTypeLabel(const std::shared_ptr<types::Type>& type) {
+    std::string typeLabel;
+    if (type != nullptr) {
+        typeLabel = types::printType(*type);
+    } else {
+        typeLabel = "unresolved type";
+    }
+    return typeLabel;
+}
 
+void PrintVisitor::printExprNode(int id, ast::expressions::ExpressionBase& node) {
+    std::string typeLabel = getTypeLabel(node.getEvaluatedType());
+    _out << std::format("  n{}[\"{}</br>{}\"]\n", id, ast::nodeKindName(node.getKind()), typeLabel);
+}
+
+void PrintVisitor::printSymbol(int id, const types::OrdSymbol& symb) {
     // TODO print more details
     std::visit(overload{
-                   [this, id](const types::VarSymbol& /*s*/) {
-                       _out << std::format("  n{} --> n{}{{{{{}}}}}\n", id, ++_id, "VarSymbol");
+                   [this, id](const std::shared_ptr<types::VarSymbol>& s) {
+                       if (!s) return;
+                       _out << std::format("  n{} --> n{}{{{{\"{}</br>{}\"}}}}\n", id, ++_id,
+                                           "VarSymbol", getTypeLabel(s->type));
                    },
-                   [this, id](const types::FuncSymbol& /*s*/) {
-                       _out << std::format("  n{} --> n{}{{{{{}}}}}\n", id, ++_id, "FuncSymbol");
+                   [this, id](const std::shared_ptr<types::FuncSymbol>& s) {
+                       if (!s) return;
+                       _out << std::format("  n{} --> n{}{{{{\"{}</br>{}\"}}}}\n", id, ++_id,
+                                           "FuncSymbol", getTypeLabel(s->type));
                    },
-                   [this, id](const types::TypedefSymbol& /*s*/) {
-                       _out << std::format("  n{} --> n{}{{{{{}}}}}\n", id, ++_id, "TypedefSymbol");
+                   [this, id](const std::shared_ptr<types::TypedefSymbol>& s) {
+                       if (!s) return;
+                       _out << std::format("  n{} --> n{}{{{{\"{}</br>{}\"}}}}\n", id, ++_id,
+                                           "TypedefSymbol", getTypeLabel(s->type));
                    },
                },
-               *symb);
+               symb);
 }
 
 template <typename T>
@@ -115,7 +138,8 @@ void PrintVisitor::visit(ast::declarations::FunctionDefinition& node) {
     visitChild(cur, "Declarations", node.getDeclarations());
     visitChild(cur, "Statement", node.getStatement());
     if (node.getSymbol()) {
-        _out << std::format("  n{} --> n{}{{{{{}}}}}\n", cur, ++_id, "FuncSymbol");
+        _out << std::format("  n{} --> n{}{{{{\"{}</br>{}\"}}}}\n", cur, ++_id, "FuncSymbol",
+                            getTypeLabel(node.getSymbol()->type));
     }
 };
 
@@ -125,7 +149,8 @@ void PrintVisitor::visit(ast::declarations::ParameterDeclaration& node) {
     visitChild(cur, "Specifiers", node.getSpecifiers());
     visitChild(cur, "Declarator", node.getDecl());
     if (node.getSymbol()) {
-        _out << std::format("  n{} --> n{}{{{{{}}}}}\n", cur, ++_id, "VarSymbol");
+        _out << std::format("  n{} --> n{}{{{{\"{}</br>{}\"}}}}\n", cur, ++_id, "VarSymbol",
+                            getTypeLabel(node.getSymbol()->type));
     }
 }
 
@@ -166,6 +191,7 @@ void PrintVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
     const int cur = _id;
     printNode(cur, node);
     _out << std::format("  n{} -->|Identifier| n{}([{}])\n", cur, ++_id, node.getIdentifier());
+    printSymbol(cur, node.getSymbol());
 };
 
 void PrintVisitor::visit(ast::declarators::InitDeclarator& node) {
@@ -173,6 +199,7 @@ void PrintVisitor::visit(ast::declarators::InitDeclarator& node) {
     printNode(cur, node);
     visitChild(cur, "Declarator", node.getDecl());
     visitChild(cur, "Initializer", node.getInitializer());
+    printSymbol(cur, node.getSymbol());
 }
 
 void PrintVisitor::visit(ast::declarators::PointerDeclarator& node) {
@@ -191,14 +218,14 @@ void PrintVisitor::visit(ast::declarators::StructMemberDeclarator& node) {
 
 void PrintVisitor::visit(ast::expressions::CastExpression& node) {
     const int cur = _id;
-    printNode(cur, node);
+    printExprNode(cur, node);
     visitChild(cur, "CastType", node.getTypeName());
     visitChild(cur, "Expr", node.getExpr());
 }
 
 void PrintVisitor::visit(ast::expressions::ConditionalExpression& node) {
     const int cur = _id;
-    printNode(cur, node);
+    printExprNode(cur, node);
     visitChild(cur, "Condition", node.getCond());
     visitChild(cur, "If", node.getIfExpr());
     visitChild(cur, "Else", node.getElseExpr());
@@ -206,34 +233,35 @@ void PrintVisitor::visit(ast::expressions::ConditionalExpression& node) {
 
 void PrintVisitor::visit(ast::expressions::ConstantExpression& node) {
     const int cur = _id;
-    printNode(cur, node);
+    printExprNode(cur, node);
     visitChild(cur, "Expr", node.getExpr());
 }
 
 void PrintVisitor::visit(ast::expressions::IdentifierExpression& node) {
     const int cur = _id;
-    printNode(cur, node);
+    printExprNode(cur, node);
     _out << std::format("  n{} -->|Identifier| n{}([{}])\n", cur, ++_id, node.getIdentifier());
     printSymbol(cur, node.getSymbol());
 };
 
 void PrintVisitor::visit(ast::expressions::IncDecExpression& node) {
     const int cur = _id;
-    _out << std::format("  n{}[\"{} ({} {})\"]\n", cur, ast::nodeKindName(node.getKind()),
+    _out << std::format("  n{}[\"{} ({} {})</br>{}\"]\n", cur, ast::nodeKindName(node.getKind()),
                         node.getIsPrefix() ? "Prefix" : "Postfix",
-                        node.getIsDecrement() ? "Dec" : "Inc");
+                        node.getIsDecrement() ? "Dec" : "Inc",
+                        getTypeLabel(node.getEvaluatedType()));
     visitChild(cur, "Expr", node.getExpr());
 }
 
 void PrintVisitor::visit(ast::expressions::ListExpression& node) {
     const int cur = _id;
-    printNode(cur, node);
+    printExprNode(cur, node);
     visitChild(cur, "List", node.getList());
 };
 
 void PrintVisitor::visit(ast::expressions::PrimaryExpression& node) {
     const int cur = _id;
-    printNode(cur, node);
+    printExprNode(cur, node);
     const auto value = node.getValue();
     std::visit(
         [this, cur](auto&& v) {
@@ -269,7 +297,8 @@ void PrintVisitor::visit(ast::expressions::binary::AddMultExpression& node) {
             op = '%';
             break;
     }
-    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
+    _out << std::format("  n{}[\"{} ({})</br>{}\"]\n", cur, ast::nodeKindName(node.getKind()), op,
+                        getTypeLabel(node.getEvaluatedType()));
     visit(static_cast<ast::expressions::binary::BinaryExpressionBase&>(node));
 }
 
@@ -311,7 +340,8 @@ void PrintVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             op = "|=";
             break;
     }
-    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
+    _out << std::format("  n{}[\"{} ({})</br>{}\"]\n", cur, ast::nodeKindName(node.getKind()), op,
+                        getTypeLabel(node.getEvaluatedType()));
     visit(static_cast<ast::expressions::binary::BinaryExpressionBase&>(node));
 }
 
@@ -329,14 +359,15 @@ void PrintVisitor::visit(ast::expressions::binary::BitwiseExpression& node) {
             op = '^';
             break;
     }
-    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
+    _out << std::format("  n{}[\"{} ({})</br>{}\"]\n", cur, ast::nodeKindName(node.getKind()), op,
+                        getTypeLabel(node.getEvaluatedType()));
     visit(static_cast<ast::expressions::binary::BinaryExpressionBase&>(node));
 }
 
 void PrintVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
     const int cur = _id;
-    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()),
-                        node.getIsNe() ? "!=" : "==");
+    _out << std::format("  n{}[\"{} ({})</br>\"]\n", cur, ast::nodeKindName(node.getKind()),
+                        node.getIsNe() ? "!=" : "==", getTypeLabel(node.getEvaluatedType()));
     visit(static_cast<ast::expressions::binary::BinaryExpressionBase&>(node));
 }
 
@@ -351,7 +382,8 @@ void PrintVisitor::visit(ast::expressions::binary::LogicalExpression& node) {
             op = "||";
             break;
     }
-    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
+    _out << std::format("  n{}[\"{} ({})</br>{}\"]\n", cur, ast::nodeKindName(node.getKind()), op,
+                        getTypeLabel(node.getEvaluatedType()));
     visit(static_cast<ast::expressions::binary::BinaryExpressionBase&>(node));
 }
 
@@ -372,41 +404,43 @@ void PrintVisitor::visit(ast::expressions::binary::RelationalExpression& node) {
             op = ">=";
             break;
     }
-    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), op);
+    _out << std::format("  n{}[\"{} ({})</br>{}\"]\n", cur, ast::nodeKindName(node.getKind()), op,
+                        getTypeLabel(node.getEvaluatedType()));
     visit(static_cast<ast::expressions::binary::BinaryExpressionBase&>(node));
 }
 
 void PrintVisitor::visit(ast::expressions::binary::ShiftExpression& node) {
     const int cur = _id;
-    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()),
-                        node.getIsRightShift() ? ">>" : "<<");
+    _out << std::format("  n{}[\"{} ({})</br>{}\"]\n", cur, ast::nodeKindName(node.getKind()),
+                        node.getIsRightShift() ? ">>" : "<<",
+                        getTypeLabel(node.getEvaluatedType()));
     visit(static_cast<ast::expressions::binary::BinaryExpressionBase&>(node));
 }
 
 void PrintVisitor::visit(ast::expressions::postfix::ArrayAccessExpression& node) {
     const int cur = _id;
-    printNode(cur, node);
+    printExprNode(cur, node);
     visitChild(cur, "Array", node.getArray());
     visitChild(cur, "Index", node.getIndex());
 }
 
 void PrintVisitor::visit(ast::expressions::postfix::FunctionCallExpression& node) {
     const int cur = _id;
-    printNode(cur, node);
+    printExprNode(cur, node);
     visitChild(cur, "Function", node.getExpr());
     visitChild(cur, "Args", node.getArgs());
 }
 
 void PrintVisitor::visit(ast::expressions::postfix::MemberAccessExpression& node) {
     const int cur = _id;
-    printNode(cur, node);
+    printExprNode(cur, node);
     visitChild(cur, "Parent", node.getExpr());
     _out << std::format("  n{} -->|Identifier| n{}([{}])\n", cur, ++_id, node.getIdentifier());
 }
 
 void PrintVisitor::visit(ast::expressions::prefix::SizeofExpression& node) {
     const int cur = _id;
-    printNode(cur, node);
+    printExprNode(cur, node);
     std::visit([this, cur](const auto& ptr) { visitChild(cur, "Expr", ptr.get()); },
                node.getExpr());
 };
@@ -434,13 +468,14 @@ void PrintVisitor::visit(ast::expressions::prefix::UnaryOperatorExpression& node
             symbol = '!';
             break;
     }
-    _out << std::format("  n{}[\"{} ({})\"]\n", cur, ast::nodeKindName(node.getKind()), symbol);
+    _out << std::format("  n{}[\"{} ({})</br>{}\"]\n", cur, ast::nodeKindName(node.getKind()),
+                        symbol, getTypeLabel(node.getEvaluatedType()));
     visitChild(cur, "Expr", node.getExpr());
 }
 
 void PrintVisitor::visit(ast::expressions::Initializer& node) {
     const int cur = _id;
-    printNode(cur, node);
+    printExprNode(cur, node);
 
     std::visit(
         overload{

@@ -48,12 +48,16 @@ struct EnumSymbol {
     bool isDefinition;
 };
 
-typedef std::variant<VarSymbol, FuncSymbol, TypedefSymbol> OrdSymbol;
-typedef std::variant<StructSymbol, UnionSymbol, EnumSymbol> TagSymbol;
+typedef std::variant<std::shared_ptr<VarSymbol>, std::shared_ptr<FuncSymbol>,
+                     std::shared_ptr<TypedefSymbol>>
+    OrdSymbol;
+typedef std::variant<std::shared_ptr<StructSymbol>, std::shared_ptr<UnionSymbol>,
+                     std::shared_ptr<EnumSymbol>>
+    TagSymbol;
 
 struct Scope {
-    std::map<std::string, std::shared_ptr<TagSymbol>> tagSymbols;
-    std::map<std::string, std::shared_ptr<OrdSymbol>> ordinarySymbols;
+    std::map<std::string, TagSymbol> tagSymbols;
+    std::map<std::string, OrdSymbol> ordinarySymbols;
 };
 
 }  // namespace thogcc::types
