@@ -203,9 +203,17 @@ void SemaVisitor::visit(ast::declarators::FunctionDeclarator& node) {
 }
 
 void SemaVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
-    auto varSymb = types::VarSymbol{std::make_shared<types::Type>(_curType)};
+    types::VarSymbol varSymb{std::make_shared<types::Type>(_curType)};
     auto sharedSymb = std::make_shared<types::VarSymbol>(varSymb);
     _table.addToScope(std::string{node.getIdentifier()}, {sharedSymb});
+    node.setSymbol(sharedSymb);
+}
+
+void SemaVisitor::visit(ast::declarators::InitDeclarator& node) {
+    RecursiveVisitor::visit(node);
+    auto name = node.getIdentifier();
+    auto symb = _table.getOrd(std::string{name});
+    node.setSymbol(symb);
 }
 
 void SemaVisitor::visit(ast::declarators::PointerDeclarator& node) {

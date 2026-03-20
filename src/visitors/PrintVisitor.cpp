@@ -190,6 +190,7 @@ void PrintVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
     const int cur = _id;
     printNode(cur, node);
     _out << std::format("  n{} -->|Identifier| n{}([{}])\n", cur, ++_id, node.getIdentifier());
+    printSymbol(cur, node.getSymbol());
 };
 
 void PrintVisitor::visit(ast::declarators::InitDeclarator& node) {
@@ -197,6 +198,7 @@ void PrintVisitor::visit(ast::declarators::InitDeclarator& node) {
     printNode(cur, node);
     visitChild(cur, "Declarator", node.getDecl());
     visitChild(cur, "Initializer", node.getInitializer());
+    printSymbol(cur, node.getSymbol());
 }
 
 void PrintVisitor::visit(ast::declarators::PointerDeclarator& node) {
