@@ -34,16 +34,16 @@ int main(int argc, char** argv) {
         // Parse source file
         auto root = thogcc::ParseC(input, args);
 
+        // SEMAAAAA
+        thogcc::types::SymbolTable table{};
+        auto sema = thogcc::visitors::SemaVisitor(table);
+        root->accept(sema);
+
         // Print AST
         if (args.printGraph) {
             auto printer = thogcc::visitors::PrintVisitor(std::cout);
             root->accept(printer);
         }
-
-        // SEMAAAAA
-        thogcc::types::SymbolTable table{};
-        auto sema = thogcc::visitors::SemaVisitor(table);
-        root->accept(sema);
 
         // Generate IR
         auto irGenerator = thogcc::visitors::IRGenVisitor(srcPath.filename());
@@ -68,7 +68,6 @@ int main(int argc, char** argv) {
             thogcc::codegen::RISCVEmitter riscv(riscOut);
             riscv.emit(irGenerator.getModule());
         }
-
     } catch (const std::exception& e) {
         std::cerr << "thogcc: " << e.what() << '\n';
         return 1;
