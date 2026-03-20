@@ -71,7 +71,7 @@ void RISCVEmitter::emit(const ir::LLVMModule& module) {
     // TODO .attribute arch, unaligned_access, stack_align
 
     // Float consts
-    _out << ".rodata\n";
+    _out << ".section .rodata\n";
     for (const auto& func : module.functions) {
         for (size_t i = 0; i < func.consts.size(); ++i) {
             auto c = func.consts[i];
