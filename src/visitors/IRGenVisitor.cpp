@@ -237,27 +237,30 @@ void IRGenVisitor::visit(ast::statements::IfStatement& node) {
 }
 
 void IRGenVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
-    node.getLhs()->accept(*this);
-    int lhs = this->_function->instructions.size() - 1;
     node.getRhs()->accept(*this);
     int rhs = this->_function->instructions.size() - 1;
+    node.getLhs()->accept(*this);
+    int lhs = this->_function->instructions.size() - 1;
 
-    ir::LLVMInstruction instr = {
-        .opcode = ir::LLVMOpcode::LOAD,
-        .type = types::toLLVMType(*node.getRhs()->getEvaluatedType()),
-        .operands =
-            {
+    ir::LLVMInstruction instr;
+    if (node.getLhs()->isLvalue()) {
+        instr = {
+            .opcode = ir::LLVMOpcode::LOAD,
+            .type = types::toLLVMType(*node.getRhs()->getEvaluatedType()),
+            .operands =
                 {
-                    .kind = ir::LLVMValueKind::INSTR,
-                    .id = lhs,
+                    {
+                        .kind = ir::LLVMValueKind::INSTR,
+                        .id = lhs,
+                    },
                 },
-            },
-    };
-    this->_function->blocks.at(this->_function->blocks.size() - 1)
-        .instrIDs.push_back({
-            .id = (int)this->_function->instructions.size(),
-        });
-    this->_function->instructions.push_back(instr);
+        };
+        this->_function->blocks.at(this->_function->blocks.size() - 1)
+            .instrIDs.push_back({
+                .id = (int)this->_function->instructions.size(),
+            });
+        this->_function->instructions.push_back(instr);
+    }
 
     instr = {
         .opcode = ir::LLVMOpcode::ICMP,
@@ -266,7 +269,6 @@ void IRGenVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
                 .type = ir::LLVMBasicType::INT,
                 .intSize = 1,
             },
-        .cond = node.getIsNe() ? ir::LLVMCmpCond::NE : ir::LLVMCmpCond::EQ,
         .operands =
             {
                 {
@@ -278,6 +280,7 @@ void IRGenVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
                     .id = rhs,
                 },
             },
+        .cond = node.getIsNe() ? ir::LLVMCmpCond::NE : ir::LLVMCmpCond::EQ,
     };
     this->_function->blocks.at(this->_function->blocks.size() - 1)
         .instrIDs.push_back({
@@ -290,22 +293,25 @@ void IRGenVisitor::visit(ast::statements::ReturnStatement& node) {
     node.getExpr()->accept(*this);
     const int ret = this->_function->instructions.size() - 1;
 
-    ir::LLVMInstruction instr = {
-        .opcode = ir::LLVMOpcode::LOAD,
-        .type = this->_function->instructions.at(ret).type,
-        .operands =
-            {
+    ir::LLVMInstruction instr;
+    if (node.getExpr()->isLvalue()) {
+        instr = {
+            .opcode = ir::LLVMOpcode::LOAD,
+            .type = this->_function->instructions.at(ret).type,
+            .operands =
                 {
-                    .kind = ir::LLVMValueKind::INSTR,
-                    .id = ret,
+                    {
+                        .kind = ir::LLVMValueKind::INSTR,
+                        .id = ret,
+                    },
                 },
-            },
-    };
-    this->_function->blocks.at(this->_function->blocks.size() - 1)
-        .instrIDs.push_back({
-            .id = (int)this->_function->instructions.size(),
-        });
-    this->_function->instructions.push_back(instr);
+        };
+        this->_function->blocks.at(this->_function->blocks.size() - 1)
+            .instrIDs.push_back({
+                .id = (int)this->_function->instructions.size(),
+            });
+        this->_function->instructions.push_back(instr);
+    }
 
     instr = {
         .opcode = ir::LLVMOpcode::RET,
@@ -456,6 +462,37 @@ void IRGenVisitor::visit(ast::expressions::PrimaryExpression& node) {
                     .id = (int)this->_function->instructions.size(),
                 });
             this->_function->instructions.push_back(instr);
+
+            // if (node.isLvalue()) {
+            //     instr = ir::LLVMInstruction{
+            //         .opcode = ir::LLVMOpcode::ALLOCA,
+            //         .type = instr.type,
+            //     };
+            //     this->_function->blocks.at(this->_function->blocks.size() - 1)
+            //         .instrIDs.push_back({
+            //             .id = (int)this->_function->instructions.size(),
+            //         });
+            //     this->_function->instructions.push_back(instr);
+            //     instr = ir::LLVMInstruction{
+            //         .opcode = ir::LLVMOpcode::STORE,
+            //         .operands =
+            //             {
+            //                 {
+            //                     .kind = ir::LLVMValueKind::INSTR,
+            //                     .id = (int)this->_function->instructions.size() - 2,
+            //                 },
+            //                 {
+            //                     .kind = ir::LLVMValueKind::INSTR,
+            //                     .id = (int)this->_function->instructions.size() - 1,
+            //                 },
+            //             },
+            //     };
+            //     this->_function->blocks.at(this->_function->blocks.size() - 1)
+            //         .instrIDs.push_back({
+            //             .id = (int)this->_function->instructions.size(),
+            //         });
+            //     this->_function->instructions.push_back(instr);
+            // }
         } else {
             // die
         }
