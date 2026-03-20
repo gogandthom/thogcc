@@ -242,6 +242,74 @@ void IRGenVisitor::visit(ast::statements::IfStatement& node) {
     this->_function->instructions[startJumpEnd].operands[0].id = this->_function->blocks.size() - 1;
 }
 
+void IRGenVisitor::visit(ast::expressions::binary::AddMultExpression& node) {
+    node.getRhs()->accept(*this);
+    int rhs = this->_function->instructions.size() - 1;
+    node.getLhs()->accept(*this);
+    int lhs = this->_function->instructions.size() - 1;
+
+    ir::LLVMInstruction instr;
+    if (node.getLhs()->isLvalue()) {
+        instr = {
+            .opcode = ir::LLVMOpcode::LOAD,
+            .type = types::toLLVMType(*node.getRhs()->getEvaluatedType()),
+            .operands =
+                {
+                    {
+                        .kind = ir::LLVMValueKind::INSTR,
+                        .id = lhs,
+                    },
+                },
+        };
+        this->_function->blocks.at(this->_function->blocks.size() - 1)
+            .instrIDs.push_back({
+                .id = (int)this->_function->instructions.size(),
+            });
+        this->_function->instructions.push_back(instr);
+    }
+
+    ir::LLVMOpcode op;
+
+    switch (node.getOp()) {
+        case ast::expressions::binary::AddMultExpressionType::ADD:
+            op = ir::LLVMOpcode::ADD;
+            break;
+        case ast::expressions::binary::AddMultExpressionType::SUB:
+            op = ir::LLVMOpcode::SUB;
+            break;
+        case ast::expressions::binary::AddMultExpressionType::MUL:
+            op = ir::LLVMOpcode::MUL;
+            break;
+        case ast::expressions::binary::AddMultExpressionType::DIV:
+            op = ir::LLVMOpcode::SDIV;
+            break;
+        case ast::expressions::binary::AddMultExpressionType::REM:
+            op = ir::LLVMOpcode::SREM;
+            break;
+    }
+
+    instr = {
+        .opcode = op,
+        .type = types::toLLVMType(*node.getRhs()->getEvaluatedType()),
+        .operands =
+            {
+                {
+                    .kind = ir::LLVMValueKind::INSTR,
+                    .id = (int)this->_function->instructions.size() - 1,
+                },
+                {
+                    .kind = ir::LLVMValueKind::INSTR,
+                    .id = rhs,
+                },
+            },
+    };
+    this->_function->blocks.at(this->_function->blocks.size() - 1)
+        .instrIDs.push_back({
+            .id = (int)this->_function->instructions.size(),
+        });
+    this->_function->instructions.push_back(instr);
+}
+
 void IRGenVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
     node.getRhs()->accept(*this);
     const int rhs = this->_function->instructions.size() - 1;
