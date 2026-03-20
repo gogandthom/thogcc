@@ -11,6 +11,7 @@
 #include "ast/TypeQualifier.h"
 #include "ast/TypeSpecifier.h"
 #include "ast/all.h"
+#include "ast/expressions/ListExpression.h"
 #include "errors/errors.h"
 #include "types/Scope.h"
 #include "types/SymbolTable.h"
@@ -19,6 +20,42 @@
 #include "visitors/RecursiveVisitor.h"
 
 namespace thogcc::visitors {
+
+std::shared_ptr<types::Type> SemaVisitor::getPromotedType(const std::shared_ptr<types::Type>& lhs,
+                                                          const std::shared_ptr<types::Type>& rhs) {
+    const auto* lBasic = std::get_if<types::BasicType>(&lhs->data);
+    const auto* rBasic = std::get_if<types::BasicType>(&rhs->data);
+
+    if ((lBasic == nullptr) || (rBasic == nullptr)) {
+        throw errors::SemaError("Uimplemented: implicit promotion to non-basic type");
+    }
+
+    auto getRank = [](types::BasicType::Kind k) {
+        switch (k) {
+            case types::BasicType::Kind::DOUBLE:
+                return 6;
+            case types::BasicType::Kind::FLOAT:
+                return 5;
+            case types::BasicType::Kind::LONG:
+                return 4;
+            case types::BasicType::Kind::INT:
+                return 3;
+            case types::BasicType::Kind::SHORT:
+                return 2;
+            case types::BasicType::Kind::CHAR:
+                return 1;
+            default:
+                return -1;
+        }
+    };
+
+    // TODO compare .isUnsigned
+
+    if (getRank(lBasic->kind) >= getRank(rBasic->kind)) {
+        return lhs;
+    }
+    return rhs;
+}
 
 void SemaVisitor::visitVal(ast::ValueNode<ast::TypeSpecifier>& valNode) {
     types::BasicType basicType;
@@ -104,6 +141,8 @@ void SemaVisitor::visit(ast::declarations::FunctionDefinition& node) {
     node.getSpecifiers()->accept(*this);
     node.getDeclarator()->accept(*this);
 
+    std::string funcName{node.getDeclarator()->getIdentifier()};
+
     if (node.getDeclarations() != nullptr) {
         throw errors::SemaError("K&R FunctionDefinition not supported.");
     }
@@ -119,8 +158,9 @@ void SemaVisitor::visit(ast::declarations::FunctionDefinition& node) {
 
     _table.popScope();
 
-    auto funcSymb = std::get<types::FuncSymbol>(*_table.getBack().ordinarySymbols.end()->second);
-    node.setSymbol(std::make_shared<types::FuncSymbol>(funcSymb));
+    auto ordSymb = _table.getOrd(funcName);
+    auto funcSymb = std::get<std::shared_ptr<types::FuncSymbol>>(ordSymb);
+    node.setSymbol(funcSymb);
 }
 
 void SemaVisitor::visit(ast::declarations::ParameterDeclaration& node) {
@@ -153,20 +193,18 @@ void SemaVisitor::visit(ast::declarators::FunctionDeclarator& node) {
     }
 
     types::FuncType funcType{returnType, params};
-    types::OrdSymbol symb{types::FuncSymbol{
-        std::make_shared<types::Type>(funcType),
-        true  // TODO fix
-    }};
-    auto sharedSymb = std::make_shared<types::OrdSymbol>(symb);
+    auto sharedSymb = std::make_shared<types::FuncSymbol>(std::make_shared<types::Type>(funcType),
+                                                          true  // TODO fix
+    );
 
     // Do not call node.getBase()->accept(*this) I think?
-    _table.addToParentScope(std::string{node.getIdentifier()}, sharedSymb);
+    _table.addToParentScope(std::string{node.getIdentifier()}, {sharedSymb});
 }
 
 void SemaVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
     auto varSymb = types::VarSymbol{std::make_shared<types::Type>(_curType)};
-    auto sharedSymb = std::make_shared<types::OrdSymbol>(varSymb);
-    _table.addToScope(std::string{node.getIdentifier()}, sharedSymb);
+    auto sharedSymb = std::make_shared<types::VarSymbol>(varSymb);
+    _table.addToScope(std::string{node.getIdentifier()}, {sharedSymb});
 }
 
 void SemaVisitor::visit(ast::declarators::PointerDeclarator& node) {
@@ -183,24 +221,54 @@ void SemaVisitor::visit(ast::declarators::PointerDeclarator& node) {
 
 void SemaVisitor::visit(ast::expressions::IdentifierExpression& node) {
     auto symb = _table.getOrd(std::string{node.getIdentifier()});
-    auto resolvedType = std::visit([](auto& s) { return s.type; }, *symb);
+    auto resolvedType = std::visit([](auto& s) { return s.get()->type; }, symb);
     node.setSymbol(symb);
     node.setEvaluatedType(resolvedType);
     node.setIsLvalue(true);  // should always be an lvalue I think?
 }
 
+void SemaVisitor::visit(ast::expressions::ListExpression& node) {
+    std::shared_ptr<types::Type> lastType = nullptr;
+
+    for (const auto& expr : node.getList()->getNodes()) {
+        expr->accept(*this);
+        lastType = expr->getEvaluatedType();
+    }
+
+    if (lastType == nullptr) {
+        throw errors::SemaError("ListExpression return no lastType.");
+    }
+
+    node.setEvaluatedType(lastType);
+    node.setIsLvalue(false);  // comma operator should always yield an rvalue?
+}
+
 void SemaVisitor::visit(ast::expressions::PrimaryExpression& node) {
-    std::shared_ptr<types::Type> type{};
-    std::visit(
-        overload{
-            [&type](int& /* x */) { type->data = types::BasicType{types::BasicType::Kind::INT}; },
-            [&type](double& /* x */) {
-                type->data = types::BasicType{types::BasicType::Kind::DOUBLE};
-            },
-            [](auto& /* x */) { assert(false && "TODO: strings"); },
-        },
-        node.getValue());
+    auto type = std::make_shared<types::Type>();
+    std::visit(overload{
+                   [&type](const int& /* x */) {
+                       type->data = types::BasicType{types::BasicType::Kind::INT};
+                   },
+                   [&type](const double& /* x */) {
+                       type->data = types::BasicType{types::BasicType::Kind::DOUBLE};
+                   },
+                   [](const auto& /* x */) { assert(false && "TODO: strings"); },
+               },
+               node.getValue());
     node.setEvaluatedType(type);
+    node.setIsLvalue(false);
+}
+
+void SemaVisitor::visit(ast::expressions::binary::AddMultExpression& node) {
+    node.getLhs()->accept(*this);
+    auto lhsType = node.getLhs()->getEvaluatedType();
+
+    node.getRhs()->accept(*this);
+    auto rhsType = node.getRhs()->getEvaluatedType();
+
+    auto resultType = getPromotedType(lhsType, rhsType);
+
+    node.setEvaluatedType(resultType);
     node.setIsLvalue(false);
 }
 
@@ -223,6 +291,25 @@ void SemaVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
     // TODO implicit conversion and type checking lhs = rhs
 
     node.setEvaluatedType(lhsType);
+    node.setIsLvalue(false);
+}
+
+void SemaVisitor::visit(ast::expressions::postfix::FunctionCallExpression& node) {
+    node.getExpr()->accept(*this);
+    auto calleeType = node.getExpr()->getEvaluatedType();
+    auto* funcType = std::get_if<types::FuncType>(&calleeType->data);
+    if (funcType == nullptr) {
+        throw errors::SemaError("Expected a FuncType");
+    }
+
+    if (node.getArgs()->size() != funcType->params.size()) {
+        throw errors::SemaError(std::format("Function expected {} arguments, got {}",
+                                            funcType->params.size(), node.getArgs()->size()));
+    }
+
+    node.getArgs()->accept(*this);
+
+    node.setEvaluatedType(funcType->returnType);
     node.setIsLvalue(false);
 }
 

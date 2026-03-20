@@ -29,16 +29,16 @@ class SymbolTable {
         _scopes.pop_back();
     };
 
-    void addToScope(std::string identifier, std::shared_ptr<OrdSymbol> symbol) {
+    void addToScope(std::string identifier, OrdSymbol symbol) {
         _scopes.back().ordinarySymbols.insert({std::move(identifier), std::move(symbol)});
     }
 
-    void addToParentScope(std::string identifier, std::shared_ptr<OrdSymbol> symbol) {
+    void addToParentScope(std::string identifier, OrdSymbol symbol) {
         _scopes.at(_scopes.size() - 2)
             .ordinarySymbols.insert({std::move(identifier), std::move(symbol)});
     }
 
-    std::shared_ptr<OrdSymbol> getOrd(const std::string& identifier) {
+    const OrdSymbol& getOrd(const std::string& identifier) const {
         for (auto it = _scopes.rbegin(); it != _scopes.rend(); ++it) {
             auto a = it->ordinarySymbols.find(identifier);
             if (a != it->ordinarySymbols.end()) {
