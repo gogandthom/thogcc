@@ -91,6 +91,15 @@ void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
 
         // Control flow
         case LLVMOpcode::BR:
+            if (instr.operands.size() == 1) {
+                _out << std::format("br label {}", func.getValueLabel(instr.operands.at(0)));
+            } else {
+                _out << std::format("br i1 {}, label {}, label {}",
+                                    func.getValueLabel(instr.operands.at(0)),
+                                    func.getValueLabel(instr.operands.at(1)),
+                                    func.getValueLabel(instr.operands.at(2)));
+            }
+            break;
         case LLVMOpcode::CALL:
             break;
         case LLVMOpcode::RET:

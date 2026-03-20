@@ -17,6 +17,7 @@ enum class LLVMValueKind : std::uint8_t {
     PARAM,
     INSTR,
     CONST,
+    BLOCK,
 };
 
 struct LLVMValueID {
@@ -101,7 +102,7 @@ inline std::string_view printCmpCond(const LLVMCmpCond& op) {
     switch (op) {
 #define X(VAL, NAME)       \
     case LLVMCmpCond::VAL: \
-        return #NAME;
+        return NAME;
         LLVM_CMP_COND
 #undef X
     }
@@ -161,6 +162,9 @@ struct LLVMFunction {
             case LLVMValueKind::CONST:
                 return std::visit([](const auto& c) { return std::to_string(c); },
                                   consts.at(id.id).value);
+            case LLVMValueKind::BLOCK:
+                return std::format("%{}", blocks.at(id.id).label);
+                break;
         }
         throw std::runtime_error("Invalid ValueID");
     }
@@ -177,8 +181,9 @@ struct LLVMFunction {
                 return instructions.at(id.id).type;
             case LLVMValueKind::CONST:
                 return consts.at(id.id).type;
+            default:
+                throw std::runtime_error("Invalid ValueID for getTypeOf");
         }
-        throw std::runtime_error("Invalid ValueID");
     }
 };
 

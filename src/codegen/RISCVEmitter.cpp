@@ -71,7 +71,7 @@ void RISCVEmitter::emitFunction(const ir::LLVMFunction& func) {
     _out << std::format("    addi s0, sp, {}\n", frameSize);    // set frame pointer
 
     for (const auto& block : func.blocks) {
-        if (!block.label.empty()) _out << std::format("{}:\n", block.label);
+        if (!block.label.empty()) _out << std::format(".L_{}_{}:\n", func.name, block.label);
 
         for (const auto& id : block.instrIDs) {
             emitInstruction(id);
@@ -252,7 +252,17 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             _out << "    sw t0, 0(t1)\n";
             break;
         case ir::LLVMOpcode::BR:
-            // TODO
+            // unconditional jump
+            if (instr.operands.size() == 1) {
+                _out << std::format("    j .L_{}_{}\n", _curFunc->name,
+                                    _curFunc->getValueLabel(instr.operands.at(1)));
+            } else {
+                loadValue(instr.operands.at(0), "t0");
+                _out << std::format("    bnez t0, .L_{}_{}\n", _curFunc->name,
+                                    _curFunc->getValueLabel(instr.operands.at(1)));
+                _out << std::format("    j .L_{}_{}\n", _curFunc->name,
+                                    _curFunc->getValueLabel(instr.operands.at(2)));
+            }
             break;
         case ir::LLVMOpcode::CALL:
             break;
