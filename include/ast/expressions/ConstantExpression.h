@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <optional>
 #include <utility>
 
 #include "ast/Node.h"
@@ -16,8 +17,16 @@ class ConstantExpression : public VisitableNode<ConstantExpression, ExpressionBa
         return _expr.get();
     }
 
+    void setConstVal(auto val) {
+        _constVal = val;
+    }
+    const auto& getConstVal() const {
+        return _constVal;
+    }
+
    private:
     std::unique_ptr<ExpressionBase> _expr;
+    std::optional<std::variant<int, float, double>> _constVal;
 };
 
 }  // namespace thogcc::ast::expressions

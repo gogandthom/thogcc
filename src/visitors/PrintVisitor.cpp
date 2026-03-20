@@ -5,6 +5,7 @@
 #include <format>
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <string>
 #include <string_view>
@@ -233,7 +234,14 @@ void PrintVisitor::visit(ast::expressions::ConditionalExpression& node) {
 
 void PrintVisitor::visit(ast::expressions::ConstantExpression& node) {
     const int cur = _id;
-    printExprNode(cur, node);
+    std::string typeLabel = getTypeLabel(node.getEvaluatedType());
+    std::string constLabel{};
+    if (node.getConstVal().has_value()) {
+        constLabel += std::visit([](auto& v) { return std::format(" {}", std::to_string(v)); },
+                                 node.getConstVal().value());
+    }
+    _out << std::format("  n{}[\"{}</br>{}{}\"]\n", cur, ast::nodeKindName(node.getKind()),
+                        typeLabel, constLabel);
     visitChild(cur, "Expr", node.getExpr());
 }
 

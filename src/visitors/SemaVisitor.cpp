@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <format>
 #include <memory>
+#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -179,6 +180,25 @@ void SemaVisitor::visit(ast::declarations::ParameterDeclaration& node) {
     // TODO add to _table here or elsewhere?
 }
 
+void SemaVisitor::visit(ast::declarators::ArrayDeclarator& node) {
+    traverse(node.getBase());
+    traverse(node.getExpr());
+
+    if (!node.getExpr()->getConstVal().has_value()) {
+        throw errors::SemaError(
+            "ArrayDeclarator cannot figure out size. Is it a compile-time constant?");
+    }
+    const auto* constSize = std::get_if<int>(&node.getExpr()->getConstVal().value());
+    if (constSize == nullptr) {
+        throw errors::SemaError("ArrayDeclarator size expression is not an integer");
+    }
+
+    auto arrayType = std::make_shared<types::Type>();
+    arrayType->data = types::ArrayType{.elementType = std::make_shared<types::Type>(_curType),
+                                       .size = *constSize};
+    _curType = *arrayType;
+}
+
 void SemaVisitor::visit(ast::declarators::FunctionDeclarator& node) {
     auto returnType = std::make_shared<types::Type>(_curType);
 
@@ -229,6 +249,21 @@ void SemaVisitor::visit(ast::declarators::PointerDeclarator& node) {
     _curType = baseType;
 }
 
+void SemaVisitor::visit(ast::expressions::ConstantExpression& node) {
+    _lastConstVal = std::nullopt;  // reset mailbox
+
+    traverse(node.getExpr());
+
+    if (_lastConstVal) {
+        node.setConstVal(*_lastConstVal);
+    } else {
+        throw errors::SemaError("Expression is not a compile-type constant.");
+    }
+
+    auto type = node.getExpr()->getEvaluatedType();
+    node.setEvaluatedType(type);
+}
+
 void SemaVisitor::visit(ast::expressions::IdentifierExpression& node) {
     auto symb = _table.getOrd(std::string{node.getIdentifier()});
     auto resolvedType = std::visit([](auto& s) { return s.get()->type; }, symb);
@@ -256,13 +291,18 @@ void SemaVisitor::visit(ast::expressions::ListExpression& node) {
 void SemaVisitor::visit(ast::expressions::PrimaryExpression& node) {
     auto type = std::make_shared<types::Type>();
     std::visit(overload{
-                   [&type](const int& /* x */) {
+                   [&type, this](const int& i) {
                        type->data = types::BasicType{types::BasicType::Kind::INT};
+                       _lastConstVal = i;
                    },
-                   [&type](const double& /* x */) {
+                   [&type, this](const double& d) {
                        type->data = types::BasicType{types::BasicType::Kind::DOUBLE};
+                       _lastConstVal = d;
                    },
-                   [](const auto& /* x */) { assert(false && "TODO: strings"); },
+                   [this](const auto&) {
+                       assert(false && "TODO: strings");
+                       _lastConstVal = std::nullopt;
+                   },
                },
                node.getValue());
     node.setEvaluatedType(type);
