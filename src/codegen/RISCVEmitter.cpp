@@ -196,7 +196,45 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             pushStack("t2");
             break;
         case ir::LLVMOpcode::ICMP:
-            // TODO
+            loadValue(instr.operands.at(0), "t0");
+            loadValue(instr.operands.at(1), "t1");
+            switch (instr.cond) {
+                case ir::LLVMCmpCond::EQ:
+                    _out << "    sub t2, t0, t1\n";
+                    _out << "    seqz t2, t2\n";
+                    break;
+                case ir::LLVMCmpCond::NE:
+                    _out << "    sub t2, t0, t1\n";
+                    _out << "    snez t2, t2\n";
+                    break;
+                case ir::LLVMCmpCond::UGT:
+                    _out << "    sltu t2, t1, t0\n";
+                    break;
+                case ir::LLVMCmpCond::UGE:
+                    _out << "    sltu t2, t0, t1\n";
+                    _out << "    xori t2, t2, 1\n";
+                    break;
+                case ir::LLVMCmpCond::ULT:
+                    _out << "    sltu t2, t0, t1\n";
+                    break;
+                case ir::LLVMCmpCond::SGT:
+                    _out << "    slt t2, t1, t0\n";
+                    break;
+                case ir::LLVMCmpCond::SGE:
+                    _out << "    slt t2, t0, t1\n";
+                    _out << "    xori t2, t2, 1\n";
+                    break;
+                case ir::LLVMCmpCond::SLT:
+                    _out << "    slt t2, t0, t1\n";
+                    break;
+                case ir::LLVMCmpCond::SLE:
+                    _out << "    slt t2, t1, t0\n";
+                    _out << "    xori t2, t2, 1\n";  // invert
+                    break;
+                default:
+                    assert(false && "Unimplemented ICMP instructionin RV backend");
+            }
+            pushStack("t2");
             break;
         case ir::LLVMOpcode::ALLOCA:
             // this almost definitely won't work
