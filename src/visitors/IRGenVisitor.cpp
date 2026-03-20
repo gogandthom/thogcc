@@ -3,6 +3,8 @@
 #include <iostream>
 
 #include "errors/errors.h"
+#include "types/helpers.h"
+#include "utils.h"
 
 namespace thogcc::visitors {
 
@@ -40,20 +42,32 @@ void IRGenVisitor::visit(ast::declarations::Declaration& node) {
         // local declaration
         std::cout << "local" << std::endl;
         ir::LLVMType type = {};
-        this->type = &type;
+        this->_type = &type;
         node.getSpecifiers()->accept(*this);
-        ir::LLVMInstruction instr = {};
-        this->_instruction = &instr;
         node.getDeclarators()->accept(*this);
-        this->_instruction = nullptr;
-        this->type = nullptr;
-        this->_function->instructions.push_back(instr);
+        this->_type = nullptr;
     }
 }
 
 void IRGenVisitor::visit(ast::declarations::FunctionDefinition& node) {
     std::cout << "global function" << std::endl;
     ir::LLVMFunction func = {};
+
+    func.returnType = types::toLLVMType(
+        *std::get<types::FuncType>(node.getSymbol().get()->type.get()->data).returnType);
+
+    func.blocks.push_back({
+        .instrIDs = {},
+    });
+    func.consts.push_back({
+        .type =
+            {
+                .type = ir::LLVMBasicType::INT,
+                .intSize = 32,
+            },
+        .value = (uint64_t)6,
+    });
+
     this->_function = &func;
     node.getSpecifiers()->accept(*this);
     node.getDeclarator()->accept(*this);
@@ -64,22 +78,22 @@ void IRGenVisitor::visit(ast::declarations::FunctionDefinition& node) {
 }
 
 void IRGenVisitor::visit(ast::declarations::ParameterDeclaration& node) {
-    this->_function->params.push_back({
+    this->_function->params.push_back(ir::LLVMParameter{
         // TODO
-        .type = {},
+        .type = {types::toLLVMType(*node.getSymbol().get()->type)},
         .name = (std::string)node.getDecl()->getIdentifier(),
     });
 }
 
 void IRGenVisitor::visit(ast::declarators::FunctionDeclarator& node) {
     this->_function->name = node.getIdentifier();
-    node.getParams()->accept(*this);
+    if (node.getParams()) node.getParams()->accept(*this);
     if (node.getIdentifiers()) node.getIdentifiers()->accept(*this);
 }
 
 void IRGenVisitor::visit(ast::declarators::InitDeclarator& node) {
     node.getDecl()->accept(*this);
-    if (node.getInitializer()) node.getInitializer()->accept(*this);
+    // if (node.getInitializer()) node.getInitializer()->accept(*this);
 }
 
 void IRGenVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
@@ -91,8 +105,8 @@ void IRGenVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
 }
 
 void IRGenVisitor::visit(ast::statements::CompoundStatement& node) {
-    node.getDeclarationList()->accept(*this);
-    node.getStatementList()->accept(*this);
+    if (node.getDeclarationList()) node.getDeclarationList()->accept(*this);
+    if (node.getStatementList()) node.getStatementList()->accept(*this);
 }
 
 void IRGenVisitor::visit(ast::statements::ExpressionStatement& node) {
@@ -114,12 +128,91 @@ void IRGenVisitor::visit(ast::statements::ReturnStatement& node) {
                 },
             },
     };
+    this->_function->blocks.at(this->_function->blocks.size() - 1)
+        .instrIDs.push_back({
+            .id = (int)this->_function->instructions.size(),
+        });
     this->_function->instructions.push_back(instr);
 }
 
 void IRGenVisitor::visit(ast::expressions::ListExpression& node) {
     for (size_t i = 0; i < node.getList()->size(); i++) {
         node.getList()->getRawNode(i).accept(*this);
+    }
+}
+
+void IRGenVisitor::visit(ast::expressions::PrimaryExpression& node) {
+    auto kind = std::get<types::BasicType>(node.getEvaluatedType().get()->data).kind;
+
+    bool doesnTExist = false;
+
+    ir::LLVMInstruction instr = {};
+
+    switch (kind) {
+        case types::BasicType::Kind::INT:
+            this->_function->consts.push_back({
+                .type =
+                    {
+                        .type = ir::LLVMBasicType::INT,
+                    },
+                .value = (uint64_t)std::get<int>(node.getValue()),
+            });
+            instr = ir::LLVMInstruction{
+                .opcode = ir::LLVMOpcode::ADD,
+                .type =
+                    {
+                        .type = ir::LLVMBasicType::INT,
+                        .intSize = 32,
+                    },
+                .operands =
+                    {
+                        {
+                            .kind = ir::LLVMValueKind::CONST,
+                            .id = (int)this->_function->consts.size() - 1,
+                        },
+                        {
+                            .kind = ir::LLVMValueKind::CONST,
+                            .id = 0,
+                        },
+                    },
+            };
+            break;
+        case types::BasicType::Kind::VOID:
+        default:
+            doesnTExist = true;
+            break;
+    }
+
+    if (!doesnTExist) {
+        if (!this->_global) {
+            this->_function->blocks.at(this->_function->blocks.size() - 1)
+                .instrIDs.push_back({
+                    .id = (int)this->_function->instructions.size(),
+                });
+            this->_function->blocks.at(this->_function->blocks.size() - 1)
+                .instrIDs.push_back({
+                    .id = (int)this->_function->instructions.size(),
+                });
+            this->_function->blocks.at(this->_function->blocks.size() - 1)
+                .instrIDs.push_back({
+                    .id = (int)this->_function->instructions.size(),
+                });
+            this->_function->blocks.at(this->_function->blocks.size() - 1)
+                .instrIDs.push_back({
+                    .id = (int)this->_function->instructions.size(),
+                });
+            this->_function->blocks.at(this->_function->blocks.size() - 1)
+                .instrIDs.push_back({
+                    .id = (int)this->_function->instructions.size(),
+                });
+            this->_function->blocks.at(this->_function->blocks.size() - 1)
+                .instrIDs.push_back({
+                    .id = (int)this->_function->instructions.size(),
+                });
+            this->_function->instructions.push_back(instr);
+        } else {
+            // die
+        }
     }
 }
 
@@ -132,7 +225,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
     node.getLhs()->accept(*this);
     int lhs = this->_function->instructions.size() - 1;
 
-    ir::LLVMInstruction instr = {};
+    ir::LLVMInstruction instr;
 
     // ASSUMES LHS ALWAYS RETURNS A POINTER, RHS ALWAYS RETURNS A VALUE
     // TODO:
@@ -151,6 +244,10 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
+            this->_function->blocks.at(this->_function->blocks.size() - 1)
+                .instrIDs.push_back({
+                    .id = (int)this->_function->instructions.size(),
+                });
             this->_function->instructions.push_back(instr);
             int loaded = this->_function->instructions.size() - 1;
             instr = {
@@ -168,6 +265,10 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
+            this->_function->blocks.at(this->_function->blocks.size() - 1)
+                .instrIDs.push_back({
+                    .id = (int)this->_function->instructions.size(),
+                });
             this->_function->instructions.push_back(instr);
             break;
         }
@@ -184,6 +285,10 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
+            this->_function->blocks.at(this->_function->blocks.size() - 1)
+                .instrIDs.push_back({
+                    .id = (int)this->_function->instructions.size(),
+                });
             this->_function->instructions.push_back(instr);
             int loaded = this->_function->instructions.size() - 1;
             instr = {
@@ -201,6 +306,10 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
+            this->_function->blocks.at(this->_function->blocks.size() - 1)
+                .instrIDs.push_back({
+                    .id = (int)this->_function->instructions.size(),
+                });
             this->_function->instructions.push_back(instr);
             break;
         }
@@ -217,6 +326,10 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
+            this->_function->blocks.at(this->_function->blocks.size() - 1)
+                .instrIDs.push_back({
+                    .id = (int)this->_function->instructions.size(),
+                });
             this->_function->instructions.push_back(instr);
             int loaded = this->_function->instructions.size() - 1;
             instr = {
@@ -234,6 +347,10 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
+            this->_function->blocks.at(this->_function->blocks.size() - 1)
+                .instrIDs.push_back({
+                    .id = (int)this->_function->instructions.size(),
+                });
             this->_function->instructions.push_back(instr);
             break;
         }
@@ -249,6 +366,11 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
+
+            this->_function->blocks.at(this->_function->blocks.size() - 1)
+                .instrIDs.push_back({
+                    .id = (int)this->_function->instructions.size(),
+                });
             this->_function->instructions.push_back(instr);
             int loaded = this->_function->instructions.size() - 1;
             instr = {
@@ -266,6 +388,10 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
+            this->_function->blocks.at(this->_function->blocks.size() - 1)
+                .instrIDs.push_back({
+                    .id = (int)this->_function->instructions.size(),
+                });
             this->_function->instructions.push_back(instr);
             break;
         }
@@ -281,6 +407,10 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
+            this->_function->blocks.at(this->_function->blocks.size() - 1)
+                .instrIDs.push_back({
+                    .id = (int)this->_function->instructions.size(),
+                });
             this->_function->instructions.push_back(instr);
             int loaded = this->_function->instructions.size() - 1;
             instr = {
@@ -298,6 +428,10 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
+            this->_function->blocks.at(this->_function->blocks.size() - 1)
+                .instrIDs.push_back({
+                    .id = (int)this->_function->instructions.size(),
+                });
             this->_function->instructions.push_back(instr);
             break;
         }
@@ -320,6 +454,10 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             //             },
             //         },
             // };
+            // this->_function->blocks.at(this->_function->blocks.size() - 1)
+            //     .instrIDs.push_back({
+            //         .id = (int)this->_function->instructions.size(),
+            //     });
             // this->_function->instructions.push_back(instr);
             // int loaded = this->_function->instructions.size() - 1;
             // instr = {
@@ -337,6 +475,10 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             //             },
             //         },
             // };
+            // this->_function->blocks.at(this->_function->blocks.size() - 1)
+            //     .instrIDs.push_back({
+            //         .id = (int)this->_function->instructions.size(),
+            //     });
             // this->_function->instructions.push_back(instr);
             break;
         }
@@ -352,6 +494,10 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             //             },
             //         },
             // };
+            // this->_function->blocks.at(this->_function->blocks.size() - 1)
+            //     .instrIDs.push_back({
+            //         .id = (int)this->_function->instructions.size(),
+            //     });
             // this->_function->instructions.push_back(instr);
             // int loaded = this->_function->instructions.size() - 1;
             // instr = {
@@ -369,6 +515,10 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             //             },
             //         },
             // };
+            // this->_function->blocks.at(this->_function->blocks.size() - 1)
+            //     .instrIDs.push_back({
+            //         .id = (int)this->_function->instructions.size(),
+            //     });
             // this->_function->instructions.push_back(instr);
             break;
         }
@@ -384,6 +534,10 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             //             },
             //         },
             // };
+            // this->_function->blocks.at(this->_function->blocks.size() - 1)
+            //     .instrIDs.push_back({
+            //         .id = (int)this->_function->instructions.size(),
+            //     });
             // this->_function->instructions.push_back(instr);
             // int loaded = this->_function->instructions.size() - 1;
             // instr = {
@@ -401,6 +555,10 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             //             },
             //         },
             // };
+            // this->_function->blocks.at(this->_function->blocks.size() - 1)
+            //     .instrIDs.push_back({
+            //         .id = (int)this->_function->instructions.size(),
+            //     });
             // this->_function->instructions.push_back(instr);
             break;
         }
@@ -430,7 +588,13 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                 },
             },
     };
+    this->_function->blocks.at(this->_function->blocks.size() - 1)
+        .instrIDs.push_back({
+            .id = (int)this->_function->instructions.size(),
+        });
     this->_function->instructions.push_back(instr);
+
+    this->_instruction = temp;
 }
 
 }  // namespace thogcc::visitors

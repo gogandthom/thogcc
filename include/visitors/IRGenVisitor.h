@@ -28,6 +28,7 @@ class IRGenVisitor : public DefaultVisitor {
 
     void visit(ast::expressions::binary::AssignmentExpression& node) override;
     void visit(ast::expressions::ListExpression& node) override;
+    void visit(ast::expressions::PrimaryExpression& node) override;
 
     ir::LLVMModule getModule();
 
@@ -40,7 +41,7 @@ class IRGenVisitor : public DefaultVisitor {
     ir::LLVMFunction* _function = nullptr;
     ir::LLVMGlobal* _global = nullptr;
     ir::LLVMInstruction* _instruction = nullptr;
-    ir::LLVMType* type = nullptr;
+    ir::LLVMType* _type = nullptr;
 };
 
 }  // namespace thogcc::visitors
