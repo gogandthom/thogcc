@@ -97,9 +97,7 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
             _out << "    add t2, t0, t1\n";
-
             pushStack("t2");
-
             break;
         case ir::LLVMOpcode::FADD: {
             std::string precision;
@@ -113,7 +111,6 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "ft0");
             loadValue(instr.operands.at(1), "ft1");
             _out << std::format("    fadd.{} ft2, ft0, ft1\n", precision);
-
             pushStack("ft2");
             break;
         }
@@ -121,7 +118,6 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
             _out << "   sub t2, t0, t1\n";
-
             pushStack("t2");
             break;
         case ir::LLVMOpcode::FSUB: {
@@ -136,7 +132,6 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "ft0");
             loadValue(instr.operands.at(1), "ft1");
             _out << std::format("    fsub.{} ft2, ft0, ft1\n", precision);
-
             pushStack("ft2");
             break;
         }
@@ -144,7 +139,6 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
             _out << "   mul t2, t0, t1\n";
-
             pushStack("t2");
             break;
         case ir::LLVMOpcode::FMUL: {
@@ -159,7 +153,6 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "ft0");
             loadValue(instr.operands.at(1), "ft1");
             _out << std::format("    fmul.{} ft2, ft0, ft1\n", precision);
-
             pushStack("ft2");
             break;
         }
@@ -167,14 +160,12 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
             _out << "   divu t2, t0, t1\n";
-
             pushStack("t2");
             break;
         case ir::LLVMOpcode::SDIV:
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
             _out << "   div t2, t0, t1\n";
-
             pushStack("t2");
             break;
         case ir::LLVMOpcode::FDIV: {
@@ -189,7 +180,6 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "ft0");
             loadValue(instr.operands.at(1), "ft1");
             _out << std::format("    fdiv.{} ft2, ft0, ft1\n", precision);
-
             pushStack("ft2");
             break;
         }
@@ -197,14 +187,12 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
             _out << "   remu t2, t0, t1\n";
-
             pushStack("t2");
             break;
         case ir::LLVMOpcode::SREM:
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
             _out << "   rem t2, t0, t1\n";
-
             pushStack("t2");
             break;
         case ir::LLVMOpcode::ICMP:
@@ -233,10 +221,6 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
         case ir::LLVMOpcode::RET:
             loadValue(instr.operands.at(0), "a0");
             _out << std::format("    j .L_{}_epilogue\n", _curFunc->name);
-            break;
-
-        // not present in riscv
-        case ir::LLVMOpcode::FREM:
             break;
 
         case ir::LLVMOpcode::FCMP:

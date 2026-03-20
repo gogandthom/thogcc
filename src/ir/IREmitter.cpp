@@ -49,8 +49,7 @@ void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
         case LLVMOpcode::SDIV:
         case LLVMOpcode::FDIV:
         case LLVMOpcode::UREM:
-        case LLVMOpcode::SREM:
-        case LLVMOpcode::FREM: {
+        case LLVMOpcode::SREM: {
             // opcode and type
             _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
             // operands
