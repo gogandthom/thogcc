@@ -1,0 +1,248 @@
+#include "codegen/RISCVEmitter.h"
+
+#include <cassert>
+#include <format>
+#include <string_view>
+#include <variant>
+#include <vector>
+
+#include "ir/LLVMType.h"
+#include "ir/llvm.h"
+
+namespace thogcc::codegen {
+
+const int prologueSize = 8;
+
+const int stackItemSize = 8;
+
+void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targetReg) {
+    switch (valID.kind) {
+        case ir::LLVMValueKind::PARAM:
+            // ????
+            break;
+        case ir::LLVMValueKind::INSTR:
+            loadFromStack(valID.id, targetReg);
+            break;
+        case ir::LLVMValueKind::CONST:
+            std::visit([this, targetReg](
+                           auto& c) { _out << std::format("    li {}, {}\n", targetReg, c); },
+                       _curFunc->consts.at(valID.id).value);
+            break;
+    }
+}
+
+void RISCVEmitter::pushStack(std::string_view srcReg) {
+    _out << std::format("   addi sp, sp, -{}\n", stackItemSize);
+    _out << std::format("   sw {}, {}(sp)\n", srcReg, stackItemSize);
+}
+
+void RISCVEmitter::loadFromStack(int id, std::string_view targetReg) {
+    _out << std::format("   lw {}, {}(s0)\n", targetReg, prologueSize + (id * stackItemSize));
+}
+
+void RISCVEmitter::clearStack() {
+    _out << std::format("   addi sp, s0, -{}\n", prologueSize);
+}
+
+void RISCVEmitter::emit(const ir::LLVMModule& module) {
+    _out << std::format(".file \"{}\"\n", module.srcFileName);
+    _out << ".option nopic\n";  // static binary, not a shared library
+    // TODO .attribute arch, unaligned_access, stack_align
+
+    _out << ".text\n";
+    for (const auto& func : module.functions) {
+        emitFunction(func);
+    }
+}
+
+void RISCVEmitter::emitFunction(const ir::LLVMFunction& func) {
+    // set context
+    _curFunc = &func;
+
+    _out << std::format(".globl {}\n", func.name);
+    _out << std::format(".type {}, @function\n", func.name);
+    _out << std::format("{}:\n", func.name);
+
+    // prologue
+    int frameSize = prologueSize;
+    _out << std::format("    addi sp, sp, -{}\n", frameSize);   // allocate stack
+    _out << std::format("    sw ra, {}(sp)\n", frameSize - 4);  // save ra
+    _out << std::format("    sw s0, {}(sp)\n", frameSize - 8);  // save old frame pointer
+    _out << std::format("    addi s0, sp, {}\n", frameSize);    // set frame pointer
+
+    for (const auto& block : func.blocks) {
+        if (!block.label.empty()) _out << std::format("{}:\n", block.label);
+
+        for (const auto& id : block.instrIDs) {
+            emitInstruction(id);
+        }
+    }
+
+    // epilogue
+    _out << std::format(".L_{}_epilogue:\n", func.name);
+    _out << std::format("    lw ra, {}(sp)\n", frameSize - 4);  // restore old frame pointer
+    _out << std::format("    lw s0, {}(sp)\n", frameSize - 8);  // restore old frame pointer
+    _out << std::format("    addi sp, sp, {}\n", frameSize);    // deallocate frame
+    _out << "    jr ra\n";
+
+    _out << std::format("    .size {0}, .-{0}\n", func.name);
+}
+
+void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
+    const ir::LLVMInstruction& instr = _curFunc->getInstr(instrID);
+
+    switch (instr.opcode) {
+        case ir::LLVMOpcode::ADD:
+            loadValue(instr.operands.at(0), "t0");
+            loadValue(instr.operands.at(1), "t1");
+            _out << "    add t2, t0, t1\n";
+
+            pushStack("t2");
+
+            break;
+        case ir::LLVMOpcode::FADD: {
+            std::string precision;
+            if (instr.type.type == ir::LLVMBasicType::FLOAT) {
+                precision = "s";
+            } else if (instr.type.type == ir::LLVMBasicType::DOUBLE) {
+                precision = "d";
+            } else {
+                assert(false && "Invalid type for FADD");
+            };
+            loadValue(instr.operands.at(0), "ft0");
+            loadValue(instr.operands.at(1), "ft1");
+            _out << std::format("    fadd.{} ft2, ft0, ft1\n", precision);
+
+            pushStack("ft2");
+            break;
+        }
+        case ir::LLVMOpcode::SUB:
+            loadValue(instr.operands.at(0), "t0");
+            loadValue(instr.operands.at(1), "t1");
+            _out << "   sub t2, t0, t1\n";
+
+            pushStack("t2");
+            break;
+        case ir::LLVMOpcode::FSUB: {
+            std::string precision;
+            if (instr.type.type == ir::LLVMBasicType::FLOAT) {
+                precision = "s";
+            } else if (instr.type.type == ir::LLVMBasicType::DOUBLE) {
+                precision = "d";
+            } else {
+                assert(false && "Invalid type for FSUB");
+            };
+            loadValue(instr.operands.at(0), "ft0");
+            loadValue(instr.operands.at(1), "ft1");
+            _out << std::format("    fsub.{} ft2, ft0, ft1\n", precision);
+
+            pushStack("ft2");
+            break;
+        }
+        case ir::LLVMOpcode::MUL:
+            loadValue(instr.operands.at(0), "t0");
+            loadValue(instr.operands.at(1), "t1");
+            _out << "   mul t2, t0, t1\n";
+
+            pushStack("t2");
+            break;
+        case ir::LLVMOpcode::FMUL: {
+            std::string precision;
+            if (instr.type.type == ir::LLVMBasicType::FLOAT) {
+                precision = "s";
+            } else if (instr.type.type == ir::LLVMBasicType::DOUBLE) {
+                precision = "d";
+            } else {
+                assert(false && "Invalid type for FMUL");
+            };
+            loadValue(instr.operands.at(0), "ft0");
+            loadValue(instr.operands.at(1), "ft1");
+            _out << std::format("    fmul.{} ft2, ft0, ft1\n", precision);
+
+            pushStack("ft2");
+            break;
+        }
+        case ir::LLVMOpcode::UDIV:
+            loadValue(instr.operands.at(0), "t0");
+            loadValue(instr.operands.at(1), "t1");
+            _out << "   divu t2, t0, t1\n";
+
+            pushStack("t2");
+            break;
+        case ir::LLVMOpcode::SDIV:
+            loadValue(instr.operands.at(0), "t0");
+            loadValue(instr.operands.at(1), "t1");
+            _out << "   div t2, t0, t1\n";
+
+            pushStack("t2");
+            break;
+        case ir::LLVMOpcode::FDIV: {
+            std::string precision;
+            if (instr.type.type == ir::LLVMBasicType::FLOAT) {
+                precision = "s";
+            } else if (instr.type.type == ir::LLVMBasicType::DOUBLE) {
+                precision = "d";
+            } else {
+                assert(false && "Invalid type for FDIV");
+            };
+            loadValue(instr.operands.at(0), "ft0");
+            loadValue(instr.operands.at(1), "ft1");
+            _out << std::format("    fdiv.{} ft2, ft0, ft1\n", precision);
+
+            pushStack("ft2");
+            break;
+        }
+        case ir::LLVMOpcode::UREM:
+            loadValue(instr.operands.at(0), "t0");
+            loadValue(instr.operands.at(1), "t1");
+            _out << "   remu t2, t0, t1\n";
+
+            pushStack("t2");
+            break;
+        case ir::LLVMOpcode::SREM:
+            loadValue(instr.operands.at(0), "t0");
+            loadValue(instr.operands.at(1), "t1");
+            _out << "   rem t2, t0, t1\n";
+
+            pushStack("t2");
+            break;
+        case ir::LLVMOpcode::ICMP:
+            // TODO
+            break;
+        case ir::LLVMOpcode::ALLOCA:
+            // this almost definitely won't work
+            _out << "   addi t0, sp, zero\n";
+            pushStack("t0");
+            break;
+        case ir::LLVMOpcode::LOAD:
+            loadValue(instr.operands.at(0), "t0");
+            _out << "   lw t1, 0(t0)\n";
+            pushStack("t1");
+            break;
+        case ir::LLVMOpcode::STORE:
+            loadValue(instr.operands.at(0), "t0");
+            loadValue(instr.operands.at(1), "t1");
+            _out << "   sw t0, 0(t1)\n";
+            break;
+        case ir::LLVMOpcode::BR:
+            // TODO
+            break;
+        case ir::LLVMOpcode::CALL:
+            break;
+        case ir::LLVMOpcode::RET:
+            // TODO load a0 retval
+            _out << std::format("    j L_{}_epilogue\n", _curFunc->name);
+            break;
+
+        // not present in riscv
+        case ir::LLVMOpcode::FREM:
+            break;
+
+        case ir::LLVMOpcode::FCMP:
+            break;
+        case ir::LLVMOpcode::GETELEMENTPTR:
+            break;
+    }
+}
+
+}  // namespace thogcc::codegen
