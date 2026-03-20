@@ -1,7 +1,6 @@
 #include "ir/IREmitter.h"
 
 #include <format>
-#include <iostream>
 #include <iterator>
 #include <stdexcept>
 #include <string>

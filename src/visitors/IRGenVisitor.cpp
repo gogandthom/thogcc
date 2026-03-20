@@ -1,17 +1,23 @@
 #include "visitors/IRGenVisitor.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <iostream>
+#include <string>
+#include <utility>
 
-#include "errors/errors.h"
+#include "ast/Node.h"
+#include "ast/all.h"
+#include "ast/utils.h"
+#include "ir/LLVMType.h"
+#include "ir/llvm.h"
 #include "types/helpers.h"
-#include "utils.h"
 
 namespace thogcc::visitors {
 
-IRGenVisitor::IRGenVisitor(std::string srcFilePath) {
+IRGenVisitor::IRGenVisitor(std::string srcFilePath) : _function(nullptr) {
     this->_module = {};
-    this->_module.srcFileName = srcFilePath;
-    this->_function = nullptr;
+    this->_module.srcFileName = std::move(srcFilePath);
 }
 
 ir::LLVMModule IRGenVisitor::getModule() {
@@ -19,7 +25,7 @@ ir::LLVMModule IRGenVisitor::getModule() {
 }
 
 void IRGenVisitor::visit(ast::Node& node) {
-    std::cout << "yeep tain " << ast::nodeKindName(node.getKind()) << std::endl;
+    std::cout << "yeep tain " << ast::nodeKindName(node.getKind()) << '\n';
 }
 
 void IRGenVisitor::visit(ast::NodeListBase& node) {
@@ -31,7 +37,7 @@ void IRGenVisitor::visit(ast::NodeListBase& node) {
 void IRGenVisitor::visit(ast::declarations::Declaration& node) {
     if (this->_function == nullptr) {
         // global declaration
-        std::cout << "global" << std::endl;
+        std::cout << "global" << '\n';
         ir::LLVMGlobal global = {};
         this->_global = &global;
         node.getSpecifiers()->accept(*this);
@@ -40,7 +46,7 @@ void IRGenVisitor::visit(ast::declarations::Declaration& node) {
         this->_module.globals.push_back(global);
     } else {
         // local declaration
-        std::cout << "local" << std::endl;
+        std::cout << "local" << '\n';
         ir::LLVMType type = {};
         this->_type = &type;
         node.getSpecifiers()->accept(*this);
@@ -50,7 +56,7 @@ void IRGenVisitor::visit(ast::declarations::Declaration& node) {
 }
 
 void IRGenVisitor::visit(ast::declarations::FunctionDefinition& node) {
-    std::cout << "global function" << std::endl;
+    std::cout << "global function" << '\n';
     ir::LLVMFunction func = {};
 
     func.returnType = types::toLLVMType(
@@ -71,8 +77,8 @@ void IRGenVisitor::visit(ast::declarations::FunctionDefinition& node) {
     this->_function = &func;
     node.getSpecifiers()->accept(*this);
     node.getDeclarator()->accept(*this);
-    if (node.getDeclarations()) node.getDeclarations()->accept(*this);
-    if (node.getStatement()) node.getStatement()->accept(*this);
+    if (node.getDeclarations() != nullptr) node.getDeclarations()->accept(*this);
+    if (node.getStatement() != nullptr) node.getStatement()->accept(*this);
     this->_function = nullptr;
     this->_module.functions.push_back(func);
 }
@@ -87,8 +93,8 @@ void IRGenVisitor::visit(ast::declarations::ParameterDeclaration& node) {
 
 void IRGenVisitor::visit(ast::declarators::FunctionDeclarator& node) {
     this->_function->name = node.getIdentifier();
-    if (node.getParams()) node.getParams()->accept(*this);
-    if (node.getIdentifiers()) node.getIdentifiers()->accept(*this);
+    if (node.getParams() != nullptr) node.getParams()->accept(*this);
+    if (node.getIdentifiers() != nullptr) node.getIdentifiers()->accept(*this);
 }
 
 void IRGenVisitor::visit(ast::declarators::InitDeclarator& node) {
@@ -97,7 +103,7 @@ void IRGenVisitor::visit(ast::declarators::InitDeclarator& node) {
 }
 
 void IRGenVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
-    if (this->_global) {
+    if (this->_global != nullptr) {
         // identifier for global so yay
         this->_global->name = node.getIdentifier();
     }
@@ -105,8 +111,8 @@ void IRGenVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
 }
 
 void IRGenVisitor::visit(ast::statements::CompoundStatement& node) {
-    if (node.getDeclarationList()) node.getDeclarationList()->accept(*this);
-    if (node.getStatementList()) node.getStatementList()->accept(*this);
+    if (node.getDeclarationList() != nullptr) node.getDeclarationList()->accept(*this);
+    if (node.getStatementList() != nullptr) node.getStatementList()->accept(*this);
 }
 
 void IRGenVisitor::visit(ast::statements::ExpressionStatement& node) {
@@ -115,9 +121,9 @@ void IRGenVisitor::visit(ast::statements::ExpressionStatement& node) {
 
 void IRGenVisitor::visit(ast::statements::ReturnStatement& node) {
     node.getExpr()->accept(*this);
-    int ret = this->_function->instructions.size() - 1;
+    const int ret = this->_function->instructions.size() - 1;
 
-    ir::LLVMInstruction instr = {
+    const ir::LLVMInstruction instr = {
         .opcode = ir::LLVMOpcode::RET,
         .type = this->_function->instructions.at(ret).type,
         .operands =
@@ -184,7 +190,7 @@ void IRGenVisitor::visit(ast::expressions::PrimaryExpression& node) {
     }
 
     if (!doesnTExist) {
-        if (!this->_global) {
+        if (this->_global == nullptr) {
             this->_function->blocks.at(this->_function->blocks.size() - 1)
                 .instrIDs.push_back({
                     .id = (int)this->_function->instructions.size(),
@@ -200,10 +206,10 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
     ir::LLVMInstruction* temp = this->_instruction;
 
     node.getRhs()->accept(*this);
-    int rhs = this->_function->instructions.size() - 1;
+    const int rhs = this->_function->instructions.size() - 1;
 
     node.getLhs()->accept(*this);
-    int lhs = this->_function->instructions.size() - 1;
+    const int lhs = this->_function->instructions.size() - 1;
 
     ir::LLVMInstruction instr;
 
@@ -229,7 +235,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                     .id = (int)this->_function->instructions.size(),
                 });
             this->_function->instructions.push_back(instr);
-            int loaded = this->_function->instructions.size() - 1;
+            const int loaded = this->_function->instructions.size() - 1;
             instr = {
                 .opcode = ir::LLVMOpcode::MUL,
                 .type = this->_function->instructions.at(rhs).type,
@@ -270,7 +276,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                     .id = (int)this->_function->instructions.size(),
                 });
             this->_function->instructions.push_back(instr);
-            int loaded = this->_function->instructions.size() - 1;
+            const int loaded = this->_function->instructions.size() - 1;
             instr = {
                 .opcode = ir::LLVMOpcode::UDIV,
                 .type = this->_function->instructions.at(rhs).type,
@@ -311,7 +317,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                     .id = (int)this->_function->instructions.size(),
                 });
             this->_function->instructions.push_back(instr);
-            int loaded = this->_function->instructions.size() - 1;
+            const int loaded = this->_function->instructions.size() - 1;
             instr = {
                 .opcode = ir::LLVMOpcode::UREM,
                 .type = this->_function->instructions.at(rhs).type,
@@ -352,7 +358,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                     .id = (int)this->_function->instructions.size(),
                 });
             this->_function->instructions.push_back(instr);
-            int loaded = this->_function->instructions.size() - 1;
+            const int loaded = this->_function->instructions.size() - 1;
             instr = {
                 .opcode = ir::LLVMOpcode::ADD,
                 .type = this->_function->instructions.at(rhs).type,
@@ -392,7 +398,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                     .id = (int)this->_function->instructions.size(),
                 });
             this->_function->instructions.push_back(instr);
-            int loaded = this->_function->instructions.size() - 1;
+            const int loaded = this->_function->instructions.size() - 1;
             instr = {
                 .opcode = ir::LLVMOpcode::SUB,
                 .type = this->_function->instructions.at(rhs).type,
@@ -548,7 +554,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
         }
     }
 
-    int out = this->_function->instructions.size() - 1;
+    const int out = this->_function->instructions.size() - 1;
 
     instr = {
         .opcode = ir::LLVMOpcode::STORE,

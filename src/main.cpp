@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
         auto irGenerator = thogcc::visitors::IRGenVisitor(args.srcPath);
         root->accept(irGenerator);
 
-        std::cout << "generated IR" << std::endl;
+        std::cout << "generated IR" << '\n';
 
         if (!args.llvmDestPath.empty()) {
             std::ofstream llvmOut(args.llvmDestPath);
