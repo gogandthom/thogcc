@@ -22,6 +22,8 @@ class PrintVisitor : public Visitor {
 
    private:
     void printNode(int id, ast::Node& node);
+    static std::string getTypeLabel(const std::shared_ptr<types::Type>& type);
+    void printExprNode(int id, ast::expressions::ExpressionBase& node);
     void printSymbol(int id, const types::OrdSymbol& symb);
 
     template <typename T>

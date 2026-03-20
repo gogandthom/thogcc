@@ -1,6 +1,7 @@
 #include "visitors/SemaVisitor.h"
 
 #include <cassert>
+#include <format>
 #include <memory>
 #include <string>
 #include <variant>
