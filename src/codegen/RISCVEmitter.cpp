@@ -21,7 +21,11 @@ const int stackItemSize = 8;
 void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targetReg) {
     switch (valID.kind) {
         case ir::LLVMValueKind::PARAM:
-            // ????
+            if (valID.id < 8) {
+                _out << std::format("    mv {}, a{}\n", targetReg, valID.id);
+            } else {
+                throw std::runtime_error("Unimplemented: params > 7");
+            }
             break;
         case ir::LLVMValueKind::INSTR:
             loadFromStack(valID.id, targetReg);
