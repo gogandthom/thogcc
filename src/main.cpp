@@ -18,7 +18,7 @@
 int main(int argc, char** argv) {
     try {
         // Parse args
-        const std::vector<std::string_view> rawArgs(argv + 1, argv + argc);
+        const std::vector<std::string_view> rawArgs(argv + 1, argv + argc);  // NOLINT
         const thogcc::CommandLineArgs args = thogcc::parseArgs(rawArgs);
 
         // Open source file
@@ -39,14 +39,12 @@ int main(int argc, char** argv) {
 
         // SEMAAAAA
         auto table = thogcc::types::SymbolTable();
-        auto fucker = thogcc::visitors::SemaVisitor(table);
-        root->accept(fucker);
+        auto sema = thogcc::visitors::SemaVisitor(table);
+        root->accept(sema);
 
         // Generate IR
         auto irGenerator = thogcc::visitors::IRGenVisitor(args.srcPath);
         root->accept(irGenerator);
-
-        std::cout << "generated IR" << '\n';
 
         if (!args.llvmDestPath.empty()) {
             std::ofstream llvmOut(args.llvmDestPath);
@@ -58,8 +56,6 @@ int main(int argc, char** argv) {
 
             llvmEmitter.emit(irGenerator.getModule());
         }
-
-        // aaaaaaaand finally to riscv assembly
 
         if (!args.destPath.empty()) {
             std::ofstream riscOut(args.destPath);

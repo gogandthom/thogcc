@@ -8,7 +8,6 @@
 
 #include "ast/Node.h"
 #include "ast/all.h"
-#include "ast/utils.h"
 #include "ir/LLVMType.h"
 #include "ir/llvm.h"
 #include "types/helpers.h"
@@ -24,9 +23,7 @@ ir::LLVMModule IRGenVisitor::getModule() {
     return this->_module;
 }
 
-void IRGenVisitor::visit(ast::Node& node) {
-    std::cout << "yeep tain " << ast::nodeKindName(node.getKind()) << '\n';
-}
+void IRGenVisitor::visit(ast::Node& /*node*/) {}
 
 void IRGenVisitor::visit(ast::NodeListBase& node) {
     for (size_t i = 0; i < node.size(); i++) {
@@ -37,7 +34,6 @@ void IRGenVisitor::visit(ast::NodeListBase& node) {
 void IRGenVisitor::visit(ast::declarations::Declaration& node) {
     if (this->_function == nullptr) {
         // global declaration
-        std::cout << "global" << '\n';
         ir::LLVMGlobal global = {};
         this->_global = &global;
         node.getSpecifiers()->accept(*this);
@@ -46,7 +42,6 @@ void IRGenVisitor::visit(ast::declarations::Declaration& node) {
         this->_module.globals.push_back(global);
     } else {
         // local declaration
-        std::cout << "local" << '\n';
         ir::LLVMType type = {};
         this->_type = &type;
         node.getSpecifiers()->accept(*this);
@@ -56,13 +51,13 @@ void IRGenVisitor::visit(ast::declarations::Declaration& node) {
 }
 
 void IRGenVisitor::visit(ast::declarations::FunctionDefinition& node) {
-    std::cout << "global function" << '\n';
     ir::LLVMFunction func = {};
 
-    func.returnType = types::toLLVMType(
-        *std::get<types::FuncType>(node.getSymbol().get()->type.get()->data).returnType);
+    func.returnType =
+        types::toLLVMType(*std::get<types::FuncType>(node.getSymbol()->type->data).returnType);
 
     func.blocks.push_back({
+        .label = "",
         .instrIDs = {},
     });
     func.consts.push_back({
@@ -86,7 +81,7 @@ void IRGenVisitor::visit(ast::declarations::FunctionDefinition& node) {
 void IRGenVisitor::visit(ast::declarations::ParameterDeclaration& node) {
     this->_function->params.push_back(ir::LLVMParameter{
         // TODO
-        .type = {types::toLLVMType(*node.getSymbol().get()->type)},
+        .type = {types::toLLVMType(*node.getSymbol()->type)},
         .name = (std::string)node.getDecl()->getIdentifier(),
     });
 }
@@ -148,7 +143,7 @@ void IRGenVisitor::visit(ast::expressions::ListExpression& node) {
 }
 
 void IRGenVisitor::visit(ast::expressions::PrimaryExpression& node) {
-    auto kind = std::get<types::BasicType>(node.getEvaluatedType().get()->data).kind;
+    auto kind = std::get<types::BasicType>(node.getEvaluatedType()->data).kind;
 
     bool doesnTExist = false;
 
@@ -558,10 +553,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
 
     instr = {
         .opcode = ir::LLVMOpcode::STORE,
-        .type =
-            {
-                .type = ir::LLVMBasicType::VOID,
-            },
+        .type = {.type = ir::LLVMBasicType::VOID, .intSize = 0},
         .operands =
             {
                 {
