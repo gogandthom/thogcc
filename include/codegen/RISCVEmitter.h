@@ -28,7 +28,7 @@ class RISCVEmitter {
 
     const ir::LLVMFunction* _curFunc = nullptr;
 
-    std::map<int, int> _allocaInsts = {};
+    std::map<int, int> _allocaInsts;
 };
 
 }  // namespace thogcc::codegen

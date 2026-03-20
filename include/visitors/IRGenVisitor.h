@@ -46,7 +46,7 @@ class IRGenVisitor : public DefaultVisitor {
     ir::LLVMGlobal* _global = nullptr;
     ir::LLVMInstruction* _instruction = nullptr;
     ir::LLVMType* _type = nullptr;
-    std::string_view _initialising = "";
+    std::string_view _initialising;
 
     typedef std::map<std::string_view, int> IdentifierResolutionLayer;
     std::vector<IdentifierResolutionLayer> _identifiers;

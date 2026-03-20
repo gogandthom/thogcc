@@ -2,20 +2,27 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <format>
 #include <iostream>
+#include <map>
+#include <memory>
 #include <string>
+#include <string_view>
 #include <utility>
+#include <variant>
 
 #include "ast/Node.h"
 #include "ast/all.h"
+#include "ast/utils.h"
 #include "ir/LLVMType.h"
 #include "ir/llvm.h"
+#include "types/Scope.h"
 #include "types/helpers.h"
 #include "utils.h"
 
 namespace thogcc::visitors {
 
-IRGenVisitor::IRGenVisitor(std::string srcFilePath) : _function(nullptr) {
+IRGenVisitor::IRGenVisitor(std::string srcFilePath)  {
     this->_module = {};
     this->_module.srcFileName = std::move(srcFilePath);
 
@@ -26,9 +33,7 @@ ir::LLVMModule IRGenVisitor::getModule() {
     return this->_module;
 }
 
-void IRGenVisitor::visit(ast::Node& node) {
-    std::cout << "no " << ast::nodeKindName(node.getKind()) << std::endl;
-}
+void IRGenVisitor::visit(ast::Node& /*node*/) {}
 
 void IRGenVisitor::visit(ast::NodeListBase& node) {
     for (size_t i = 0; i < node.size(); i++) {
@@ -37,7 +42,7 @@ void IRGenVisitor::visit(ast::NodeListBase& node) {
 }
 
 std::map<std::string_view, int>& IRGenVisitor::_currentIdentifiers() {
-    if (this->_identifiers.size() == 0) this->_identifiers.push_back({});
+    if (this->_identifiers.empty()) this->_identifiers.push_back({});
     return this->_identifiers.at(this->_identifiers.size() - 1);
 }
 
@@ -115,16 +120,16 @@ void IRGenVisitor::visit(ast::declarators::FunctionDeclarator& node) {
 
 void IRGenVisitor::visit(ast::declarators::InitDeclarator& node) {
     node.getDecl()->accept(*this);
-    if (!this->_function) {
+    if (this->_function == nullptr) {
         this->_global->type = types::toLLVMType(
             *std::get<std::shared_ptr<types::VarSymbol>>(node.getSymbol()).get()->type);
-        if (node.getInitializer()) node.getInitializer()->accept(*this);
+        if (node.getInitializer() != nullptr) node.getInitializer()->accept(*this);
     } else {
         *this->_type = types::toLLVMType(
             *std::get<std::shared_ptr<types::VarSymbol>>(node.getSymbol()).get()->type);
 
         this->_initialising = node.getIdentifier();
-        if (node.getInitializer()) node.getInitializer()->accept(*this);
+        if (node.getInitializer() != nullptr) node.getInitializer()->accept(*this);
     }
 }
 
@@ -133,7 +138,7 @@ void IRGenVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
         // identifier for global so yay
         this->_global->name = node.getIdentifier();
     } else {
-        ir::LLVMInstruction instr = {
+        const ir::LLVMInstruction instr = {
             .opcode = ir::LLVMOpcode::ALLOCA,
             .type =
                 types::toLLVMType(*std::visit([](auto& v) { return v->type; }, node.getSymbol())),
@@ -162,7 +167,7 @@ void IRGenVisitor::visit(ast::statements::IfStatement& node) {
     node.getCond()->accept(*this);
     int ifID = this->_function->instructions.size();
 
-    ir::LLVMInstruction instr = {
+    const ir::LLVMInstruction instr = {
         .opcode = ir::LLVMOpcode::BR,
         .operands =
             {
@@ -181,7 +186,7 @@ void IRGenVisitor::visit(ast::statements::IfStatement& node) {
             },
     };
 
-    int index = this->_function->instructions.size();
+    const int index = this->_function->instructions.size();
 
     this->_function->blocks.at(this->_function->blocks.size() - 1)
         .instrIDs.push_back({
@@ -189,7 +194,7 @@ void IRGenVisitor::visit(ast::statements::IfStatement& node) {
         });
     this->_function->instructions.push_back(instr);
 
-    ir::LLVMInstruction jumpEnd = {
+    const ir::LLVMInstruction jumpEnd = {
         .opcode = ir::LLVMOpcode::BR,
         .operands =
             {
@@ -200,7 +205,7 @@ void IRGenVisitor::visit(ast::statements::IfStatement& node) {
             },
     };
 
-    int startJumpEnd = this->_function->instructions.size();
+    const int startJumpEnd = this->_function->instructions.size();
     this->_function->instructions.push_back(jumpEnd);
 
     this->_function->blocks.push_back({
@@ -209,14 +214,14 @@ void IRGenVisitor::visit(ast::statements::IfStatement& node) {
 
     node.getIfStatement()->accept(*this);
 
-    int endIndex = this->_function->instructions.size();
+    const int endIndex = this->_function->instructions.size();
     this->_function->blocks.at(this->_function->blocks.size() - 1)
         .instrIDs.push_back({
             .id = (int)this->_function->instructions.size(),
         });
     this->_function->instructions.push_back(jumpEnd);
 
-    if (node.getElseStatement()) {
+    if (node.getElseStatement() != nullptr) {
         this->_function->blocks.push_back({
             .label = std::format("if_false_{}", ifID),
         });
@@ -230,17 +235,18 @@ void IRGenVisitor::visit(ast::statements::IfStatement& node) {
         .label = std::format("if_end_{}", ifID),
     });
 
-    if (this->_function->instructions[index].operands[2].id == 0)
+    if (this->_function->instructions[index].operands[2].id == 0) {
         this->_function->instructions[index].operands[2].id = this->_function->blocks.size() - 1;
+    }
     this->_function->instructions[endIndex].operands[0].id = this->_function->blocks.size() - 1;
     this->_function->instructions[startJumpEnd].operands[0].id = this->_function->blocks.size() - 1;
 }
 
 void IRGenVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
     node.getRhs()->accept(*this);
-    int rhs = this->_function->instructions.size() - 1;
+    const int rhs = this->_function->instructions.size() - 1;
     node.getLhs()->accept(*this);
-    int lhs = this->_function->instructions.size() - 1;
+    const int lhs = this->_function->instructions.size() - 1;
 
     ir::LLVMInstruction instr;
     if (node.getLhs()->isLvalue()) {
@@ -385,7 +391,7 @@ void IRGenVisitor::visit(ast::expressions::Initializer& node) {
             }},
         node.getChild());
 
-    ir::LLVMInstruction instr = ir::LLVMInstruction{
+    const ir::LLVMInstruction instr = ir::LLVMInstruction{
         .opcode = ir::LLVMOpcode::STORE,
         .type = *this->_type,
         .operands =
