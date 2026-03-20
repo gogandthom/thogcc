@@ -80,10 +80,10 @@ void RISCVEmitter::emitFunction(const ir::LLVMFunction& func) {
 
     // epilogue
     _out << std::format(".L_{}_epilogue:\n", func.name);
+    clearStack();
     _out << std::format("    lw ra, {}(sp)\n", frameSize - 4);  // restore old frame pointer
     _out << std::format("    lw s0, {}(sp)\n", frameSize - 8);  // restore old frame pointer
     _out << std::format("    addi sp, sp, {}\n", frameSize);    // deallocate frame
-    // _out << "    jr ra\n";
     _out << "    ret\n";
 
     _out << std::format("    .size {0}, .-{0}\n", func.name);
@@ -232,7 +232,7 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             break;
         case ir::LLVMOpcode::RET:
             loadValue(instr.operands.at(0), "a0");
-            _out << std::format("    j L_{}_epilogue\n", _curFunc->name);
+            _out << std::format("    j .L_{}_epilogue\n", _curFunc->name);
             break;
 
         // not present in riscv
