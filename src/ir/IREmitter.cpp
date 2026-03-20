@@ -1,6 +1,7 @@
 #include "ir/IREmitter.h"
 
 #include <format>
+#include <iostream>
 #include <iterator>
 #include <stdexcept>
 #include <string>
@@ -20,7 +21,6 @@ void IREmitter::emit(const LLVMModule& module) {
             std::visit([](auto& val) { return std::to_string(val); }, global.initValue));
     }
     _out << "\n";
-
     for (const auto& func : module.functions) {
         emitFunction(func);
     }
@@ -113,6 +113,8 @@ void IREmitter::emitFunction(const LLVMFunction& func) {
 
     _out << ") {\n";
 
+    // std::cout << "function has " << func.instructions.size() << " instruction(s)" << std::endl;
+
     // Blocks
     bool first = true;
     for (const auto& block : func.blocks) {
@@ -130,6 +132,9 @@ void IREmitter::emitFunction(const LLVMFunction& func) {
         }
 
         for (const auto& id : block.instrIDs) {
+            // std::cout << "dhwaukdhawukdw: " << id.id << std::endl;
+            // std::cout << "e: " << (int)func.instructions.at(id.id).opcode << std::endl;
+            // std::cout << "e2: " << (int)func.instructions.at(id.id).operands.size() << std::endl;
             emitInstruction(func, id);
         }
     }

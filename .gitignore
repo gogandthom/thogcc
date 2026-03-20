@@ -9,3 +9,6 @@ a.out
 /*.s
 /*.ll
 /*.c
+
+venv/
+Testing/

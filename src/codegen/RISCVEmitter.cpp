@@ -32,16 +32,16 @@ void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targ
 }
 
 void RISCVEmitter::pushStack(std::string_view srcReg) {
-    _out << std::format("   addi sp, sp, -{}\n", stackItemSize);
-    _out << std::format("   sw {}, {}(sp)\n", srcReg, stackItemSize);
+    _out << std::format("    addi sp, sp, -{}\n", stackItemSize);
+    _out << std::format("    sw {}, {}(sp)\n", srcReg, stackItemSize);
 }
 
 void RISCVEmitter::loadFromStack(int id, std::string_view targetReg) {
-    _out << std::format("   lw {}, {}(s0)\n", targetReg, prologueSize + (id * stackItemSize));
+    _out << std::format("    lw {}, -{}(s0)\n", targetReg, prologueSize + (id * stackItemSize));
 }
 
 void RISCVEmitter::clearStack() {
-    _out << std::format("   addi sp, s0, -{}\n", prologueSize);
+    _out << std::format("    addi sp, s0, -{}\n", prologueSize);
 }
 
 void RISCVEmitter::emit(const ir::LLVMModule& module) {
@@ -83,7 +83,8 @@ void RISCVEmitter::emitFunction(const ir::LLVMFunction& func) {
     _out << std::format("    lw ra, {}(sp)\n", frameSize - 4);  // restore old frame pointer
     _out << std::format("    lw s0, {}(sp)\n", frameSize - 8);  // restore old frame pointer
     _out << std::format("    addi sp, sp, {}\n", frameSize);    // deallocate frame
-    _out << "    jr ra\n";
+    // _out << "    jr ra\n";
+    _out << "    ret\n";
 
     _out << std::format("    .size {0}, .-{0}\n", func.name);
 }
@@ -211,18 +212,18 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             break;
         case ir::LLVMOpcode::ALLOCA:
             // this almost definitely won't work
-            _out << "   addi t0, sp, zero\n";
+            _out << "    addi t0, sp, zero\n";
             pushStack("t0");
             break;
         case ir::LLVMOpcode::LOAD:
             loadValue(instr.operands.at(0), "t0");
-            _out << "   lw t1, 0(t0)\n";
+            _out << "    lw t1, 0(t0)\n";
             pushStack("t1");
             break;
         case ir::LLVMOpcode::STORE:
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
-            _out << "   sw t0, 0(t1)\n";
+            _out << "    sw t0, 0(t1)\n";
             break;
         case ir::LLVMOpcode::BR:
             // TODO
@@ -230,7 +231,7 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
         case ir::LLVMOpcode::CALL:
             break;
         case ir::LLVMOpcode::RET:
-            // TODO load a0 retval
+            loadValue(instr.operands.at(0), "a0");
             _out << std::format("    j L_{}_epilogue\n", _curFunc->name);
             break;
 

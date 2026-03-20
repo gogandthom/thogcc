@@ -65,7 +65,7 @@ void IRGenVisitor::visit(ast::declarations::FunctionDefinition& node) {
                 .type = ir::LLVMBasicType::INT,
                 .intSize = 32,
             },
-        .value = (uint64_t)6,
+        .value = (uint64_t)0,
     });
 
     this->_function = &func;
@@ -185,26 +185,6 @@ void IRGenVisitor::visit(ast::expressions::PrimaryExpression& node) {
 
     if (!doesnTExist) {
         if (!this->_global) {
-            this->_function->blocks.at(this->_function->blocks.size() - 1)
-                .instrIDs.push_back({
-                    .id = (int)this->_function->instructions.size(),
-                });
-            this->_function->blocks.at(this->_function->blocks.size() - 1)
-                .instrIDs.push_back({
-                    .id = (int)this->_function->instructions.size(),
-                });
-            this->_function->blocks.at(this->_function->blocks.size() - 1)
-                .instrIDs.push_back({
-                    .id = (int)this->_function->instructions.size(),
-                });
-            this->_function->blocks.at(this->_function->blocks.size() - 1)
-                .instrIDs.push_back({
-                    .id = (int)this->_function->instructions.size(),
-                });
-            this->_function->blocks.at(this->_function->blocks.size() - 1)
-                .instrIDs.push_back({
-                    .id = (int)this->_function->instructions.size(),
-                });
             this->_function->blocks.at(this->_function->blocks.size() - 1)
                 .instrIDs.push_back({
                     .id = (int)this->_function->instructions.size(),
