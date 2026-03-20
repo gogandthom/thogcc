@@ -102,7 +102,7 @@ struct LLVMParameter {
 /// Constants
 struct LLVMConstant {
     LLVMType type;
-    std::variant<uint64_t, double> value;
+    std::variant<uint64_t, float, double> value;
 };
 
 /// Global variable
