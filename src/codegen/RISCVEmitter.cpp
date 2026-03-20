@@ -21,7 +21,14 @@ void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targ
             // ????
             break;
         case ir::LLVMValueKind::INSTR:
-            loadFromStack(valID.id, targetReg);
+            if (this->_allocaInsts.contains(valID.id)) {
+                _out << std::format("  # wahey: {} should be stored at -{}(s0) hopefully?\n",
+                                    targetReg, this->_allocaInsts[valID.id]);
+                _out << std::format("    addi {}, s0, -{}\n", targetReg,
+                                    this->_allocaInsts[valID.id]);
+            } else {
+                loadFromStack(valID.id, targetReg);
+            }
             break;
         case ir::LLVMValueKind::CONST:
             std::visit([this, targetReg](
@@ -87,6 +94,8 @@ void RISCVEmitter::emitFunction(const ir::LLVMFunction& func) {
     _out << "    ret\n";
 
     _out << std::format("    .size {0}, .-{0}\n", func.name);
+
+    this->_allocaInsts = {};
 }
 
 void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
@@ -199,9 +208,9 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             // TODO
             break;
         case ir::LLVMOpcode::ALLOCA:
-            // this almost definitely won't work
-            _out << "    addi t0, sp, zero\n";
-            pushStack("t0");
+            this->_allocaInsts[instrID.id] = prologueSize + (instrID.id * stackItemSize);
+            // _out << "    add t0, sp, zero\n";
+            pushStack("zero");
             break;
         case ir::LLVMOpcode::LOAD:
             loadValue(instr.operands.at(0), "t0");
@@ -212,6 +221,7 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
             _out << "    sw t0, 0(t1)\n";
+            pushStack("zero");
             break;
         case ir::LLVMOpcode::BR:
             // TODO

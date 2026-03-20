@@ -27,6 +27,8 @@ class IRGenVisitor : public DefaultVisitor {
     void visit(ast::statements::ReturnStatement& node) override;
 
     void visit(ast::expressions::binary::AssignmentExpression& node) override;
+    void visit(ast::expressions::IdentifierExpression& node) override;
+    void visit(ast::expressions::Initializer& node) override;
     void visit(ast::expressions::ListExpression& node) override;
     void visit(ast::expressions::PrimaryExpression& node) override;
 
@@ -42,6 +44,13 @@ class IRGenVisitor : public DefaultVisitor {
     ir::LLVMGlobal* _global = nullptr;
     ir::LLVMInstruction* _instruction = nullptr;
     ir::LLVMType* _type = nullptr;
+    std::string_view _initialising = "";
+
+    typedef std::map<std::string_view, int> IdentifierResolutionLayer;
+    std::vector<IdentifierResolutionLayer> _identifiers;
+
+    int _resolveIdentifier(std::string_view name);
+    std::map<std::string_view, int>& _currentIdentifiers();
 };
 
 }  // namespace thogcc::visitors

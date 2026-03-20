@@ -1,5 +1,6 @@
 #pragma once
 
+#include <map>
 #include <ostream>
 #include <string_view>
 
@@ -26,6 +27,8 @@ class RISCVEmitter {
     std::ostream& _out;  // NOLINT
 
     const ir::LLVMFunction* _curFunc = nullptr;
+
+    std::map<int, int> _allocaInsts = {};
 };
 
 }  // namespace thogcc::codegen
