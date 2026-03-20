@@ -143,7 +143,7 @@ void SemaVisitor::visit(ast::declarations::FunctionDefinition& node) {
     node.getSpecifiers()->accept(*this);
     node.getDeclarator()->accept(*this);
 
-    std::string funcName{node.getDeclarator()->getIdentifier()};
+    const std::string funcName{node.getDeclarator()->getIdentifier()};
 
     if (node.getDeclarations() != nullptr) {
         throw errors::SemaError("K&R FunctionDefinition not supported.");
@@ -173,7 +173,7 @@ void SemaVisitor::visit(ast::declarations::ParameterDeclaration& node) {
 
     // TODO holds_alternative<ArrayType>
 
-    auto varSymb = types::VarSymbol{std::make_shared<types::Type>(_curType)};
+    const auto varSymb = types::VarSymbol{std::make_shared<types::Type>(_curType)};
     auto sharedSymb = std::make_shared<types::VarSymbol>(varSymb);
     node.setSymbol(sharedSymb);
     // TODO add to _table here or elsewhere?
@@ -204,7 +204,7 @@ void SemaVisitor::visit(ast::declarators::FunctionDeclarator& node) {
 }
 
 void SemaVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
-    types::VarSymbol varSymb{std::make_shared<types::Type>(_curType)};
+    const types::VarSymbol varSymb{std::make_shared<types::Type>(_curType)};
     auto sharedSymb = std::make_shared<types::VarSymbol>(varSymb);
     _table.addToScope(std::string{node.getIdentifier()}, {sharedSymb});
     node.setSymbol(sharedSymb);

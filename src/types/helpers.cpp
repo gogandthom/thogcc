@@ -55,7 +55,7 @@ std::string printType(const Type& type) {
 
     res += std::visit(overload{
                           [type](const BasicType& b) -> std::string {
-                              std::string unsignedLabel = b.isUnsigned ? "unsigned " : "";
+                              const std::string unsignedLabel = b.isUnsigned ? "unsigned " : "";
                               switch (b.kind) {
                                   case BasicType::Kind::VOID:
                                       return "void";

@@ -1,12 +1,15 @@
 #pragma once
 
+#include <memory>
 #include <ostream>
+#include <string>
 #include <string_view>
 
 #include "ast/Node.h"
 #include "ast/fwd.h"
 #include "ast/nodes.h"
 #include "types/Scope.h"
+#include "types/Type.h"
 #include "visitors/Visitor.h"
 
 namespace thogcc::visitors {
