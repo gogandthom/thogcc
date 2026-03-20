@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
         const thogcc::CommandLineArgs args = thogcc::parseArgs(rawArgs);
 
         // Open source file
-        std::filesystem::path srcPath(args.srcPath);
+        const std::filesystem::path srcPath(args.srcPath);
         std::ifstream input(srcPath);
         if (!input.is_open()) {
             throw thogcc::errors::CommandLineError(
