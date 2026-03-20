@@ -1,4 +1,5 @@
 #include <exception>
+#include <filesystem>
 #include <format>
 #include <fstream>
 #include <iostream>
@@ -11,6 +12,7 @@
 #include "errors/errors.h"
 #include "ir/IREmitter.h"
 #include "parse.h"
+#include "types/SymbolTable.h"
 #include "visitors/IRGenVisitor.h"
 #include "visitors/PrintVisitor.h"
 #include "visitors/SemaVisitor.h"
@@ -22,7 +24,8 @@ int main(int argc, char** argv) {
         const thogcc::CommandLineArgs args = thogcc::parseArgs(rawArgs);
 
         // Open source file
-        std::ifstream input(args.srcPath);
+        std::filesystem::path srcPath(args.srcPath);
+        std::ifstream input(srcPath);
         if (!input.is_open()) {
             throw thogcc::errors::CommandLineError(
                 std::format("Couldn't open input file: {}", args.srcPath));
@@ -38,12 +41,12 @@ int main(int argc, char** argv) {
         }
 
         // SEMAAAAA
-        auto table = thogcc::types::SymbolTable();
+        thogcc::types::SymbolTable table{};
         auto sema = thogcc::visitors::SemaVisitor(table);
         root->accept(sema);
 
         // Generate IR
-        auto irGenerator = thogcc::visitors::IRGenVisitor(args.srcPath);
+        auto irGenerator = thogcc::visitors::IRGenVisitor(srcPath.filename());
         root->accept(irGenerator);
 
         if (!args.llvmDestPath.empty()) {
@@ -53,7 +56,6 @@ int main(int argc, char** argv) {
                     std::format("Couldn't open llvm output file: {}", args.llvmDestPath));
             }
             thogcc::ir::IREmitter llvmEmitter(llvmOut);
-
             llvmEmitter.emit(irGenerator.getModule());
         }
 
@@ -64,7 +66,6 @@ int main(int argc, char** argv) {
                     std::format("Couldn't open RISCV assembly output file: {}", args.destPath));
             }
             thogcc::codegen::RISCVEmitter riscv(riscOut);
-
             riscv.emit(irGenerator.getModule());
         }
 
