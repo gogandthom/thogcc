@@ -1,6 +1,7 @@
 #include "visitors/SemaVisitor.h"
 
 #include <cassert>
+#include <cstddef>
 #include <format>
 #include <memory>
 #include <string>
@@ -324,12 +325,16 @@ void SemaVisitor::visit(ast::expressions::postfix::FunctionCallExpression& node)
         throw errors::SemaError("Expected a FuncType");
     }
 
-    if (node.getArgs()->size() != funcType->params.size()) {
+    size_t funcArgs = 0;
+    if (node.getArgs() != nullptr) {
+        funcArgs = node.getArgs()->size();
+        node.getArgs()->accept(*this);
+    }
+
+    if ((funcArgs != funcType->params.size())) {
         throw errors::SemaError(std::format("Function expected {} arguments, got {}",
                                             funcType->params.size(), node.getArgs()->size()));
     }
-
-    node.getArgs()->accept(*this);
 
     node.setEvaluatedType(funcType->returnType);
     node.setIsLvalue(false);
