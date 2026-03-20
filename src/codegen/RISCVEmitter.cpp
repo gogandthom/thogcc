@@ -71,17 +71,40 @@ void RISCVEmitter::emit(const ir::LLVMModule& module) {
     // TODO .attribute arch, unaligned_access, stack_align
 
     // Float consts
-    _out << ".section .rodata\n";
-    for (const auto& func : module.functions) {
-        for (size_t i = 0; i < func.consts.size(); ++i) {
-            auto c = func.consts[i];
-            if (std::holds_alternative<float>(c.value)) {
-                _out << std::format(".LC_{}_{}:\n", func.name, i);
-                _out << std::format("  .float {}\n", std::get<float>(c.value));
-            } else if (std::holds_alternative<double>(c.value)) {
-                _out << std::format(".LC_{}_{}:\n", func.name, i);
-                _out << std::format("  .double {}\n", std::get<double>(c.value));
+    if (!module.functions.empty()) {
+        _out << ".section .rodata\n";
+        for (const auto& func : module.functions) {
+            for (size_t i = 0; i < func.consts.size(); ++i) {
+                auto c = func.consts[i];
+                if (std::holds_alternative<float>(c.value)) {
+                    _out << std::format(".LC_{}_{}:\n", func.name, i);
+                    _out << std::format("  .float {}\n", std::get<float>(c.value));
+                } else if (std::holds_alternative<double>(c.value)) {
+                    _out << std::format(".LC_{}_{}:\n", func.name, i);
+                    _out << std::format("  .double {}\n", std::get<double>(c.value));
+                }
             }
+        }
+    }
+
+    // Globals
+    if (!module.globals.empty()) {
+        _out << ".data\n";
+        for (const auto& global : module.globals) {
+            _out << std::format(".type {}, @object\n", global.name);
+            _out << std::format(".globl {}\n", global.name);
+            _out << std::format("{}:\n", global.name);
+            std::visit(overload{
+                           [this, &global](const uint64_t& val) {
+                               _out << std::format("    .word {}\n", val);
+                               _out << std::format("    .size {}, 4\n", global.name);
+                           },
+                           [this, &global](const double& val) {
+                               _out << std::format("    .double {:f}\n", val);
+                               _out << std::format("    .size {}, 8\n", global.name);
+                           },
+                       },
+                       global.initValue);
         }
     }
 
