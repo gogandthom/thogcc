@@ -45,13 +45,13 @@ void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targ
                     },
                     [this, targetReg, valID](const float&) {
                         std::string label = std::format(".LC_{}_{}", _curFunc->name, valID.id);
-                        _out << std::format("    lla t0, {}\n", label);
-                        _out << std::format("    flw {}, 0(t0)\n", targetReg);
+                        _out << std::format("    la {}, {}\n", targetReg, label);
+                        _out << std::format("    flw {0}, 0({0})\n", targetReg);
                     },
                     [this, targetReg, valID](const double&) {
                         std::string label = std::format(".LC_{}_{}", _curFunc->name, valID.id);
-                        _out << std::format("    lla t0, {}\n", label);
-                        _out << std::format("    fld {}, 0(t0)\n", targetReg);
+                        _out << std::format("    la {}, {}\n", targetReg, label);
+                        _out << std::format("    fld {0}, 0({0})\n", targetReg);
                     },
                 },
                 _curFunc->consts.at(valID.id).value);
