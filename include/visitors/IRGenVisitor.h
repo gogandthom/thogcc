@@ -54,6 +54,8 @@ class IRGenVisitor : public DefaultVisitor {
 
     int _resolveIdentifier(std::string_view name);
     std::map<std::string_view, int>& _currentIdentifiers();
+
+    int _emitInstr(const ir::LLVMInstruction& instr);
 };
 
 }  // namespace thogcc::visitors

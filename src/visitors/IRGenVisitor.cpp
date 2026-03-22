@@ -3,7 +3,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <string>
@@ -13,7 +12,6 @@
 
 #include "ast/Node.h"
 #include "ast/all.h"
-#include "ast/utils.h"
 #include "ir/LLVMType.h"
 #include "ir/llvm.h"
 #include "types/Scope.h"
@@ -22,7 +20,14 @@
 
 namespace thogcc::visitors {
 
-IRGenVisitor::IRGenVisitor(std::string srcFilePath)  {
+int IRGenVisitor::_emitInstr(const ir::LLVMInstruction& instr) {
+    const int id = (int)_function->instructions.size();
+    _function->instructions.push_back(instr);
+    _function->blocks.back().instrIDs.push_back({.id = id});
+    return id;
+}
+
+IRGenVisitor::IRGenVisitor(std::string srcFilePath) {
     this->_module = {};
     this->_module.srcFileName = std::move(srcFilePath);
 
@@ -143,11 +148,7 @@ void IRGenVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
             .type =
                 types::toLLVMType(*std::visit([](auto& v) { return v->type; }, node.getSymbol())),
         };
-        this->_function->blocks.at(this->_function->blocks.size() - 1)
-            .instrIDs.push_back({
-                .id = (int)this->_function->instructions.size(),
-            });
-        this->_function->instructions.push_back(instr);
+        _emitInstr(instr);
         this->_currentIdentifiers()[node.getIdentifier()] =
             this->_function->instructions.size() - 1;
     }
@@ -188,11 +189,7 @@ void IRGenVisitor::visit(ast::statements::IfStatement& node) {
 
     const int index = this->_function->instructions.size();
 
-    this->_function->blocks.at(this->_function->blocks.size() - 1)
-        .instrIDs.push_back({
-            .id = (int)this->_function->instructions.size(),
-        });
-    this->_function->instructions.push_back(instr);
+    _emitInstr(instr);
 
     const ir::LLVMInstruction jumpEnd = {
         .opcode = ir::LLVMOpcode::BR,
@@ -215,11 +212,7 @@ void IRGenVisitor::visit(ast::statements::IfStatement& node) {
     node.getIfStatement()->accept(*this);
 
     const int endIndex = this->_function->instructions.size();
-    this->_function->blocks.at(this->_function->blocks.size() - 1)
-        .instrIDs.push_back({
-            .id = (int)this->_function->instructions.size(),
-        });
-    this->_function->instructions.push_back(jumpEnd);
+    _emitInstr(jumpEnd);
 
     if (node.getElseStatement() != nullptr) {
         this->_function->blocks.push_back({
@@ -261,11 +254,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AddMultExpression& node) {
                     },
                 },
         };
-        this->_function->blocks.at(this->_function->blocks.size() - 1)
-            .instrIDs.push_back({
-                .id = (int)this->_function->instructions.size(),
-            });
-        this->_function->instructions.push_back(instr);
+        _emitInstr(instr);
     }
 
     ir::LLVMOpcode op;
@@ -303,11 +292,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AddMultExpression& node) {
                 },
             },
     };
-    this->_function->blocks.at(this->_function->blocks.size() - 1)
-        .instrIDs.push_back({
-            .id = (int)this->_function->instructions.size(),
-        });
-    this->_function->instructions.push_back(instr);
+    _emitInstr(instr);
 }
 
 void IRGenVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
@@ -329,11 +314,7 @@ void IRGenVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
                     },
                 },
         };
-        this->_function->blocks.at(this->_function->blocks.size() - 1)
-            .instrIDs.push_back({
-                .id = (int)this->_function->instructions.size(),
-            });
-        this->_function->instructions.push_back(instr);
+        _emitInstr(instr);
     }
 
     instr = {
@@ -356,11 +337,7 @@ void IRGenVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
             },
         .cond = node.getIsNe() ? ir::LLVMCmpCond::NE : ir::LLVMCmpCond::EQ,
     };
-    this->_function->blocks.at(this->_function->blocks.size() - 1)
-        .instrIDs.push_back({
-            .id = (int)this->_function->instructions.size(),
-        });
-    this->_function->instructions.push_back(instr);
+    _emitInstr(instr);
 }
 
 void IRGenVisitor::visit(ast::statements::ReturnStatement& node) {
@@ -380,11 +357,7 @@ void IRGenVisitor::visit(ast::statements::ReturnStatement& node) {
                     },
                 },
         };
-        this->_function->blocks.at(this->_function->blocks.size() - 1)
-            .instrIDs.push_back({
-                .id = (int)this->_function->instructions.size(),
-            });
-        this->_function->instructions.push_back(instr);
+        _emitInstr(instr);
     }
 
     instr = {
@@ -398,11 +371,7 @@ void IRGenVisitor::visit(ast::statements::ReturnStatement& node) {
                 },
             },
     };
-    this->_function->blocks.at(this->_function->blocks.size() - 1)
-        .instrIDs.push_back({
-            .id = (int)this->_function->instructions.size(),
-        });
-    this->_function->instructions.push_back(instr);
+    _emitInstr(instr);
 }
 
 void IRGenVisitor::visit(ast::expressions::IdentifierExpression& node) {
@@ -441,11 +410,7 @@ void IRGenVisitor::visit(ast::expressions::IdentifierExpression& node) {
         };
     }
 
-    this->_function->blocks.at(this->_function->blocks.size() - 1)
-        .instrIDs.push_back({
-            .id = (int)this->_function->instructions.size(),
-        });
-    this->_function->instructions.push_back(instr);
+    _emitInstr(instr);
 }
 
 void IRGenVisitor::visit(ast::expressions::Initializer& node) {
@@ -474,11 +439,7 @@ void IRGenVisitor::visit(ast::expressions::Initializer& node) {
                 },
             },
     };
-    this->_function->blocks.at(this->_function->blocks.size() - 1)
-        .instrIDs.push_back({
-            .id = (int)this->_function->instructions.size(),
-        });
-    this->_function->instructions.push_back(instr);
+    _emitInstr(instr);
 }
 
 void IRGenVisitor::visit(ast::expressions::ListExpression& node) {
@@ -531,22 +492,14 @@ void IRGenVisitor::visit(ast::expressions::PrimaryExpression& node) {
 
     if (!doesnTExist) {
         if (this->_global == nullptr) {
-            this->_function->blocks.at(this->_function->blocks.size() - 1)
-                .instrIDs.push_back({
-                    .id = (int)this->_function->instructions.size(),
-                });
-            this->_function->instructions.push_back(instr);
+            _emitInstr(instr);
 
             // if (node.isLvalue()) {
             //     instr = ir::LLVMInstruction{
             //         .opcode = ir::LLVMOpcode::ALLOCA,
             //         .type = instr.type,
             //     };
-            //     this->_function->blocks.at(this->_function->blocks.size() - 1)
-            //         .instrIDs.push_back({
-            //             .id = (int)this->_function->instructions.size(),
-            //         });
-            //     this->_function->instructions.push_back(instr);
+            //     _emitInstr(instr);
             //     instr = ir::LLVMInstruction{
             //         .opcode = ir::LLVMOpcode::STORE,
             //         .operands =
@@ -561,11 +514,7 @@ void IRGenVisitor::visit(ast::expressions::PrimaryExpression& node) {
             //                 },
             //             },
             //     };
-            //     this->_function->blocks.at(this->_function->blocks.size() - 1)
-            //         .instrIDs.push_back({
-            //             .id = (int)this->_function->instructions.size(),
-            //         });
-            //     this->_function->instructions.push_back(instr);
+            //     _emitInstr(instr);
             // }
         } else {
             // die
@@ -601,11 +550,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
-            this->_function->blocks.at(this->_function->blocks.size() - 1)
-                .instrIDs.push_back({
-                    .id = (int)this->_function->instructions.size(),
-                });
-            this->_function->instructions.push_back(instr);
+            _emitInstr(instr);
             const int loaded = this->_function->instructions.size() - 1;
             instr = {
                 .opcode = ir::LLVMOpcode::MUL,
@@ -622,11 +567,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
-            this->_function->blocks.at(this->_function->blocks.size() - 1)
-                .instrIDs.push_back({
-                    .id = (int)this->_function->instructions.size(),
-                });
-            this->_function->instructions.push_back(instr);
+            _emitInstr(instr);
             break;
         }
         // TODO: fix with signed/unsigned
@@ -642,11 +583,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
-            this->_function->blocks.at(this->_function->blocks.size() - 1)
-                .instrIDs.push_back({
-                    .id = (int)this->_function->instructions.size(),
-                });
-            this->_function->instructions.push_back(instr);
+            _emitInstr(instr);
             const int loaded = this->_function->instructions.size() - 1;
             instr = {
                 .opcode = ir::LLVMOpcode::UDIV,
@@ -663,11 +600,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
-            this->_function->blocks.at(this->_function->blocks.size() - 1)
-                .instrIDs.push_back({
-                    .id = (int)this->_function->instructions.size(),
-                });
-            this->_function->instructions.push_back(instr);
+            _emitInstr(instr);
             break;
         }
             // TODO: same as above
@@ -683,11 +616,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
-            this->_function->blocks.at(this->_function->blocks.size() - 1)
-                .instrIDs.push_back({
-                    .id = (int)this->_function->instructions.size(),
-                });
-            this->_function->instructions.push_back(instr);
+            _emitInstr(instr);
             const int loaded = this->_function->instructions.size() - 1;
             instr = {
                 .opcode = ir::LLVMOpcode::UREM,
@@ -704,11 +633,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
-            this->_function->blocks.at(this->_function->blocks.size() - 1)
-                .instrIDs.push_back({
-                    .id = (int)this->_function->instructions.size(),
-                });
-            this->_function->instructions.push_back(instr);
+            _emitInstr(instr);
             break;
         }
         case ast::expressions::binary::AssignmentExpressionType::ADD_ASSIGN: {
@@ -724,11 +649,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                     },
             };
 
-            this->_function->blocks.at(this->_function->blocks.size() - 1)
-                .instrIDs.push_back({
-                    .id = (int)this->_function->instructions.size(),
-                });
-            this->_function->instructions.push_back(instr);
+            _emitInstr(instr);
             const int loaded = this->_function->instructions.size() - 1;
             instr = {
                 .opcode = ir::LLVMOpcode::ADD,
@@ -745,11 +666,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
-            this->_function->blocks.at(this->_function->blocks.size() - 1)
-                .instrIDs.push_back({
-                    .id = (int)this->_function->instructions.size(),
-                });
-            this->_function->instructions.push_back(instr);
+            _emitInstr(instr);
             break;
         }
         case ast::expressions::binary::AssignmentExpressionType::SUB_ASSIGN: {
@@ -764,11 +681,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
-            this->_function->blocks.at(this->_function->blocks.size() - 1)
-                .instrIDs.push_back({
-                    .id = (int)this->_function->instructions.size(),
-                });
-            this->_function->instructions.push_back(instr);
+            _emitInstr(instr);
             const int loaded = this->_function->instructions.size() - 1;
             instr = {
                 .opcode = ir::LLVMOpcode::SUB,
@@ -785,11 +698,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                         },
                     },
             };
-            this->_function->blocks.at(this->_function->blocks.size() - 1)
-                .instrIDs.push_back({
-                    .id = (int)this->_function->instructions.size(),
-                });
-            this->_function->instructions.push_back(instr);
+            _emitInstr(instr);
             break;
         }
         // do these after signed things exist
@@ -811,11 +720,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             //             },
             //         },
             // };
-            // this->_function->blocks.at(this->_function->blocks.size() - 1)
-            //     .instrIDs.push_back({
-            //         .id = (int)this->_function->instructions.size(),
-            //     });
-            // this->_function->instructions.push_back(instr);
+            // _emitInstr(instr);
             // int loaded = this->_function->instructions.size() - 1;
             // instr = {
             //     .opcode = ir::LLVMOpcode::AND,
@@ -832,11 +737,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             //             },
             //         },
             // };
-            // this->_function->blocks.at(this->_function->blocks.size() - 1)
-            //     .instrIDs.push_back({
-            //         .id = (int)this->_function->instructions.size(),
-            //     });
-            // this->_function->instructions.push_back(instr);
+            // _emitInstr(instr);
             break;
         }
         case ast::expressions::binary::AssignmentExpressionType::XOR_ASSIGN: {
@@ -851,11 +752,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             //             },
             //         },
             // };
-            // this->_function->blocks.at(this->_function->blocks.size() - 1)
-            //     .instrIDs.push_back({
-            //         .id = (int)this->_function->instructions.size(),
-            //     });
-            // this->_function->instructions.push_back(instr);
+            // _emitInstr(instr);
             // int loaded = this->_function->instructions.size() - 1;
             // instr = {
             //     .opcode = ir::LLVMOpcode::XOR,
@@ -872,11 +769,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             //             },
             //         },
             // };
-            // this->_function->blocks.at(this->_function->blocks.size() - 1)
-            //     .instrIDs.push_back({
-            //         .id = (int)this->_function->instructions.size(),
-            //     });
-            // this->_function->instructions.push_back(instr);
+            // _emitInstr(instr);
             break;
         }
         case ast::expressions::binary::AssignmentExpressionType::OR_ASSIGN: {
@@ -891,11 +784,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             //             },
             //         },
             // };
-            // this->_function->blocks.at(this->_function->blocks.size() - 1)
-            //     .instrIDs.push_back({
-            //         .id = (int)this->_function->instructions.size(),
-            //     });
-            // this->_function->instructions.push_back(instr);
+            // _emitInstr(instr);
             // int loaded = this->_function->instructions.size() - 1;
             // instr = {
             //     .opcode = ir::LLVMOpcode::OR,
@@ -912,11 +801,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             //             },
             //         },
             // };
-            // this->_function->blocks.at(this->_function->blocks.size() - 1)
-            //     .instrIDs.push_back({
-            //         .id = (int)this->_function->instructions.size(),
-            //     });
-            // this->_function->instructions.push_back(instr);
+            // _emitInstr(instr);
             break;
         }
         case ast::expressions::binary::AssignmentExpressionType::ASSIGN:
@@ -942,11 +827,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
                 },
             },
     };
-    this->_function->blocks.at(this->_function->blocks.size() - 1)
-        .instrIDs.push_back({
-            .id = (int)this->_function->instructions.size(),
-        });
-    this->_function->instructions.push_back(instr);
+    _emitInstr(instr);
 
     this->_instruction = temp;
 }
