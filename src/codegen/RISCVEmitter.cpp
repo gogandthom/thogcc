@@ -51,10 +51,13 @@ void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targ
                     [this, targetReg, valID](const double&) {
                         std::string label = std::format(".LC_{}_{}", _curFunc->name, valID.id);
                         _out << std::format("    lla t0, {}\n", label);
-                        _out << std::format("    flw {}, 0(t0)\n", targetReg);
+                        _out << std::format("    fld {}, 0(t0)\n", targetReg);
                     },
                 },
                 _curFunc->consts.at(valID.id).value);
+            break;
+        case ir::LLVMValueKind::BLOCK:
+            assert(false && "loadValue() passed a label (LLVMValueKind::BLOCK)");
             break;
     }
 }
