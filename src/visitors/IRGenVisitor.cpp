@@ -107,10 +107,28 @@ void IRGenVisitor::visit(ast::declarations::FunctionDefinition& node) {
 }
 
 void IRGenVisitor::visit(ast::declarations::ParameterDeclaration& node) {
-    _function->params.push_back(ir::LLVMParameter{
+    node.getDecl()->accept(*this);
+
+    this->_function->params.push_back(ir::LLVMParameter{
         // TODO
         .type = {types::toLLVMType(*node.getSymbol()->type)},
         .name = (std::string)node.getDecl()->getIdentifier(),
+    });
+
+    _emitInstr({
+        .opcode = ir::LLVMOpcode::STORE,
+        .type = {ir::LLVMBasicType::VOID, 0},
+        .operands =
+            {
+                {
+                    .kind = ir::LLVMValueKind::PARAM,
+                    .id = (int)this->_function->params.size() - 1,
+                },
+                {
+                    .kind = ir::LLVMValueKind::INSTR,
+                    .id = (int)this->_function->instructions.size() - 1,
+                },
+            },
     });
 }
 
