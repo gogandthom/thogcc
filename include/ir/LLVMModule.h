@@ -2,8 +2,6 @@
 
 #include <cassert>
 #include <cstdint>
-#include <format>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -152,39 +150,6 @@ struct LLVMFunction {
     std::vector<LLVMInstruction> instructions;
     std::vector<LLVMParameter> params;
     std::vector<LLVMConstant> consts;
-
-    std::string getValueLabel(const LLVMValueID& id) const {
-        switch (id.kind) {
-            case LLVMValueKind::INSTR:
-                return std::format("%ins{}", id.id);
-            case LLVMValueKind::PARAM:
-                return std::format("%{}", params.at(id.id).name);
-            case LLVMValueKind::CONST:
-                return std::visit([](const auto& c) { return std::to_string(c); },
-                                  consts.at(id.id).value);
-            case LLVMValueKind::BLOCK:
-                return std::format("{}", blocks.at(id.id).label);
-                break;
-        }
-        throw std::runtime_error("Invalid ValueID");
-    }
-
-    const LLVMInstruction& getInstr(LLVMInstrID id) const {
-        return instructions.at(id.id);
-    }
-
-    LLVMType getTypeOf(const LLVMValueID& id) const {
-        switch (id.kind) {
-            case LLVMValueKind::PARAM:
-                return params.at(id.id).type;
-            case LLVMValueKind::INSTR:
-                return instructions.at(id.id).type;
-            case LLVMValueKind::CONST:
-                return consts.at(id.id).type;
-            default:
-                throw std::runtime_error("Invalid ValueID for getTypeOf");
-        }
-    }
 };
 
 /// The LLVM equivalent of a translational unit

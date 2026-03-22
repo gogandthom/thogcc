@@ -4,7 +4,7 @@
 #include <ostream>
 #include <string_view>
 
-#include "ir/llvm.h"
+#include "ir/LLVMModule.h"
 
 namespace thogcc::codegen {
 

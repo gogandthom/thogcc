@@ -2,7 +2,7 @@
 
 #include <ostream>
 
-#include "ir/llvm.h"
+#include "ir/LLVMModule.h"
 
 namespace thogcc::ir {
 

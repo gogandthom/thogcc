@@ -1,7 +1,8 @@
 #pragma once
 
 #include "ast/Node.h"
-#include "ir/llvm.h"
+#include "ir/LLVMModule.h"
+#include "ir/LLVMType.h"
 #include "visitors/DefaultVisitor.h"
 
 namespace thogcc::visitors {

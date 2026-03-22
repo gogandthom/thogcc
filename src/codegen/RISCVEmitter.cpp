@@ -4,15 +4,15 @@
 #include <cstddef>
 #include <cstdint>
 #include <format>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <variant>
 #include <vector>
 
+#include "ir/LLVMModule.h"
 #include "ir/LLVMType.h"
-#include "ir/llvm.h"
+#include "ir/helpers.h"
 #include "utils.h"
 
 namespace thogcc::codegen {
@@ -162,7 +162,7 @@ void RISCVEmitter::emitFunction(const ir::LLVMFunction& func) {
 }
 
 void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
-    const ir::LLVMInstruction& instr = _curFunc->getInstr(instrID);
+    const ir::LLVMInstruction& instr = ir::getInstr(*_curFunc, instrID);
 
     switch (instr.opcode) {
         case ir::LLVMOpcode::ADD:
@@ -329,13 +329,13 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             pushStack(instrID.id, "zero");
             if (instr.operands.size() == 1) {
                 _out << std::format("    j .L_{}_{}\n", _curFunc->name,
-                                    _curFunc->getValueLabel(instr.operands.at(0)));
+                                    ir::getValueLabel(*_curFunc, instr.operands.at(0)));
             } else {
                 loadValue(instr.operands.at(0), "t0");
                 _out << std::format("    bnez t0, .L_{}_{}\n", _curFunc->name,
-                                    _curFunc->getValueLabel(instr.operands.at(1)));
+                                    ir::getValueLabel(*_curFunc, instr.operands.at(1)));
                 _out << std::format("    j .L_{}_{}\n", _curFunc->name,
-                                    _curFunc->getValueLabel(instr.operands.at(2)));
+                                    ir::getValueLabel(*_curFunc, instr.operands.at(2)));
             }
             break;
         case ir::LLVMOpcode::CALL:

@@ -11,7 +11,7 @@
 #include "codegen/RISCVEmitter.h"
 #include "errors/errors.h"
 #include "ir/IREmitter.h"
-#include "ir/llvm.h"
+#include "ir/LLVMModule.h"
 #include "parse.h"
 #include "types/SymbolTable.h"
 #include "visitors/IRGenVisitor.h"

@@ -6,8 +6,9 @@
 #include <string>
 #include <variant>
 
+#include "ir/LLVMModule.h"
 #include "ir/LLVMType.h"
-#include "ir/llvm.h"
+#include "ir/helpers.h"
 
 namespace thogcc::ir {
 
@@ -26,7 +27,7 @@ void IREmitter::emit(const LLVMModule& module) {
 }
 
 void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
-    const LLVMInstruction& instr = func.getInstr(instrID);
+    const LLVMInstruction& instr = getInstr(func, instrID);
 
     _out << "  ";  // indent
 
@@ -53,19 +54,19 @@ void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
             // opcode and type
             _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
             // operands
-            _out << std::format(" {}, {}", func.getValueLabel(instr.operands.at(0)),
-                                func.getValueLabel(instr.operands.at(1)));
+            _out << std::format(" {}, {}", getValueLabel(func, instr.operands.at(0)),
+                                getValueLabel(func, instr.operands.at(1)));
             break;
         }
 
         // CMP
         case LLVMOpcode::ICMP: {
             // opcode and cond
-            const LLVMType opType = func.getTypeOf(instr.operands.at(0));
+            const LLVMType opType = getTypeOf(func, instr.operands.at(0));
             _out << std::format("icmp {} {}", printCmpCond(instr.cond), opType.printType());
             // operands
-            _out << std::format(" {}, {}", func.getValueLabel(instr.operands.at(0)),
-                                func.getValueLabel(instr.operands.at(1)));
+            _out << std::format(" {}, {}", getValueLabel(func, instr.operands.at(0)),
+                                getValueLabel(func, instr.operands.at(1)));
             break;
         }
         case LLVMOpcode::FCMP:
@@ -78,13 +79,13 @@ void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
             break;
         case LLVMOpcode::LOAD:
             _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
-            _out << std::format(", ptr {}", func.getValueLabel(instr.operands.at(0)));
+            _out << std::format(", ptr {}", getValueLabel(func, instr.operands.at(0)));
             break;
         case LLVMOpcode::STORE:
             _out << std::format("{} {} {}, ptr {}", printOpcode(instr.opcode),
-                                func.getTypeOf(instr.operands.at(0)).printType(),
-                                func.getValueLabel(instr.operands.at(0)),
-                                func.getValueLabel(instr.operands.at(1)));
+                                getTypeOf(func, instr.operands.at(0)).printType(),
+                                getValueLabel(func, instr.operands.at(0)),
+                                getValueLabel(func, instr.operands.at(1)));
             break;
         case LLVMOpcode::GETELEMENTPTR:
             break;
@@ -92,12 +93,12 @@ void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
         // Control flow
         case LLVMOpcode::BR:
             if (instr.operands.size() == 1) {
-                _out << std::format("br label {}", func.getValueLabel(instr.operands.at(0)));
+                _out << std::format("br label {}", getValueLabel(func, instr.operands.at(0)));
             } else {
                 _out << std::format("br i1 {}, label {}, label {}",
-                                    func.getValueLabel(instr.operands.at(0)),
-                                    func.getValueLabel(instr.operands.at(1)),
-                                    func.getValueLabel(instr.operands.at(2)));
+                                    getValueLabel(func, instr.operands.at(0)),
+                                    getValueLabel(func, instr.operands.at(1)),
+                                    getValueLabel(func, instr.operands.at(2)));
             }
             break;
         case LLVMOpcode::CALL:
@@ -106,7 +107,7 @@ void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
             // opcode and type
             _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
             if (instr.type.type != LLVMBasicType::VOID) {
-                _out << " " << func.getValueLabel(instr.operands.at(0));
+                _out << " " << getValueLabel(func, instr.operands.at(0));
             }
             break;
     }
