@@ -408,7 +408,7 @@ void IRGenVisitor::visit(ast::expressions::Initializer& node) {
 
     const ir::LLVMInstruction instr = ir::LLVMInstruction{
         .opcode = ir::LLVMOpcode::STORE,
-        .type = *_type,
+        .type = {ir::LLVMBasicType::VOID, 0},
         .operands =
             {
                 {
@@ -796,7 +796,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
 
     instr = {
         .opcode = ir::LLVMOpcode::STORE,
-        .type = {.type = ir::LLVMBasicType::VOID, .intSize = 0},
+        .type = {ir::LLVMBasicType::VOID, 0},
         .operands =
             {
                 {
