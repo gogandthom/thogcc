@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "ast/Node.h"
 #include "ir/LLVMModule.h"
 #include "ir/LLVMType.h"
@@ -55,6 +57,7 @@ class IRGenVisitor : public DefaultVisitor {
     std::map<std::string_view, int>& _currentIdentifiers();
 
     int _emitInstr(const ir::LLVMInstruction& instr);
+    ir::LLVMBasicBlock& _createBlock(std::string label);
 };
 
 }  // namespace thogcc::visitors

@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <variant>
 
 #include "ast/Node.h"
@@ -24,6 +25,13 @@ int IRGenVisitor::_emitInstr(const ir::LLVMInstruction& instr) {
     _function->instructions.push_back(instr);
     _function->blocks.back().instrIDs.push_back({.id = id});
     return id;
+}
+
+ir::LLVMBasicBlock& IRGenVisitor::_createBlock(std::string label) {
+    return _function->blocks.emplace_back(ir::LLVMBasicBlock{
+        .label = std::move(label),
+        .instrIDs = {},
+    });
 }
 
 IRGenVisitor::IRGenVisitor(ir::LLVMModule& module) : _module(module) {
@@ -72,14 +80,13 @@ void IRGenVisitor::visit(ast::declarations::Declaration& node) {
 
 void IRGenVisitor::visit(ast::declarations::FunctionDefinition& node) {
     ir::LLVMFunction func = {};
+    this->_function = &func;
 
     func.returnType =
         types::toLLVMType(*std::get<types::FuncType>(node.getSymbol()->type->data).returnType);
 
-    func.blocks.push_back({
-        .label = "",
-        .instrIDs = {},
-    });
+    _createBlock("");
+
     func.consts.push_back({
         .type =
             {
@@ -90,8 +97,6 @@ void IRGenVisitor::visit(ast::declarations::FunctionDefinition& node) {
     });
 
     this->_identifiers.push_back({});
-
-    this->_function = &func;
     // node.getSpecifiers()->accept(*this);
     node.getDeclarator()->accept(*this);
     if (node.getDeclarations() != nullptr) node.getDeclarations()->accept(*this);
@@ -197,9 +202,7 @@ void IRGenVisitor::visit(ast::statements::IfStatement& node) {
     const int startJumpEnd = this->_function->instructions.size();
     this->_function->instructions.push_back(jumpEnd);
 
-    this->_function->blocks.push_back({
-        .label = std::format("if_true_{}", ifID),
-    });
+    _createBlock(std::format("if_true_{}", ifID));
 
     node.getIfStatement()->accept(*this);
 
@@ -207,18 +210,14 @@ void IRGenVisitor::visit(ast::statements::IfStatement& node) {
     _emitInstr(jumpEnd);
 
     if (node.getElseStatement() != nullptr) {
-        this->_function->blocks.push_back({
-            .label = std::format("if_false_{}", ifID),
-        });
+        _createBlock(std::format("if_false_{}", ifID));
 
         this->_function->instructions[index].operands[2].id = this->_function->blocks.size() - 1;
 
         node.getElseStatement()->accept(*this);
     }
 
-    this->_function->blocks.push_back({
-        .label = std::format("if_end_{}", ifID),
-    });
+    _createBlock(std::format("if_end_{}", ifID));
 
     if (this->_function->instructions[index].operands[2].id == 0) {
         this->_function->instructions[index].operands[2].id = this->_function->blocks.size() - 1;
