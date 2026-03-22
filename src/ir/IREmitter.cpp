@@ -13,13 +13,17 @@
 namespace thogcc::ir {
 
 void IREmitter::emitModule(const LLVMModule& module) {
-    _out << std::format("source_filename = \"{}\"\n\n", module.srcFileName);
+    _out << std::format("source_filename = \"{}\"\n", module.srcFileName);
 
-    for (const auto& global : module.globals) {
-        _out << std::format(
-            "@{} = global {} {}\n", global.name, global.type.printType(),
-            std::visit([](auto& val) { return std::to_string(val); }, global.initValue));
+    if (!module.globals.empty()) {
+        _out << "\n";
+        for (const auto& global : module.globals) {
+            _out << std::format(
+                "@{} = global {} {}\n", global.name, global.type.printType(),
+                std::visit([](auto& val) { return std::to_string(val); }, global.initValue));
+        }
     }
+
     _out << "\n";
     for (const auto& func : module.functions) {
         emitFunction(func);
