@@ -21,6 +21,10 @@ const int prologueSize = 8;
 
 const int stackItemSize = 8;
 
+int getSlotOffset(int id) {
+    return prologueSize + (id * stackItemSize);
+}
+
 void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targetReg) {
     switch (valID.kind) {
         case ir::LLVMValueKind::PARAM:
@@ -31,12 +35,7 @@ void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targ
             }
             break;
         case ir::LLVMValueKind::INSTR:
-            if (this->_allocaInsts.contains(valID.id)) {
-                _out << std::format("    addi {}, s0, -{}\n", targetReg,
-                                    this->_allocaInsts[valID.id]);
-            } else {
-                loadFromStack(valID.id, targetReg);
-            }
+            loadFromStack(valID.id, targetReg);
             break;
         case ir::LLVMValueKind::CONST:
             std::visit(
@@ -61,16 +60,11 @@ void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targ
 }
 
 void RISCVEmitter::pushStack(int id, std::string_view srcReg) {
-    // _out << std::format("    addi sp, sp, -{}\n", stackItemSize);
-    _out << std::format("    sw {}, -{}(s0)\n", srcReg, prologueSize + (id * stackItemSize));
+    _out << std::format("    sw {}, -{}(s0)\n", srcReg, getSlotOffset(id));
 }
 
 void RISCVEmitter::loadFromStack(int id, std::string_view targetReg) {
-    _out << std::format("    lw {}, -{}(s0)\n", targetReg, prologueSize + (id * stackItemSize));
-}
-
-void RISCVEmitter::clearStack() {
-    _out << std::format("    addi sp, s0, -{}\n", prologueSize);
+    _out << std::format("    lw {}, -{}(s0)\n", targetReg, getSlotOffset(id));
 }
 
 void RISCVEmitter::emit(const ir::LLVMModule& module) {
@@ -130,12 +124,18 @@ void RISCVEmitter::emitFunction(const ir::LLVMFunction& func) {
     _out << std::format(".type {}, @function\n", func.name);
     _out << std::format("{}:\n", func.name);
 
+    // stack frame must have slots for each instruction
+    // currently we hard code stackItemSize
+    // additionally, sp must be 16-byte aligned
+    int numInstrs = func.instructions.size();
+    int dataSize = numInstrs * stackItemSize;
+    int totalFrameSize = (prologueSize + dataSize + 15) & ~15;  // NOLINT
+
     // prologue
-    int frameSize = prologueSize;
-    _out << std::format("    addi sp, sp, -{}\n", frameSize);   // allocate stack
-    _out << std::format("    sw ra, {}(sp)\n", frameSize - 4);  // save ra
-    _out << std::format("    sw s0, {}(sp)\n", frameSize - 8);  // save old frame pointer
-    _out << std::format("    addi s0, sp, {}\n", frameSize);    // set frame pointer
+    _out << std::format("    addi sp, sp, -{}\n", totalFrameSize);   // allocate stack
+    _out << std::format("    sw ra, {}(sp)\n", totalFrameSize - 4);  // save ra
+    _out << std::format("    sw s0, {}(sp)\n", totalFrameSize - 8);  // save old frame pointer
+    _out << std::format("    addi s0, sp, {}\n", totalFrameSize);    // set frame pointer
 
     for (const auto& block : func.blocks) {
         if (!block.label.empty()) {
@@ -150,15 +150,12 @@ void RISCVEmitter::emitFunction(const ir::LLVMFunction& func) {
 
     // epilogue
     _out << std::format(".L_{}_epilogue:\n", func.name);
-    clearStack();
-    _out << std::format("    lw ra, {}(sp)\n", frameSize - 4);  // restore old frame pointer
-    _out << std::format("    lw s0, {}(sp)\n", frameSize - 8);  // restore old frame pointer
-    _out << std::format("    addi sp, sp, {}\n", frameSize);    // deallocate frame
+    _out << std::format("    lw ra, {}(sp)\n", totalFrameSize - 4);  // restore old frame pointer
+    _out << std::format("    lw s0, {}(sp)\n", totalFrameSize - 8);  // restore old frame pointer
+    _out << std::format("    addi sp, sp, {}\n", totalFrameSize);    // deallocate frame
     _out << "    ret\n";
 
     _out << std::format("    .size {0}, .-{0}\n", func.name);
-
-    this->_allocaInsts = {};
 }
 
 void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
@@ -309,9 +306,8 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             pushStack(instrID.id, "t2");
             break;
         case ir::LLVMOpcode::ALLOCA:
-            this->_allocaInsts[instrID.id] = prologueSize + (instrID.id * stackItemSize);
-            // _out << "    add t0, sp, zero\n";
-            pushStack(instrID.id, "zero");
+            _out << std::format("    addi t0, s0, -{}\n", getSlotOffset(instrID.id));
+            pushStack(instrID.id, "t0");
             break;
         case ir::LLVMOpcode::LOAD:
             loadValue(instr.operands.at(0), "t0");

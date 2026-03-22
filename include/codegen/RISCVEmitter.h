@@ -22,13 +22,10 @@ class RISCVEmitter {
 
     void pushStack(int id, std::string_view srcReg);
     void loadFromStack(int id, std::string_view targetReg);
-    void clearStack();
 
     std::ostream& _out;  // NOLINT
 
     const ir::LLVMFunction* _curFunc = nullptr;
-
-    std::map<int, int> _allocaInsts;
 };
 
 }  // namespace thogcc::codegen
