@@ -8,7 +8,7 @@ namespace thogcc::visitors {
 
 class IRGenVisitor : public DefaultVisitor {
    public:
-    IRGenVisitor(std::string srcFilePath);
+    IRGenVisitor(ir::LLVMModule& module);
 
     void visit(ast::Node& node) override;
     void visit(ast::NodeListBase& node) override;
@@ -35,14 +35,12 @@ class IRGenVisitor : public DefaultVisitor {
     void visit(ast::expressions::ListExpression& node) override;
     void visit(ast::expressions::PrimaryExpression& node) override;
 
-    ir::LLVMModule getModule();
-
     // #define V(NS, NAME) void visit(NS::NAME& node) override;
     //     AST_NODES_ALL(V)
     // #undef V
 
    private:
-    ir::LLVMModule _module;
+    ir::LLVMModule& _module;
     ir::LLVMFunction* _function = nullptr;
     ir::LLVMGlobal* _global = nullptr;
     ir::LLVMInstruction* _instruction = nullptr;

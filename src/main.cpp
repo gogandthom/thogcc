@@ -11,6 +11,7 @@
 #include "codegen/RISCVEmitter.h"
 #include "errors/errors.h"
 #include "ir/IREmitter.h"
+#include "ir/llvm.h"
 #include "parse.h"
 #include "types/SymbolTable.h"
 #include "visitors/IRGenVisitor.h"
@@ -46,7 +47,9 @@ int main(int argc, char** argv) {
         }
 
         // Generate IR
-        auto irGenerator = thogcc::visitors::IRGenVisitor(srcPath.filename());
+        thogcc::ir::LLVMModule llvmModule;
+        llvmModule.srcFileName = srcPath.filename();
+        auto irGenerator = thogcc::visitors::IRGenVisitor(llvmModule);
         root->accept(irGenerator);
 
         if (!args.llvmDestPath.empty()) {
@@ -56,7 +59,7 @@ int main(int argc, char** argv) {
                     std::format("Couldn't open llvm output file: {}", args.llvmDestPath));
             }
             thogcc::ir::IREmitter llvmEmitter(llvmOut);
-            llvmEmitter.emit(irGenerator.getModule());
+            llvmEmitter.emit(llvmModule);
         }
 
         if (!args.destPath.empty()) {
@@ -66,7 +69,7 @@ int main(int argc, char** argv) {
                     std::format("Couldn't open RISCV assembly output file: {}", args.destPath));
             }
             thogcc::codegen::RISCVEmitter riscv(riscOut);
-            riscv.emit(irGenerator.getModule());
+            riscv.emit(llvmModule);
         }
     } catch (const std::exception& e) {
         std::cerr << "thogcc: " << e.what() << '\n';

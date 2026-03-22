@@ -27,15 +27,8 @@ int IRGenVisitor::_emitInstr(const ir::LLVMInstruction& instr) {
     return id;
 }
 
-IRGenVisitor::IRGenVisitor(std::string srcFilePath) {
-    this->_module = {};
-    this->_module.srcFileName = std::move(srcFilePath);
-
+IRGenVisitor::IRGenVisitor(ir::LLVMModule& module) : _module(module) {
     this->_identifiers.push_back({});
-}
-
-ir::LLVMModule IRGenVisitor::getModule() {
-    return this->_module;
 }
 
 void IRGenVisitor::visit(ast::Node& /*node*/) {}
