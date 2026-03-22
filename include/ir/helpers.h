@@ -4,7 +4,7 @@
 
 namespace thogcc::ir {
 
-std::string getValueLabel(const LLVMFunction& func, const LLVMValueID& id);
+std::string getValueLabel(const LLVMModule& mod, const LLVMFunction& func, const LLVMValueID& id);
 
 const LLVMInstruction& getInstr(const LLVMFunction& func, LLVMInstrID id);
 

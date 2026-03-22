@@ -50,11 +50,11 @@ class IRGenVisitor : public DefaultVisitor {
     ir::LLVMType* _type = nullptr;
     std::string_view _initialising;
 
-    typedef std::map<std::string_view, int> IdentifierResolutionLayer;
+    typedef std::map<std::string_view, ir::LLVMValueID> IdentifierResolutionLayer;
     std::vector<IdentifierResolutionLayer> _identifiers;
 
-    int _resolveIdentifier(std::string_view name);
-    std::map<std::string_view, int>& _currentIdentifiers();
+    ir::LLVMValueID _resolveIdentifier(std::string_view name);
+    std::map<std::string_view, ir::LLVMValueID>& _currentIdentifiers();
 
     int _emitInstr(const ir::LLVMInstruction& instr);
     ir::LLVMBasicBlock& _createBlock(std::string label);

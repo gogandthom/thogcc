@@ -16,6 +16,7 @@ enum class LLVMValueKind : std::uint8_t {
     INSTR,
     CONST,
     BLOCK,
+    GLOBAL,
 };
 
 struct LLVMValueID {

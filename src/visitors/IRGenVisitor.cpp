@@ -44,15 +44,16 @@ void IRGenVisitor::visit(ast::NodeListBase& node) {
     }
 }
 
-std::map<std::string_view, int>& IRGenVisitor::_currentIdentifiers() {
+std::map<std::string_view, ir::LLVMValueID>& IRGenVisitor::_currentIdentifiers() {
     if (_identifiers.empty()) _identifiers.push_back({});
     return _identifiers.at(_identifiers.size() - 1);
 }
 
-int IRGenVisitor::_resolveIdentifier(std::string_view name) {
+ir::LLVMValueID IRGenVisitor::_resolveIdentifier(std::string_view name) {
     for (int i = _identifiers.size() - 1; i >= 0; i--) {
         if (_identifiers.at(i).contains(name)) return _identifiers.at(i).at(name);
     }
+    throw std::runtime_error(std::format("Unknown identifier {}", name));
 }
 
 void IRGenVisitor::visit(ast::declarations::Declaration& node) {
@@ -137,6 +138,10 @@ void IRGenVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
     if (_global != nullptr) {
         // identifier for global so yay
         _global->name = node.getIdentifier();
+        _currentIdentifiers()[node.getIdentifier()] = {
+            ir::LLVMValueKind::GLOBAL,
+            static_cast<int>(_module.globals.size()),
+        };
     } else {
         const ir::LLVMInstruction instr = {
             .opcode = ir::LLVMOpcode::ALLOCA,
@@ -144,7 +149,8 @@ void IRGenVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
                 types::toLLVMType(*std::visit([](auto& v) { return v->type; }, node.getSymbol())),
         };
         _emitInstr(instr);
-        _currentIdentifiers()[node.getIdentifier()] = _function->instructions.size() - 1;
+        _currentIdentifiers()[node.getIdentifier()] = {
+            ir::LLVMValueKind::INSTR, static_cast<int>(_function->instructions.size() - 1)};
     }
     // TODO
 }
@@ -368,10 +374,7 @@ void IRGenVisitor::visit(ast::expressions::IdentifierExpression& node) {
             .type = {.type = ir::LLVMBasicType::PTR, .intSize = 0},
             .operands =
                 {
-                    {
-                        .kind = ir::LLVMValueKind::INSTR,
-                        .id = _resolveIdentifier(node.getIdentifier()),
-                    },
+                    _resolveIdentifier(node.getIdentifier()),
                     {
                         .kind = ir::LLVMValueKind::CONST,
                         .id = 0,
@@ -385,10 +388,7 @@ void IRGenVisitor::visit(ast::expressions::IdentifierExpression& node) {
             .type = types::toLLVMType(*node.getEvaluatedType()),
             .operands =
                 {
-                    {
-                        .kind = ir::LLVMValueKind::INSTR,
-                        .id = _resolveIdentifier(node.getIdentifier()),
-                    },
+                    _resolveIdentifier(node.getIdentifier()),
                 },
             .cond{},
         });
@@ -415,10 +415,7 @@ void IRGenVisitor::visit(ast::expressions::Initializer& node) {
                     .kind = ir::LLVMValueKind::INSTR,
                     .id = (int)_function->instructions.size() - 1,
                 },
-                {
-                    .kind = ir::LLVMValueKind::INSTR,
-                    .id = _resolveIdentifier(_initialising),
-                },
+                _resolveIdentifier(_initialising),
             },
     };
     _emitInstr(instr);

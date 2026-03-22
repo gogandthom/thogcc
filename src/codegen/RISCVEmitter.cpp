@@ -59,6 +59,10 @@ void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targ
         case ir::LLVMValueKind::BLOCK:
             assert(false && "loadValue() passed a label (LLVMValueKind::BLOCK)");
             break;
+        case ir::LLVMValueKind::GLOBAL:
+            // Globals are always ptr, so we load the address, not value.
+            _out << std::format("    la {}, {}\n", targetReg, _module.globals.at(valID.id).name);
+            break;
     }
 }
 

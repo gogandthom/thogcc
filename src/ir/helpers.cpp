@@ -1,4 +1,5 @@
 #include "ir/helpers.h"
+
 #include <format>
 #include <stdexcept>
 #include <string>
@@ -9,7 +10,7 @@
 
 namespace thogcc::ir {
 
-std::string getValueLabel(const LLVMFunction& func, const LLVMValueID& id) {
+std::string getValueLabel(const LLVMModule& mod, const LLVMFunction& func, const LLVMValueID& id) {
     switch (id.kind) {
         case LLVMValueKind::INSTR:
             return std::format("%ins{}", id.id);
@@ -20,7 +21,8 @@ std::string getValueLabel(const LLVMFunction& func, const LLVMValueID& id) {
                               func.consts.at(id.id).value);
         case LLVMValueKind::BLOCK:
             return std::format("{}", func.blocks.at(id.id).label);
-            break;
+        case LLVMValueKind::GLOBAL:
+            return std::format("@{}", mod.globals.at(id.id).name);
     }
     throw std::runtime_error("Invalid ValueID");
 }
