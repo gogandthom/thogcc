@@ -58,8 +58,7 @@ int main(int argc, char** argv) {
                 throw thogcc::errors::CommandLineError(
                     std::format("Couldn't open llvm output file: {}", args.llvmDestPath));
             }
-            thogcc::ir::IREmitter llvmEmitter(llvmOut);
-            llvmEmitter.emit(llvmModule);
+            thogcc::ir::IREmitter llvmEmitter(llvmOut, llvmModule);
         }
 
         if (!args.destPath.empty()) {
@@ -68,8 +67,7 @@ int main(int argc, char** argv) {
                 throw thogcc::errors::CommandLineError(
                     std::format("Couldn't open RISCV assembly output file: {}", args.destPath));
             }
-            thogcc::codegen::RISCVEmitter riscv(riscOut);
-            riscv.emit(llvmModule);
+            thogcc::codegen::RISCVEmitter riscv(riscOut, llvmModule);
         }
     } catch (const std::exception& e) {
         std::cerr << "thogcc: " << e.what() << '\n';

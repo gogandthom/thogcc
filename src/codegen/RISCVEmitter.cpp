@@ -70,7 +70,7 @@ void RISCVEmitter::loadFromStack(int id, std::string_view targetReg) {
     _out << std::format("    lw {}, -{}(s0)\n", targetReg, getSlotOffset(id));
 }
 
-void RISCVEmitter::emit(const ir::LLVMModule& module) {
+void RISCVEmitter::emitModule(const ir::LLVMModule& module) {
     _out << std::format(".file \"{}\"\n", module.srcFileName);
     _out << ".option nopic\n";  // static binary, not a shared library
     // TODO .attribute arch, unaligned_access, stack_align

@@ -12,7 +12,7 @@
 
 namespace thogcc::ir {
 
-void IREmitter::emit(const LLVMModule& module) {
+void IREmitter::emitModule(const LLVMModule& module) {
     _out << std::format("source_filename = \"{}\"\n\n", module.srcFileName);
 
     for (const auto& global : module.globals) {
