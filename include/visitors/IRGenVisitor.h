@@ -1,8 +1,12 @@
 #pragma once
 
+#include <map>
 #include <string>
+#include <string_view>
+#include <vector>
 
 #include "ast/Node.h"
+#include "ast/fwd.h"
 #include "ir/LLVMModule.h"
 #include "ir/LLVMType.h"
 #include "visitors/DefaultVisitor.h"

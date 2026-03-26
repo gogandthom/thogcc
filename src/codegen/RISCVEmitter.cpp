@@ -15,13 +15,15 @@
 #include "ir/helpers.h"
 #include "utils.h"
 
+// NOLINTBEGIN(*-magic-numbers)
+
 namespace thogcc::codegen {
 
 const int prologueSize = 8;
 
 const int stackItemSize = 8;
 
-int getSlotOffset(int id) {
+static int getSlotOffset(int id) {
     return prologueSize + (id * stackItemSize);
 }
 
@@ -143,8 +145,8 @@ void RISCVEmitter::emitFunction(const ir::LLVMFunction& func) {
     // stack frame must have slots for each instruction
     // currently we hard code stackItemSize
     // additionally, sp must be 16-byte aligned
-    int numInstrs = func.instructions.size();
-    int dataSize = numInstrs * stackItemSize;
+    const int numInstrs = func.instructions.size();
+    const int dataSize = numInstrs * stackItemSize;
     int totalFrameSize = (prologueSize + dataSize + 15) & ~15;  // NOLINT
 
     // prologue
@@ -360,3 +362,5 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
 }
 
 }  // namespace thogcc::codegen
+
+// NOLINTEND(*-magic-numbers)

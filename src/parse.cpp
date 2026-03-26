@@ -11,6 +11,7 @@
 
 namespace thogcc {
 
+// NOLINTNEXTLINE(misc-use-internal-linkage)
 std::unique_ptr<ast::Node> ParseC(std::ifstream& file, const CommandLineArgs& args) {
     CScanner scanner(file, std::cerr);
 

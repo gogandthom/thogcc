@@ -44,4 +44,23 @@ LLVMType getTypeOf(const LLVMFunction& func, const LLVMValueID& id) {
     }
 }
 
+std::string printType(LLVMType type) {
+    switch (type.type) {
+        case LLVMBasicType::INT:
+            return std::format("i{}", type.intSize);
+            break;
+        case LLVMBasicType::FLOAT:
+            return "float";
+            break;
+        case LLVMBasicType::DOUBLE:
+            return "double";
+            break;
+        case LLVMBasicType::VOID:
+            return "void";
+        case LLVMBasicType::PTR:
+            return "ptr";
+            break;
+    }
+}
+
 }  // namespace thogcc::ir

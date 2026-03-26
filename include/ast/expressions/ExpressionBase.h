@@ -25,7 +25,7 @@ class ExpressionBase : public VisitableNode<ExpressionBase> {
 
    private:
     std::shared_ptr<types::Type> _evaluatedType;
-    bool _isLvalue;
+    bool _isLvalue{};
 };
 
 }  // namespace thogcc::ast::expressions
