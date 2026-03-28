@@ -145,9 +145,9 @@ void RISCVEmitter::emitFunction(const ir::LLVMFunction& func) {
     // stack frame must have slots for each instruction
     // currently we hard code stackItemSize
     // additionally, sp must be 16-byte aligned
-    const int numInstrs = func.instructions.size();
-    const int dataSize = numInstrs * stackItemSize;
-    int totalFrameSize = (prologueSize + dataSize + 15) & ~15;  // NOLINT
+    const size_t numInstrs = func.instructions.size();
+    const size_t dataSize = numInstrs * stackItemSize;
+    size_t totalFrameSize = (prologueSize + dataSize + 15) & ~15;  // NOLINT
 
     // prologue
     _out << std::format("    addi sp, sp, -{}\n", totalFrameSize);   // allocate stack
@@ -181,65 +181,29 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
 
     switch (instr.opcode) {
         case ir::LLVMOpcode::ADD:
-            loadValue(instr.operands.at(0), "t0");
-            loadValue(instr.operands.at(1), "t1");
-            _out << "    add t2, t0, t1\n";
-            pushStack(instrID.id, "t2");
-            break;
-        case ir::LLVMOpcode::FADD: {
-            std::string precision;
-            if (instr.type.type == ir::LLVMBasicType::FLOAT) {
-                precision = "s";
-            } else if (instr.type.type == ir::LLVMBasicType::DOUBLE) {
-                precision = "d";
-            } else {
-                assert(false && "Invalid type for FADD");
-            };
-            loadValue(instr.operands.at(0), "ft0");
-            loadValue(instr.operands.at(1), "ft1");
-            _out << std::format("    fadd.{} ft2, ft0, ft1\n", precision);
-            pushStack(instrID.id, "ft2");
-            break;
-        }
         case ir::LLVMOpcode::SUB:
-            loadValue(instr.operands.at(0), "t0");
-            loadValue(instr.operands.at(1), "t1");
-            _out << "   sub t2, t0, t1\n";
-            pushStack(instrID.id, "t2");
-            break;
-        case ir::LLVMOpcode::FSUB: {
-            std::string precision;
-            if (instr.type.type == ir::LLVMBasicType::FLOAT) {
-                precision = "s";
-            } else if (instr.type.type == ir::LLVMBasicType::DOUBLE) {
-                precision = "d";
-            } else {
-                assert(false && "Invalid type for FSUB");
-            };
-            loadValue(instr.operands.at(0), "ft0");
-            loadValue(instr.operands.at(1), "ft1");
-            _out << std::format("    fsub.{} ft2, ft0, ft1\n", precision);
-            pushStack(instrID.id, "ft2");
-            break;
-        }
         case ir::LLVMOpcode::MUL:
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
-            _out << "   mul t2, t0, t1\n";
+            _out << std::format("    {} t2, t0, t1\n", ir::printOpcode(instr.opcode));
             pushStack(instrID.id, "t2");
             break;
-        case ir::LLVMOpcode::FMUL: {
+        case ir::LLVMOpcode::FADD:
+        case ir::LLVMOpcode::FSUB:
+        case ir::LLVMOpcode::FMUL:
+        case ir::LLVMOpcode::FDIV: {
             std::string precision;
             if (instr.type.type == ir::LLVMBasicType::FLOAT) {
                 precision = "s";
             } else if (instr.type.type == ir::LLVMBasicType::DOUBLE) {
                 precision = "d";
             } else {
-                assert(false && "Invalid type for FMUL");
+                assert(false && "Invalid type for floating point arithmetic.");
             };
             loadValue(instr.operands.at(0), "ft0");
             loadValue(instr.operands.at(1), "ft1");
-            _out << std::format("    fmul.{} ft2, ft0, ft1\n", precision);
+            _out << std::format("    {}.{} ft2, ft0, ft1\n", ir::printOpcode(instr.opcode),
+                                precision);
             pushStack(instrID.id, "ft2");
             break;
         }
@@ -255,21 +219,6 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             _out << "   div t2, t0, t1\n";
             pushStack(instrID.id, "t2");
             break;
-        case ir::LLVMOpcode::FDIV: {
-            std::string precision;
-            if (instr.type.type == ir::LLVMBasicType::FLOAT) {
-                precision = "s";
-            } else if (instr.type.type == ir::LLVMBasicType::DOUBLE) {
-                precision = "d";
-            } else {
-                assert(false && "Invalid type for FDIV");
-            };
-            loadValue(instr.operands.at(0), "ft0");
-            loadValue(instr.operands.at(1), "ft1");
-            _out << std::format("    fdiv.{} ft2, ft0, ft1\n", precision);
-            pushStack(instrID.id, "ft2");
-            break;
-        }
         case ir::LLVMOpcode::UREM:
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");
@@ -319,11 +268,12 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
                     _out << "    xori t2, t2, 1\n";  // invert
                     break;
                 default:
-                    assert(false && "Unimplemented ICMP instructionin RV backend");
+                    assert(false && "Unimplemented ICMP instruction in RV backend");
             }
             pushStack(instrID.id, "t2");
             break;
         case ir::LLVMOpcode::ALLOCA:
+            // alloca does not generate any code
             break;
         case ir::LLVMOpcode::LOAD:
             loadValue(instr.operands.at(0), "t0");
@@ -354,7 +304,6 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             loadValue(instr.operands.at(0), "a0");
             _out << std::format("    j .L_{}_epilogue\n", _curFunc->name);
             break;
-
         case ir::LLVMOpcode::FCMP:
         case ir::LLVMOpcode::GETELEMENTPTR:
             break;
