@@ -23,9 +23,11 @@ const unsigned int prologueSize = 8;
 
 const unsigned int stackItemSize = 8;
 
-static constexpr int getSlotOffset(std::size_t id) {
+namespace {
+constexpr int getSlotOffset(std::size_t id) {
     return static_cast<int>(prologueSize + (id * stackItemSize));
 }
+}  // namespace
 
 void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targetReg) {
     switch (valID.kind) {
@@ -94,15 +96,16 @@ void RISCVEmitter::emitModule(const ir::LLVMModule& module) {
     if (!module.functions.empty()) {
         _out << ".section .rodata\n";
         for (const auto& func : module.functions) {
-            for (size_t i = 0; i < func.consts.size(); ++i) {
-                auto c = func.consts[i];
+            std::size_t idx = 0;
+            for (const auto c : func.consts) {
                 if (std::holds_alternative<float>(c.value)) {
-                    _out << std::format(".LC_{}_{}:\n", func.name, i);
+                    _out << std::format(".LC_{}_{}:\n", func.name, idx);
                     _out << std::format("  .float {}\n", std::get<float>(c.value));
                 } else if (std::holds_alternative<double>(c.value)) {
-                    _out << std::format(".LC_{}_{}:\n", func.name, i);
+                    _out << std::format(".LC_{}_{}:\n", func.name, idx);
                     _out << std::format("  .double {}\n", std::get<double>(c.value));
                 }
+                ++idx;
             }
         }
     }

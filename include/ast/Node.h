@@ -96,10 +96,10 @@ class NodeList : public NodeListBase {  // Yes, this is correct. We don't use Vi
         return _nodes.size();
     }
     const Node& getRawNode(size_t index) const override {
-        return *_nodes[index];
+        return *_nodes.at(index);
     }
     Node& getRawNode(size_t index) override {
-        return *_nodes[index];
+        return *_nodes.at(index);
     }
 
     using BaseType = NodeListBase;

@@ -1,5 +1,6 @@
 #include "visitors/IRGenVisitor.h"
 
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <format>

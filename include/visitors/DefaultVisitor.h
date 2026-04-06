@@ -22,7 +22,7 @@ class DefaultVisitor : public Visitor {
             return;  // Hit top of hierarchy
         } else if constexpr (HasBase<T>) {
             // upcast to BaseType
-            this->visit(static_cast<typename T::BaseType&>(node));
+            this->visit(static_cast<T::BaseType&>(node));
         } else {
             static_assert(ast::always_false<T>, "Don't know what to upcast to.");
         }
