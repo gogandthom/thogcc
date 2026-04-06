@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <ostream>
 #include <string_view>
 
@@ -20,8 +21,8 @@ class RISCVEmitter {
 
     void loadValue(const ir::LLVMValueID& valID, std::string_view targetReg);
 
-    void pushStack(int id, std::string_view srcReg);
-    void loadFromStack(int id, std::string_view targetReg);
+    void pushStack(std::size_t id, std::string_view srcReg);
+    void loadFromStack(std::size_t id, std::string_view targetReg);
 
     std::ostream& _out;  // NOLINT
     const ir::LLVMModule* _module;

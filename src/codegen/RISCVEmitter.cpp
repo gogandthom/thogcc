@@ -19,12 +19,12 @@
 
 namespace thogcc::codegen {
 
-const int prologueSize = 8;
+const unsigned int prologueSize = 8;
 
-const int stackItemSize = 8;
+const unsigned int stackItemSize = 8;
 
-static int getSlotOffset(int id) {
-    return prologueSize + (id * stackItemSize);
+static constexpr int getSlotOffset(std::size_t id) {
+    return static_cast<int>(prologueSize + (id * stackItemSize));
 }
 
 void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targetReg) {
@@ -77,11 +77,11 @@ void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targ
     }
 }
 
-void RISCVEmitter::pushStack(int id, std::string_view srcReg) {
+void RISCVEmitter::pushStack(std::size_t id, std::string_view srcReg) {
     _out << std::format("    sw {}, -{}(s0)\n", srcReg, getSlotOffset(id));
 }
 
-void RISCVEmitter::loadFromStack(int id, std::string_view targetReg) {
+void RISCVEmitter::loadFromStack(std::size_t id, std::string_view targetReg) {
     _out << std::format("    lw {}, -{}(s0)\n", targetReg, getSlotOffset(id));
 }
 
