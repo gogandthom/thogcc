@@ -72,7 +72,7 @@ void RISCVEmitter::loadValue(const ir::LLVMValueID& valID, std::string_view targ
             break;
         case ir::LLVMValueKind::GLOBAL:
             // Globals are always ptr, so we load the address, not value.
-            _out << std::format("    la {}, {}\n", targetReg, _module.globals.at(valID.id).name);
+            _out << std::format("    la {}, {}\n", targetReg, _module->globals.at(valID.id).name);
             break;
     }
 }
@@ -289,16 +289,17 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             // unconditional jump
             if (instr.operands.size() == 1) {
                 _out << std::format("    j .L_{}_{}\n", _curFunc->name,
-                                    ir::getValueLabel(_module, *_curFunc, instr.operands.at(0)));
+                                    ir::getValueLabel(*_module, *_curFunc, instr.operands.at(0)));
             } else {
                 loadValue(instr.operands.at(0), "t0");
                 _out << std::format("    bnez t0, .L_{}_{}\n", _curFunc->name,
-                                    ir::getValueLabel(_module, *_curFunc, instr.operands.at(1)));
+                                    ir::getValueLabel(*_module, *_curFunc, instr.operands.at(1)));
                 _out << std::format("    j .L_{}_{}\n", _curFunc->name,
-                                    ir::getValueLabel(_module, *_curFunc, instr.operands.at(2)));
+                                    ir::getValueLabel(*_module, *_curFunc, instr.operands.at(2)));
             }
             break;
         case ir::LLVMOpcode::CALL:
+            _out << std::format("    call {}\n", "");  // TODO
             break;
         case ir::LLVMOpcode::RET:
             loadValue(instr.operands.at(0), "a0");

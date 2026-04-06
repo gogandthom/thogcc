@@ -1,6 +1,5 @@
 #pragma once
 
-#include <map>
 #include <ostream>
 #include <string_view>
 
@@ -10,8 +9,8 @@ namespace thogcc::codegen {
 
 class RISCVEmitter {
    public:
-    RISCVEmitter(std::ostream& out, const ir::LLVMModule& module) : _out(out), _module(module) {
-        emitModule(_module);
+    RISCVEmitter(std::ostream& out, const ir::LLVMModule& module) : _out(out), _module(&module) {
+        emitModule(*_module);
     }
 
    private:
@@ -25,7 +24,7 @@ class RISCVEmitter {
     void loadFromStack(int id, std::string_view targetReg);
 
     std::ostream& _out;  // NOLINT
-    const ir::LLVMModule& _module;
+    const ir::LLVMModule* _module;
 
     const ir::LLVMFunction* _curFunc = nullptr;
 };
