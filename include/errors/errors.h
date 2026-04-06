@@ -12,11 +12,11 @@ struct ErrorBase : public std::runtime_error {
 
 struct CommandLineError : public ErrorBase {
     CommandLineError(const std::string& msg)
-        : ErrorBase(std::format("CommandLineError: {}", msg)){};
+        : ErrorBase(std::format("CommandLineError: {}", msg)) {}
 };
 
 struct ParseError : public ErrorBase {
-    ParseError(const std::string& msg) : ErrorBase(std::format("ParseError: {}", msg)){};
+    ParseError(const std::string& msg) : ErrorBase(std::format("ParseError: {}", msg)) {}
 };
 
 struct SemaError : public ErrorBase {

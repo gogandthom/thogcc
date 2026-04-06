@@ -28,7 +28,7 @@ class DeclarationSpecifiers : public VisitableNode<DeclarationSpecifiers> {
         if (typeQualifier) {
             _typeQualifiers->pushBack(std::move(typeQualifier));
         }
-    };
+    }
 
     void pushBackStorage(std::unique_ptr<ValueNode<StorageClassSpecifier>> storageClassSpecifier) {
         _storageClassSpecifiers->pushBack(std::move(storageClassSpecifier));
@@ -46,14 +46,14 @@ class DeclarationSpecifiers : public VisitableNode<DeclarationSpecifiers> {
             if (specifier->getValue() == StorageClassSpecifier::TYPEDEF) return true;
         }
         return false;
-    };
+    }
 
     auto* getStorageClassSpecifier() const {
         return _storageClassSpecifiers.get();
-    };
+    }
     auto* getTypeSpecifiers() const {
         return _typeSpecifiers.get();
-    };
+    }
 
     auto* getTypeQualifiers() const {
         return _typeQualifiers.get();

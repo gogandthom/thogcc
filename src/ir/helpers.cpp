@@ -1,5 +1,6 @@
 #include "ir/helpers.h"
 
+#include <cassert>
 #include <format>
 #include <stdexcept>
 #include <string>
@@ -24,7 +25,8 @@ std::string getValueLabel(const LLVMModule& mod, const LLVMFunction& func, const
         case LLVMValueKind::GLOBAL:
             return std::format("@{}", mod.globals.at(id.id).name);
     }
-    throw std::runtime_error("Invalid ValueID");
+    assert(false && "Unimplemented LLVMValueKind for getValueLabel");
+    __builtin_unreachable();
 }
 
 const LLVMInstruction& getInstr(const LLVMFunction& func, LLVMInstrID id) {
@@ -39,28 +41,32 @@ LLVMType getTypeOf(const LLVMFunction& func, const LLVMValueID& id) {
             return func.instructions.at(id.id).type;
         case LLVMValueKind::CONST:
             return func.consts.at(id.id).type;
-        default:
-            throw std::runtime_error("Invalid ValueID for getTypeOf");
+        case LLVMValueKind::BLOCK:
+            assert(false &&
+                   "getTypeOf() called on LLVMValueKind::BLOCK, should this be happening?");
+            return {LLVMBasicType::PTR};
+        case LLVMValueKind::GLOBAL:
+            throw std::runtime_error("Unimplemented: getTypeOf() called with global");
     }
+    assert(false && "Invalid ValueID for getTypeOf");
+    __builtin_unreachable();
 }
 
 std::string printType(LLVMType type) {
     switch (type.type) {
         case LLVMBasicType::INT:
             return std::format("i{}", type.intSize);
-            break;
         case LLVMBasicType::FLOAT:
             return "float";
-            break;
         case LLVMBasicType::DOUBLE:
             return "double";
-            break;
         case LLVMBasicType::VOID:
             return "void";
         case LLVMBasicType::PTR:
             return "ptr";
-            break;
     }
+    assert(false && "Invalid LLVMBasicType for printType");
+    __builtin_unreachable();
 }
 
 }  // namespace thogcc::ir

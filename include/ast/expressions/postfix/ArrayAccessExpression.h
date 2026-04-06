@@ -12,7 +12,7 @@ class ArrayAccessExpression : public VisitableNode<ArrayAccessExpression, Expres
    public:
     ArrayAccessExpression(std::unique_ptr<ExpressionBase> array,
                           std::unique_ptr<ExpressionBase> index)
-        : _array(std::move(array)), _index(std::move(index)) {};
+        : _array(std::move(array)), _index(std::move(index)) {}
 
     auto* getArray() const {
         return _array.get();

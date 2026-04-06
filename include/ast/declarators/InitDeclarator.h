@@ -15,11 +15,11 @@ class InitDeclarator : public VisitableNode<InitDeclarator, DeclaratorBase> {
    public:
     InitDeclarator(std::unique_ptr<DeclaratorBase> decl,
                    std::unique_ptr<expressions::Initializer> initializer = nullptr)
-        : _decl(std::move(decl)), _initializer(std::move(initializer)){};
+        : _decl(std::move(decl)), _initializer(std::move(initializer)) {}
 
     std::string_view getIdentifier() const override {
         return _decl->getIdentifier();
-    };
+    }
 
     auto* getDecl() const {
         return _decl.get();

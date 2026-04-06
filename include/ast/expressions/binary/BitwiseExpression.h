@@ -21,7 +21,7 @@ class BitwiseExpression : public VisitableNode<BitwiseExpression, BinaryExpressi
     BitwiseExpression(std::unique_ptr<ExpressionBase> lhs, std::unique_ptr<ExpressionBase> rhs,
                       BitwiseExpressionType op)
         : VisitableNode(std::move(lhs), std::move(rhs)),  // Must call direct parent's constructor
-          _op(op) {};
+          _op(op) {}
 
     BitwiseExpressionType getOp() const {
         return _op;

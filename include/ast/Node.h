@@ -20,13 +20,20 @@ namespace thogcc::ast {
 /// Do not use, except through VisitableNode
 class Node {
    public:
-    Node() = default;
     virtual ~Node() = default;
+
+    // don't copy
     Node(const Node&) = delete;
     Node& operator=(const Node&) = delete;
+    // don't move
+    Node(Node&&) = delete;
+    Node& operator=(Node&&) = delete;
 
     virtual void accept(visitors::Visitor& v) = 0;
     virtual NodeKind getKind() const = 0;
+
+   protected:
+    Node() = default;  // only instantiate through derived classes
 };
 
 /// CRTP helper for AST nodes.
@@ -41,7 +48,7 @@ class VisitableNode : public Base {
 
     NodeKind getKind() const override {
         return kind;
-    };
+    }
     void accept(visitors::Visitor& v) override {
         v.visit(static_cast<Derived&>(*this));
     }
@@ -57,7 +64,8 @@ class NodeListBase : public Node {
    public:
     using BaseType = Node;
     virtual size_t size() const = 0;
-    virtual Node& getRawNode(size_t index) const = 0;
+    virtual const Node& getRawNode(size_t index) const = 0;
+    virtual Node& getRawNode(size_t index) = 0;
 };
 
 /// Templated container for vector<unique_ptr<T>>
@@ -69,27 +77,30 @@ class NodeList : public NodeListBase {  // Yes, this is correct. We don't use Vi
     NodeList(std::unique_ptr<T> node) {
         static_assert(std::derived_from<T, Node>, "T must derive from Node");
         if (node) _nodes.push_back(std::move(node));
-    };
+    }
 
     void pushBack(std::unique_ptr<T> node) {
         if (node) _nodes.push_back(std::move(node));
-    };
+    }
     auto& getNodes() const {
         return _nodes;
-    };
+    }
     auto begin() const {
         return _nodes.begin();
-    };
+    }
     auto end() const {
         return _nodes.end();
-    };
+    }
 
     size_t size() const override {
         return _nodes.size();
-    };
-    Node& getRawNode(size_t index) const override {
+    }
+    const Node& getRawNode(size_t index) const override {
         return *_nodes[index];
-    };
+    }
+    Node& getRawNode(size_t index) override {
+        return *_nodes[index];
+    }
 
     using BaseType = NodeListBase;
     NodeKind getKind() const override {
@@ -155,7 +166,7 @@ class ValueNode
         } else {
             static_assert(always_false<E>, "fuck");
         }
-    };
+    }
 
     using BaseType = ValueNodeBase;
     NodeKind getKind() const override {

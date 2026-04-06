@@ -12,7 +12,7 @@ class FunctionCallExpression : public VisitableNode<FunctionCallExpression, Expr
    public:
     FunctionCallExpression(std::unique_ptr<ExpressionBase> expr,
                            std::unique_ptr<NodeList<ExpressionBase>> args = nullptr)
-        : _expr(std::move(expr)), _args(std::move(args)){};
+        : _expr(std::move(expr)), _args(std::move(args)) {}
 
     auto* getExpr() const {
         return _expr.get();

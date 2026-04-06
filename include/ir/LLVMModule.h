@@ -94,7 +94,6 @@ inline std::string_view printOpcode(const LLVMOpcode& op) {
         LLVM_OPCODE
 #undef X
     }
-    assert(false && "Unhandled LLVMOpcode");
     __builtin_unreachable();
 };
 
@@ -106,6 +105,7 @@ inline std::string_view printCmpCond(const LLVMCmpCond& op) {
         LLVM_CMP_COND
 #undef X
     }
+    __builtin_unreachable();
 }
 
 /// A set of instructions that runs start to finish without branching

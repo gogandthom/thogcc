@@ -15,12 +15,12 @@ namespace thogcc {
 
 class CScanner : public yyFlexLexer {
    public:
-    CScanner(std::istream& in, std::ostream& out) : yyFlexLexer(in, out){};
+    CScanner(std::istream& in, std::ostream& out) : yyFlexLexer(in, out) {}
 
     // Suppresses warning about hidden overloaded virtual function
     [[deprecated("Do not call yylex without arguments!")]] int yylex() override {
         return 1;
-    };
+    }
 
     yy::parser::symbol_type yylex(
         thogcc::TypedefTable& typedefTable);  // implementation in generated lexer.yy.cpp

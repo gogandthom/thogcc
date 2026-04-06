@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -13,7 +12,7 @@ namespace thogcc::ast::expressions {
 
 class IdentifierExpression : public VisitableNode<IdentifierExpression, ExpressionBase> {
    public:
-    IdentifierExpression(std::string identifier) : _identifier(std::move(identifier)){};
+    IdentifierExpression(std::string identifier) : _identifier(std::move(identifier)) {}
 
     std::string_view getIdentifier() const {
         return _identifier;

@@ -12,7 +12,7 @@ namespace thogcc::ast::statements {
 class ExpressionStatement : public VisitableNode<ExpressionStatement, StatementBase> {
    public:
     ExpressionStatement(std::unique_ptr<expressions::ExpressionBase> expr = nullptr)
-        : _expr(std::move(expr)){};
+        : _expr(std::move(expr)) {}
 
     auto* getExpr() const {
         return _expr.get();

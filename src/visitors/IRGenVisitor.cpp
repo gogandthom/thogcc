@@ -290,6 +290,8 @@ void IRGenVisitor::visit(ast::expressions::binary::AddMultExpression& node) {
             case ast::expressions::binary::AddMultExpressionType::REM:
                 return ir::LLVMOpcode::SREM;
         }
+        assert(false && "Unhandled AddMultExpressionType");
+        __builtin_unreachable();
     };
 
     _emitInstr({

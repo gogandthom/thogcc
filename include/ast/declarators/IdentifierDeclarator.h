@@ -12,7 +12,7 @@ namespace thogcc::ast::declarators {
 
 class IdentifierDeclarator : public VisitableNode<IdentifierDeclarator, DeclaratorBase> {
    public:
-    IdentifierDeclarator(std::string identifier) : _identifier(std::move(identifier)){};
+    IdentifierDeclarator(std::string identifier) : _identifier(std::move(identifier)) {}
 
     std::string_view getIdentifier() const override {
         return _identifier;

@@ -26,13 +26,13 @@ class DefaultVisitor : public Visitor {
         } else {
             static_assert(ast::always_false<T>, "Don't know what to upcast to.");
         }
-    };
+    }
 
     // Default implementation is to fallback()
 #define V(NS, NAME)                               \
     virtual void visit(NS::NAME& node) override { \
         fallback(node);                           \
-    };
+    }
     AST_NODES_ALL(V)
 #undef V
 };

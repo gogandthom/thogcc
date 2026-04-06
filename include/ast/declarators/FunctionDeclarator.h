@@ -21,29 +21,29 @@ class FunctionDeclarator : public VisitableNode<FunctionDeclarator, DeclaratorBa
         std::unique_ptr<NodeList<declarations::ParameterDeclaration>> params = nullptr)
         : _form(FunctionDeclaratorForm::Prototype),
           _base(std::move(base)),
-          _params(std::move(params)){};
+          _params(std::move(params)) {}
     FunctionDeclarator(std::unique_ptr<DeclaratorBase> base,
                        std::unique_ptr<NodeList<IdentifierDeclarator>> identifiers)
         : _form(FunctionDeclaratorForm::KAndR),
           _base(std::move(base)),
-          _identifiers(std::move(identifiers)){};
+          _identifiers(std::move(identifiers)) {}
 
     std::string_view getIdentifier() const override {
         return _base->getIdentifier();
-    };
+    }
 
     auto getForm() const {
         return _form;
-    };
+    }
     auto* getBase() const {
         return _base.get();
-    };
+    }
     auto* getParams() const {
         return _params.get();
-    };
+    }
     auto* getIdentifiers() const {
         return _identifiers.get();
-    };
+    }
 
    private:
     FunctionDeclaratorForm _form;

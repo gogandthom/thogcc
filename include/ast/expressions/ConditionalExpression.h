@@ -13,7 +13,7 @@ class ConditionalExpression : public VisitableNode<ConditionalExpression, Expres
     ConditionalExpression(std::unique_ptr<ExpressionBase> cond,
                           std::unique_ptr<ExpressionBase> ifExpr,
                           std::unique_ptr<ExpressionBase> elseExpr)
-        : _cond(std::move(cond)), _ifExpr(std::move(ifExpr)), _elseExpr(std::move(elseExpr)){};
+        : _cond(std::move(cond)), _ifExpr(std::move(ifExpr)), _elseExpr(std::move(elseExpr)) {}
 
     auto* getCond() const {
         return _cond.get();

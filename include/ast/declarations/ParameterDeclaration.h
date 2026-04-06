@@ -15,7 +15,7 @@ class ParameterDeclaration : public VisitableNode<ParameterDeclaration, Declarat
    public:
     ParameterDeclaration(std::unique_ptr<DeclarationSpecifiers> specifiers,
                          std::unique_ptr<declarators::DeclaratorBase> decl = nullptr)
-        : _specifiers(std::move(specifiers)), _decl(std::move(decl)){};
+        : _specifiers(std::move(specifiers)), _decl(std::move(decl)) {}
 
     auto* getSpecifiers() const {
         return _specifiers.get();
