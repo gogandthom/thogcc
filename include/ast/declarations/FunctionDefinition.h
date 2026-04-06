@@ -26,20 +26,20 @@ class FunctionDefinition
         : _specifiers(std::move(specifiers)),
           _declarator(std::move(declarator)),
           _declarations(std::move(declarations)),
-          _statement(std::move(statement)){};
+          _statement(std::move(statement)) {}
 
     auto* getSpecifiers() const {
         return _specifiers.get();
-    };
+    }
     auto* getDeclarator() const {
         return _declarator.get();
-    };
+    }
     auto* getDeclarations() const {
         return _declarations.get();
-    };
+    }
     auto* getStatement() const {
         return _statement.get();
-    };
+    }
 
     void setSymbol(std::shared_ptr<types::FuncSymbol> symb) {
         _symb = std::move(symb);

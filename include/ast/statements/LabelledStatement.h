@@ -13,7 +13,7 @@ namespace thogcc::ast::statements {
 class LabelledStatement : public VisitableNode<LabelledStatement, StatementBase> {
    public:
     LabelledStatement(std::string identifier, std::unique_ptr<StatementBase> statement)
-        : _identifier(std::move(identifier)), _statement(std::move(statement)) {};
+        : _identifier(std::move(identifier)), _statement(std::move(statement)) {}
 
     auto* getStatement() const {
         return _statement.get();

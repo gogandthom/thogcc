@@ -14,10 +14,10 @@ namespace thogcc::ast::declarators {
 class ArrayDeclarator : public VisitableNode<ArrayDeclarator, DeclaratorBase> {
    public:
     ArrayDeclarator(std::unique_ptr<expressions::ConstantExpression> expr = nullptr)
-        : _expr(std::move(expr)){};
+        : _expr(std::move(expr)) {}
     ArrayDeclarator(std::unique_ptr<DeclaratorBase> base,
                     std::unique_ptr<expressions::ConstantExpression> expr = nullptr)
-        : _base(std::move(base)), _expr(std::move(expr)){};
+        : _base(std::move(base)), _expr(std::move(expr)) {}
 
     std::string_view getIdentifier() const override {
         if (!_base) {

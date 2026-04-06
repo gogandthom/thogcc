@@ -1,5 +1,6 @@
 #include "types/helpers.h"
 
+#include <cassert>
 #include <format>
 #include <iterator>
 #include <variant>
@@ -8,6 +9,8 @@
 #include "ir/LLVMType.h"
 #include "types/Type.h"
 #include "utils.h"
+
+// NOLINTBEGIN(*-magic-numbers)
 
 namespace thogcc::types {
 
@@ -30,9 +33,8 @@ ir::LLVMType toLLVMType(const Type& type) {
                         return {ir::LLVMBasicType::FLOAT, 0};
                     case BasicType::Kind::DOUBLE:
                         return {ir::LLVMBasicType::DOUBLE, 0};
-                    default:
-                        throw errors::SemaError("Error converting C Type to LLVMType");
                 };
+                throw errors::SemaError("Error converting C Type to LLVMType");
             },
             [](const PointerType&) -> ir::LLVMType { return {ir::LLVMBasicType::PTR, 0}; },
             [](const ArrayType&) -> ir::LLVMType { return {ir::LLVMBasicType::PTR, 0}; },
@@ -72,6 +74,8 @@ std::string printType(const Type& type) {
                                   case BasicType::Kind::DOUBLE:
                                       return "double";
                               };
+                              assert(false && "Unhandled BasicType::Kind in printType");
+                              __builtin_unreachable();
                           },
                           [type](const PointerType& p) { return printType(*p.pointsTo) + "*"; },
                           [type](const ArrayType& a) {
@@ -97,3 +101,5 @@ std::string printType(const Type& type) {
 }
 
 }  // namespace thogcc::types
+
+// NOLINTEND(*-magic-numbers)

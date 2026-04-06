@@ -16,7 +16,7 @@ class IfStatement : public VisitableNode<IfStatement, StatementBase> {
                 std::unique_ptr<StatementBase> elseStatement = nullptr)
         : _cond(std::move(cond)),
           _ifStatement(std::move(ifStatement)),
-          _elseStatement(std::move(elseStatement)) {};
+          _elseStatement(std::move(elseStatement)) {}
 
     auto* getCond() const {
         return _cond.get();

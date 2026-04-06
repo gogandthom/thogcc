@@ -22,7 +22,7 @@ class RelationalExpression : public VisitableNode<RelationalExpression, BinaryEx
     RelationalExpression(std::unique_ptr<ExpressionBase> lhs, std::unique_ptr<ExpressionBase> rhs,
                          RelationalExpressionType op)
         : VisitableNode(std::move(lhs), std::move(rhs)),  // Must call direct parent's constructor
-          _op(op) {};
+          _op(op) {}
 
     RelationalExpressionType getOp() const {
         return _op;

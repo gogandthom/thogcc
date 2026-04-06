@@ -13,7 +13,7 @@ class EnumSpecifier : public VisitableNode<EnumSpecifier> {
    public:
     EnumSpecifier(std::string identifier,
                   std::unique_ptr<NodeList<declarators::EnumValueDeclarator>> declarators = nullptr)
-        : _identifier(std::move(identifier)), _declarators(std::move(declarators)){};
+        : _identifier(std::move(identifier)), _declarators(std::move(declarators)) {}
 
     auto* getDeclarators() const {
         return _declarators.get();

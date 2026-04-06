@@ -21,7 +21,7 @@ enum class UnaryOperatorType : std::uint8_t {
 class UnaryOperatorExpression : public VisitableNode<UnaryOperatorExpression, ExpressionBase> {
    public:
     UnaryOperatorExpression(UnaryOperatorType op, std::unique_ptr<ExpressionBase> expr)
-        : _op(op), _expr(std::move(expr)) {};
+        : _op(op), _expr(std::move(expr)) {}
 
     auto* getExpr() const {
         return _expr.get();

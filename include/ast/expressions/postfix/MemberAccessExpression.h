@@ -14,7 +14,7 @@ class MemberAccessExpression : public VisitableNode<MemberAccessExpression, Expr
    public:
     MemberAccessExpression(std::unique_ptr<ExpressionBase> expr, std::string identifier,
                            bool exprIsPtr = false)
-        : _expr(std::move(expr)), _identifier(std::move(identifier)), _exprIsPtr(exprIsPtr) {};
+        : _expr(std::move(expr)), _identifier(std::move(identifier)), _exprIsPtr(exprIsPtr) {}
 
     auto* getExpr() const {
         return _expr.get();

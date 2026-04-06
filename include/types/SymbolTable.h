@@ -16,15 +16,15 @@ class SymbolTable {
    public:
     SymbolTable() {
         pushScope();  // global scope
-    };
+    }
 
     void pushScope() {
         _scopes.emplace_back();
-    };
+    }
     void popScope() {
         assert(!_scopes.empty());
         _scopes.pop_back();
-    };
+    }
 
     void addToScope(std::string identifier, OrdSymbol symbol) {
         _scopes.back().ordinarySymbols.insert({std::move(identifier), std::move(symbol)});

@@ -12,7 +12,7 @@ class TypeName : public VisitableNode<TypeName> {
    public:
     TypeName(std::unique_ptr<NodeList<Node>> specifiers,
              std::unique_ptr<declarators::DeclaratorBase> declarators = nullptr)
-        : _specifiers(std::move(specifiers)), _declarator(std::move(declarators)){};
+        : _specifiers(std::move(specifiers)), _declarator(std::move(declarators)) {}
 
     auto* getSpecifiers() const {
         return _specifiers.get();

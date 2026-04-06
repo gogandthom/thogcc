@@ -14,11 +14,11 @@ class StructMemberDeclarator : public VisitableNode<StructMemberDeclarator, Decl
    public:
     StructMemberDeclarator(std::unique_ptr<DeclaratorBase> decl,
                            std::unique_ptr<expressions::ConstantExpression> expr = nullptr)
-        : _decl(std::move(decl)), _expr(std::move(expr)){};
+        : _decl(std::move(decl)), _expr(std::move(expr)) {}
 
     std::string_view getIdentifier() const override {
         return _decl->getIdentifier();
-    };
+    }
 
     auto* getDecl() const {
         return _decl.get();

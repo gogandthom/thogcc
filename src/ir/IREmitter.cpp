@@ -6,19 +6,24 @@
 #include <string>
 #include <variant>
 
+#include "ir/LLVMModule.h"
 #include "ir/LLVMType.h"
-#include "ir/llvm.h"
+#include "ir/helpers.h"
 
 namespace thogcc::ir {
 
-void IREmitter::emit(const LLVMModule& module) {
-    _out << std::format("source_filename = \"{}\"\n\n", module.srcFileName);
+void IREmitter::emitModule(const LLVMModule& module) {
+    _out << std::format("source_filename = \"{}\"\n", module.srcFileName);
 
-    for (const auto& global : module.globals) {
-        _out << std::format(
-            "@{} = global {} {}\n", global.name, global.type.printType(),
-            std::visit([](auto& val) { return std::to_string(val); }, global.initValue));
+    if (!module.globals.empty()) {
+        _out << "\n";
+        for (const auto& global : module.globals) {
+            _out << std::format(
+                "@{} = global {} {}\n", global.name, printType(global.type),
+                std::visit([](auto& val) { return std::to_string(val); }, global.initValue));
+        }
     }
+
     _out << "\n";
     for (const auto& func : module.functions) {
         emitFunction(func);
@@ -26,7 +31,7 @@ void IREmitter::emit(const LLVMModule& module) {
 }
 
 void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
-    const LLVMInstruction& instr = func.getInstr(instrID);
+    const LLVMInstruction& instr = getInstr(func, instrID);
 
     _out << "  ";  // indent
 
@@ -51,21 +56,21 @@ void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
         case LLVMOpcode::UREM:
         case LLVMOpcode::SREM: {
             // opcode and type
-            _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
+            _out << std::format("{} {}", printOpcode(instr.opcode), printType(instr.type));
             // operands
-            _out << std::format(" {}, {}", func.getValueLabel(instr.operands.at(0)),
-                                func.getValueLabel(instr.operands.at(1)));
+            _out << std::format(" {}, {}", getValueLabel(*_module, func, instr.operands.at(0)),
+                                getValueLabel(*_module, func, instr.operands.at(1)));
             break;
         }
 
         // CMP
         case LLVMOpcode::ICMP: {
             // opcode and cond
-            const LLVMType opType = func.getTypeOf(instr.operands.at(0));
-            _out << std::format("icmp {} {}", printCmpCond(instr.cond), opType.printType());
+            const LLVMType opType = getTypeOf(func, instr.operands.at(0));
+            _out << std::format("icmp {} {}", printCmpCond(instr.cond), printType(opType));
             // operands
-            _out << std::format(" {}, {}", func.getValueLabel(instr.operands.at(0)),
-                                func.getValueLabel(instr.operands.at(1)));
+            _out << std::format(" {}, {}", getValueLabel(*_module, func, instr.operands.at(0)),
+                                getValueLabel(*_module, func, instr.operands.at(1)));
             break;
         }
         case LLVMOpcode::FCMP:
@@ -74,17 +79,17 @@ void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
         // Memory
         case LLVMOpcode::ALLOCA:
             // opcode and type
-            _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
+            _out << std::format("{} {}", printOpcode(instr.opcode), printType(instr.type));
             break;
         case LLVMOpcode::LOAD:
-            _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
-            _out << std::format(", ptr {}", func.getValueLabel(instr.operands.at(0)));
+            _out << std::format("{} {}", printOpcode(instr.opcode), printType(instr.type));
+            _out << std::format(", ptr {}", getValueLabel(*_module, func, instr.operands.at(0)));
             break;
         case LLVMOpcode::STORE:
             _out << std::format("{} {} {}, ptr {}", printOpcode(instr.opcode),
-                                func.getTypeOf(instr.operands.at(0)).printType(),
-                                func.getValueLabel(instr.operands.at(0)),
-                                func.getValueLabel(instr.operands.at(1)));
+                                printType(getTypeOf(func, instr.operands.at(0))),
+                                getValueLabel(*_module, func, instr.operands.at(0)),
+                                getValueLabel(*_module, func, instr.operands.at(1)));
             break;
         case LLVMOpcode::GETELEMENTPTR:
             break;
@@ -92,21 +97,22 @@ void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
         // Control flow
         case LLVMOpcode::BR:
             if (instr.operands.size() == 1) {
-                _out << std::format("br label {}", func.getValueLabel(instr.operands.at(0)));
+                _out << std::format("br label {}",
+                                    getValueLabel(*_module, func, instr.operands.at(0)));
             } else {
                 _out << std::format("br i1 {}, label {}, label {}",
-                                    func.getValueLabel(instr.operands.at(0)),
-                                    func.getValueLabel(instr.operands.at(1)),
-                                    func.getValueLabel(instr.operands.at(2)));
+                                    getValueLabel(*_module, func, instr.operands.at(0)),
+                                    getValueLabel(*_module, func, instr.operands.at(1)),
+                                    getValueLabel(*_module, func, instr.operands.at(2)));
             }
             break;
         case LLVMOpcode::CALL:
             break;
         case LLVMOpcode::RET:
             // opcode and type
-            _out << std::format("{} {}", printOpcode(instr.opcode), instr.type.printType());
+            _out << std::format("{} {}", printOpcode(instr.opcode), printType(instr.type));
             if (instr.type.type != LLVMBasicType::VOID) {
-                _out << " " << func.getValueLabel(instr.operands.at(0));
+                _out << " " << getValueLabel(*_module, func, instr.operands.at(0));
             }
             break;
     }
@@ -116,11 +122,11 @@ void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
 
 void IREmitter::emitFunction(const LLVMFunction& func) {
     // Name and return type
-    _out << "define " << func.returnType.printType() << " @" << func.name << "(";
+    _out << "define " << printType(func.returnType) << " @" << func.name << "(";
 
     // Parameters
     for (auto it = func.params.begin(); it != func.params.end(); ++it) {
-        _out << it->type.printType() << " %" << it->name;
+        _out << printType(it->type) << " %" << it->name;
         if (std::next(it) != func.params.end()) {
             _out << ", ";
         }

@@ -11,11 +11,11 @@ namespace thogcc::ast::expressions {
 class PrimaryExpression : public VisitableNode<PrimaryExpression, ExpressionBase> {
    public:
     template <typename T>
-    PrimaryExpression(T&& value) : _value(std::forward<T>(value)){};
+    PrimaryExpression(T&& value) : _value(std::forward<T>(value)) {}
 
     auto& getValue() const {
         return _value;
-    };
+    }
 
    private:
     std::variant<int, double, std::string> _value;

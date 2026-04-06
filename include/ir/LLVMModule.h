@@ -1,9 +1,8 @@
 #pragma once
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
-#include <format>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -18,19 +17,20 @@ enum class LLVMValueKind : std::uint8_t {
     INSTR,
     CONST,
     BLOCK,
+    GLOBAL,
 };
 
 struct LLVMValueID {
     LLVMValueKind kind;
-    int id;  // index into pool/'arena'
+    std::size_t id;  // index into pool/'arena'
 };
 
 struct LLVMInstrID {
-    int id;
+    std::size_t id;
 };
 
 struct LLVMBlockID {
-    int id;
+    std::size_t id;
 };
 
 #define LLVM_OPCODE                              \
@@ -94,7 +94,6 @@ inline std::string_view printOpcode(const LLVMOpcode& op) {
         LLVM_OPCODE
 #undef X
     }
-    assert(false && "Unhandled LLVMOpcode");
     __builtin_unreachable();
 };
 
@@ -106,6 +105,7 @@ inline std::string_view printCmpCond(const LLVMCmpCond& op) {
         LLVM_CMP_COND
 #undef X
     }
+    __builtin_unreachable();
 }
 
 /// A set of instructions that runs start to finish without branching
@@ -152,39 +152,6 @@ struct LLVMFunction {
     std::vector<LLVMInstruction> instructions;
     std::vector<LLVMParameter> params;
     std::vector<LLVMConstant> consts;
-
-    std::string getValueLabel(const LLVMValueID& id) const {
-        switch (id.kind) {
-            case LLVMValueKind::INSTR:
-                return std::format("%ins{}", id.id);
-            case LLVMValueKind::PARAM:
-                return std::format("%{}", params.at(id.id).name);
-            case LLVMValueKind::CONST:
-                return std::visit([](const auto& c) { return std::to_string(c); },
-                                  consts.at(id.id).value);
-            case LLVMValueKind::BLOCK:
-                return std::format("{}", blocks.at(id.id).label);
-                break;
-        }
-        throw std::runtime_error("Invalid ValueID");
-    }
-
-    const LLVMInstruction& getInstr(LLVMInstrID id) const {
-        return instructions.at(id.id);
-    }
-
-    LLVMType getTypeOf(const LLVMValueID& id) const {
-        switch (id.kind) {
-            case LLVMValueKind::PARAM:
-                return params.at(id.id).type;
-            case LLVMValueKind::INSTR:
-                return instructions.at(id.id).type;
-            case LLVMValueKind::CONST:
-                return consts.at(id.id).type;
-            default:
-                throw std::runtime_error("Invalid ValueID for getTypeOf");
-        }
-    }
 };
 
 /// The LLVM equivalent of a translational unit

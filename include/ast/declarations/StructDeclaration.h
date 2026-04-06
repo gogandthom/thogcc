@@ -13,7 +13,7 @@ class StructDeclaration : public VisitableNode<StructDeclaration, DeclarationBas
    public:
     StructDeclaration(std::unique_ptr<NodeList<Node>> qualifiers,
                       std::unique_ptr<NodeList<declarators::StructMemberDeclarator>> declarators)
-        : _qualifiers(std::move(qualifiers)), _declarators(std::move(declarators)){};
+        : _qualifiers(std::move(qualifiers)), _declarators(std::move(declarators)) {}
 
     auto* getQualifiers() const {
         return _qualifiers.get();

@@ -12,7 +12,7 @@ namespace thogcc::ast::expressions {
 class CastExpression : public VisitableNode<CastExpression, ExpressionBase> {
    public:
     CastExpression(std::unique_ptr<TypeName> typeName, std::unique_ptr<ExpressionBase> expr)
-        : _expr(std::move(expr)), _typeName(std::move(typeName)){};
+        : _expr(std::move(expr)), _typeName(std::move(typeName)) {}
 
     auto* getExpr() const {
         return _expr.get();

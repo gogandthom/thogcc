@@ -16,11 +16,11 @@ class EnumValueDeclarator : public VisitableNode<EnumValueDeclarator, Declarator
    public:
     EnumValueDeclarator(std::string identifier,
                         std::unique_ptr<expressions::ConstantExpression> expr = nullptr)
-        : _identifier(std::move(identifier)), _expr(std::move(expr)) {};
+        : _identifier(std::move(identifier)), _expr(std::move(expr)) {}
 
     std::string_view getIdentifier() const override {
         return _identifier;
-    };
+    }
 
     auto* getExpr() const {
         return _expr.get();
