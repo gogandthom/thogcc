@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <map>
 #include <string>
 #include <string_view>
@@ -60,7 +61,7 @@ class IRGenVisitor : public DefaultVisitor {
     ir::LLVMValueID _resolveIdentifier(std::string_view name);
     std::map<std::string_view, ir::LLVMValueID>& _currentIdentifiers();
 
-    int _emitInstr(const ir::LLVMInstruction& instr);
+    std::size_t _emitInstr(const ir::LLVMInstruction& instr);
     ir::LLVMBasicBlock& _createBlock(std::string label);
 };
 

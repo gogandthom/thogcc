@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <string_view>
@@ -21,15 +22,15 @@ enum class LLVMValueKind : std::uint8_t {
 
 struct LLVMValueID {
     LLVMValueKind kind;
-    int id;  // index into pool/'arena'
+    std::size_t id;  // index into pool/'arena'
 };
 
 struct LLVMInstrID {
-    int id;
+    std::size_t id;
 };
 
 struct LLVMBlockID {
-    int id;
+    std::size_t id;
 };
 
 #define LLVM_OPCODE                              \
