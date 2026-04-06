@@ -27,6 +27,12 @@ class Visitor {
     AST_NODES_ALL(V)
 #undef V
 
+    // Specialised visitation for templated ValueNodes.
+    // ValueNode<E>::accept() will:
+    // - first call the specific visitVal(ValueNode<E>&)
+    // - then the generic visit(ValueNodeBase&).
+    // Override visit(ValueNodeBase&) if you only need the label.
+    // If a visitor overriddes both, you're probably doing something bad.
     virtual void visitVal(ast::ValueNode<ast::TypeSpecifier>& /* valNode */) {}
     virtual void visitVal(ast::ValueNode<ast::StorageClassSpecifier>& /* valNode */) {}
     virtual void visitVal(ast::ValueNode<ast::TypeQualifier>& /* valNode */) {}

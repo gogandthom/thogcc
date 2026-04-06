@@ -173,8 +173,8 @@ class ValueNode
         return NodeKind::ValueNodeBase;
     }
     void accept(visitors::Visitor& v) override {
-        v.visitVal(*this);
-        v.visit(static_cast<ValueNodeBase&>(*this));
+        v.visitVal(*this);                            // visit as specialised type
+        v.visit(static_cast<ValueNodeBase&>(*this));  // visit as 'type-erased' ValueNodeBase
     }
 
     E getValue() const {
