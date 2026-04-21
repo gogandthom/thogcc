@@ -234,6 +234,14 @@ void RISCVEmitter::emitInstruction(ir::LLVMInstrID instrID) {
             _out << "   rem t2, t0, t1\n";
             pushStack(instrID.id, "t2");
             break;
+        case ir::LLVMOpcode::AND:
+        case ir::LLVMOpcode::OR:
+        case ir::LLVMOpcode::XOR:
+            loadValue(instr.operands.at(0), "t0");
+            loadValue(instr.operands.at(1), "t1");
+            _out << std::format("    {} t2, t0, t1\n", ir::printOpcode(instr.opcode));
+            pushStack(instrID.id, "t2");
+            break;
         case ir::LLVMOpcode::ICMP:
             loadValue(instr.operands.at(0), "t0");
             loadValue(instr.operands.at(1), "t1");

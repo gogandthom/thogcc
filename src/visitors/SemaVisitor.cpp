@@ -351,6 +351,19 @@ void SemaVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
     node.setIsLvalue(false);
 }
 
+void SemaVisitor::visit(ast::expressions::binary::BitwiseExpression& node) {
+    node.getLhs()->accept(*this);
+    auto lhsType = node.getLhs()->getEvaluatedType();
+
+    node.getRhs()->accept(*this);
+    auto rhsType = node.getRhs()->getEvaluatedType();
+
+    auto resultType = getPromotedType(lhsType, rhsType);
+
+    node.setEvaluatedType(resultType);
+    node.setIsLvalue(false);
+}
+
 void SemaVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
     node.getLhs()->accept(*this);
     auto lhsType = node.getLhs()->getEvaluatedType();

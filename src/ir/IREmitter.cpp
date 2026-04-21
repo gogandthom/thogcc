@@ -63,6 +63,18 @@ void IREmitter::emitInstruction(const LLVMFunction& func, LLVMInstrID instrID) {
             break;
         }
 
+        // Bitwise
+        case LLVMOpcode::AND:
+        case LLVMOpcode::OR:
+        case LLVMOpcode::XOR: {
+            // opcode and type
+            _out << std::format("{} {}", printOpcode(instr.opcode), printType(instr.type));
+            // operands
+            _out << std::format(" {}, {}", getValueLabel(*_module, func, instr.operands.at(0)),
+                                getValueLabel(*_module, func, instr.operands.at(1)));
+            break;
+        }
+
         // CMP
         case LLVMOpcode::ICMP: {
             // opcode and cond

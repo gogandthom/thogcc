@@ -47,6 +47,11 @@ struct LLVMBlockID {
     X(UREM, "urem")                              \
     X(SREM, "srem")                              \
                                                  \
+    /* bitwise */                                \
+    X(AND, "and")                                \
+    X(OR, "or")                                  \
+    X(XOR, "xor")                                \
+                                                 \
     /* compare things */                         \
     X(ICMP, "icmp")                              \
     X(FCMP, "fcmp")                              \

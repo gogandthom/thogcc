@@ -736,6 +736,60 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
     _instruction = temp;
 }
 
+void IRGenVisitor::visit(ast::expressions::binary::BitwiseExpression& node) {
+    node.getRhs()->accept(*this);
+    std::size_t rhs = _function->instructions.size() - 1;
+    if (_function->instructions.at(rhs).type.type == ir::LLVMBasicType::PTR) {
+        rhs = _emitInstr({
+            .opcode = ir::LLVMOpcode::LOAD,
+            .type = types::toLLVMType(*node.getRhs()->getEvaluatedType()),
+            .operands = {{.kind = ir::LLVMValueKind::INSTR, .id = rhs}},
+            .cond{},
+        });
+    }
+
+    node.getLhs()->accept(*this);
+    std::size_t lhs = _function->instructions.size() - 1;
+    if (_function->instructions.at(lhs).type.type == ir::LLVMBasicType::PTR) {
+        lhs = _emitInstr({
+            .opcode = ir::LLVMOpcode::LOAD,
+            .type = types::toLLVMType(*node.getLhs()->getEvaluatedType()),
+            .operands = {{.kind = ir::LLVMValueKind::INSTR, .id = lhs}},
+            .cond{},
+        });
+    }
+
+    auto toOp = [](ast::expressions::binary::BitwiseExpressionType type) -> ir::LLVMOpcode {
+        switch (type) {
+            case ast::expressions::binary::BitwiseExpressionType::AND:
+                return ir::LLVMOpcode::AND;
+            case ast::expressions::binary::BitwiseExpressionType::OR:
+                return ir::LLVMOpcode::OR;
+            case ast::expressions::binary::BitwiseExpressionType::XOR:
+                return ir::LLVMOpcode::XOR;
+        }
+        assert(false && "Unhandled BitwiseExpressionType");
+        __builtin_unreachable();
+    };
+
+    _emitInstr({
+        .opcode = toOp(node.getOp()),
+        .type = types::toLLVMType(*node.getRhs()->getEvaluatedType()),
+        .operands =
+            {
+                {
+                    .kind = ir::LLVMValueKind::INSTR,
+                    .id = _function->instructions.size() - 1,
+                },
+                {
+                    .kind = ir::LLVMValueKind::INSTR,
+                    .id = rhs,
+                },
+            },
+        .cond{},
+    });
+}
+
 }  // namespace thogcc::visitors
 
 // NOLINTEND(*-magic-numbers)
