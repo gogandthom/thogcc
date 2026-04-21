@@ -45,7 +45,7 @@ std::shared_ptr<types::Type> SemaVisitor::getPromotedType(const std::shared_ptr<
                 return 3;
             case types::BasicType::Kind::SHORT:
                 return 2;
-            case types::BasicType::Kind::CHAR:
+            case types::BasicType::Kind::CHAR:  // TODO integer promotion?
                 return 1;
             default:
                 return -1;
@@ -270,6 +270,13 @@ void SemaVisitor::visit(ast::expressions::IdentifierExpression& node) {
     node.setSymbol(symb);
     node.setEvaluatedType(resolvedType);
     node.setIsLvalue(true);  // should always be an lvalue I think?
+}
+
+void SemaVisitor::visit(ast::expressions::IncDecExpression& node) {
+    node.getExpr()->accept(*this);
+
+    node.setEvaluatedType(node.getExpr()->getEvaluatedType());
+    node.setIsLvalue(false);
 }
 
 void SemaVisitor::visit(ast::expressions::ListExpression& node) {
