@@ -41,6 +41,9 @@ class SemaVisitor : public RecursiveVisitor {
     void visit(ast::expressions::binary::AssignmentExpression& node) override;
     void visit(ast::expressions::binary::BitwiseExpression& node) override;
     void visit(ast::expressions::binary::EqualityExpression& node) override;
+    void visit(ast::expressions::binary::LogicalExpression& node) override;
+    void visit(ast::expressions::binary::RelationalExpression& node) override;
+    void visit(ast::expressions::binary::ShiftExpression& node) override;
     void visit(ast::expressions::postfix::FunctionCallExpression& node) override;
     void visit(ast::statements::CompoundStatement& node) override;
 

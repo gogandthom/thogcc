@@ -367,6 +367,29 @@ void SemaVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
     node.setIsLvalue(false);
 }
 
+void SemaVisitor::visit(ast::expressions::binary::LogicalExpression& node) {
+    auto [lhsType, rhsType] = visitBinarySides(node);
+
+    auto intType = std::make_shared<types::Type>(types::BasicType{types::BasicType::Kind::INT});
+    node.setEvaluatedType(intType);
+    node.setIsLvalue(false);
+}
+
+void SemaVisitor::visit(ast::expressions::binary::RelationalExpression& node) {
+    auto [lhsType, rhsType] = visitBinarySides(node);
+
+    auto intType = std::make_shared<types::Type>(types::BasicType{types::BasicType::Kind::INT});
+    node.setEvaluatedType(intType);
+    node.setIsLvalue(false);
+}
+
+void SemaVisitor::visit(ast::expressions::binary::ShiftExpression& node) {
+    auto [lhsType, rhsType] = visitBinarySides(node);
+
+    node.setEvaluatedType(lhsType);  // TODO lhsType should be int promoted
+    node.setIsLvalue(false);
+}
+
 void SemaVisitor::visit(ast::expressions::postfix::FunctionCallExpression& node) {
     node.getExpr()->accept(*this);
     auto calleeType = node.getExpr()->getEvaluatedType();
