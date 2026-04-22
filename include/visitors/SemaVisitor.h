@@ -48,6 +48,9 @@ class SemaVisitor : public RecursiveVisitor {
     static std::shared_ptr<types::Type> getPromotedType(const std::shared_ptr<types::Type>& lhs,
                                                         const std::shared_ptr<types::Type>& rhs);
 
+    template <typename T>
+    auto visitBinarySides(T& node);
+
     types::SymbolTable _table;
     types::Type _curType;
 
