@@ -362,8 +362,9 @@ void IRGenVisitor::visit(ast::statements::ReturnStatement& node) {
     node.getExpr()->accept(*this);
     const std::size_t ret = _function->instructions.size() - 1;
 
-    ir::LLVMInstruction instr;
-    if (node.getExpr()->isLvalue()) {
+    // _expr is a ListExpression. We check whether the last emitted instruction is a pointer.
+    // TODO Is this correct, or should we be checking whether the last Expression is an lvalue?
+    if (_function->instructions.at(ret).type.type == ir::LLVMBasicType::PTR) {
         _emitInstr({
             .opcode = ir::LLVMOpcode::LOAD,
             .type = _function->instructions.at(ret).type,
