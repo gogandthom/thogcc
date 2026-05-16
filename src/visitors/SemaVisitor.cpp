@@ -6,6 +6,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -45,7 +46,7 @@ std::shared_ptr<types::Type> SemaVisitor::getPromotedType(const std::shared_ptr<
                 return 3;
             case types::BasicType::Kind::SHORT:
                 return 2;
-            case types::BasicType::Kind::CHAR:
+            case types::BasicType::Kind::CHAR:  // TODO integer promotion?
                 return 1;
             default:
                 return -1;
@@ -58,6 +59,17 @@ std::shared_ptr<types::Type> SemaVisitor::getPromotedType(const std::shared_ptr<
         return lhs;
     }
     return rhs;
+}
+
+template <typename T>
+auto SemaVisitor::visitBinarySides(T& node) {
+    node.getLhs()->accept(*this);
+    auto lhsType = node.getLhs()->getEvaluatedType();
+
+    node.getRhs()->accept(*this);
+    auto rhsType = node.getRhs()->getEvaluatedType();
+
+    return std::make_pair(lhsType, rhsType);
 }
 
 void SemaVisitor::visitVal(ast::ValueNode<ast::TypeSpecifier>& valNode) {
@@ -272,6 +284,13 @@ void SemaVisitor::visit(ast::expressions::IdentifierExpression& node) {
     node.setIsLvalue(true);  // should always be an lvalue I think?
 }
 
+void SemaVisitor::visit(ast::expressions::IncDecExpression& node) {
+    node.getExpr()->accept(*this);
+
+    node.setEvaluatedType(node.getExpr()->getEvaluatedType());
+    node.setIsLvalue(false);
+}
+
 void SemaVisitor::visit(ast::expressions::ListExpression& node) {
     std::shared_ptr<types::Type> lastType = nullptr;
 
@@ -310,27 +329,16 @@ void SemaVisitor::visit(ast::expressions::PrimaryExpression& node) {
 }
 
 void SemaVisitor::visit(ast::expressions::binary::AddMultExpression& node) {
-    node.getLhs()->accept(*this);
-    auto lhsType = node.getLhs()->getEvaluatedType();
+    auto [lhsType, rhsType] = visitBinarySides(node);
 
-    node.getRhs()->accept(*this);
-    auto rhsType = node.getRhs()->getEvaluatedType();
-
-    auto resultType = getPromotedType(lhsType, rhsType);
-
-    node.setEvaluatedType(resultType);
+    node.setEvaluatedType(getPromotedType(lhsType, rhsType));
     node.setIsLvalue(false);
 }
 
 void SemaVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
-    node.getLhs()->accept(*this);
-    auto lhsType = node.getLhs()->getEvaluatedType();
-    const bool lhsIsLval = node.getLhs()->isLvalue();
+    auto [lhsType, rhsType] = visitBinarySides(node);
 
-    node.getRhs()->accept(*this);
-    auto rhsType = node.getRhs()->getEvaluatedType();
-
-    if (!lhsIsLval) {
+    if (!node.getLhs()->isLvalue()) {
         throw errors::SemaError("AssignmentExpression LHS is not lvalue");
     }
 
@@ -344,16 +352,41 @@ void SemaVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
     node.setIsLvalue(false);
 }
 
+void SemaVisitor::visit(ast::expressions::binary::BitwiseExpression& node) {
+    auto [lhsType, rhsType] = visitBinarySides(node);
+
+    node.setEvaluatedType(getPromotedType(lhsType, rhsType));
+    node.setIsLvalue(false);
+}
+
 void SemaVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
-    node.getLhs()->accept(*this);
-    auto lhsType = node.getLhs()->getEvaluatedType();
+    auto [lhsType, rhsType] = visitBinarySides(node);
 
-    node.getRhs()->accept(*this);
-    auto rhsType = node.getRhs()->getEvaluatedType();
+    auto intType = std::make_shared<types::Type>(types::BasicType{types::BasicType::Kind::INT});
+    node.setEvaluatedType(intType);
+    node.setIsLvalue(false);
+}
 
-    auto resultType = std::make_shared<types::Type>(types::BasicType{types::BasicType::Kind::INT});
+void SemaVisitor::visit(ast::expressions::binary::LogicalExpression& node) {
+    auto [lhsType, rhsType] = visitBinarySides(node);
 
-    node.setEvaluatedType(resultType);
+    auto intType = std::make_shared<types::Type>(types::BasicType{types::BasicType::Kind::INT});
+    node.setEvaluatedType(intType);
+    node.setIsLvalue(false);
+}
+
+void SemaVisitor::visit(ast::expressions::binary::RelationalExpression& node) {
+    auto [lhsType, rhsType] = visitBinarySides(node);
+
+    auto intType = std::make_shared<types::Type>(types::BasicType{types::BasicType::Kind::INT});
+    node.setEvaluatedType(intType);
+    node.setIsLvalue(false);
+}
+
+void SemaVisitor::visit(ast::expressions::binary::ShiftExpression& node) {
+    auto [lhsType, rhsType] = visitBinarySides(node);
+
+    node.setEvaluatedType(lhsType);  // TODO lhsType should be int promoted
     node.setIsLvalue(false);
 }
 
