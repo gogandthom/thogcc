@@ -18,8 +18,10 @@
 
 ## Design
 
-- Bison/Flex parses C89 [(draft spec)](https://port70.net/%7Ensz/c/c89/c89-draft.html)
+- Bison/Flex parses C89.
 - Internally we use a simple subset of [LLVM IR](https://llvm.org/docs/LangRef.html) (can be emitted with `-l` flag)
   - notably, no support for `phi`. Everything is `alloca`, `load`, `store`. We have no mem2reg pass.
   - thogcc is designed to always _emit_ valid LLVM IR, but not take LLVM input.
 - Backend: RISCV, target: `rv32gc`, ABI: `ilp32d`.
+
+For more details see [ARCHITECTURE.md](/ARCHITECTURE.md).
