@@ -59,6 +59,7 @@ class IRGenVisitor : public DefaultVisitor {
     std::map<std::string_view, ir::LLVMValueID>& _currentIdentifiers();
 
     std::size_t _emitInstr(const ir::LLVMInstruction& instr);
+    std::size_t _evaluateAsRValue(ast::expressions::ExpressionBase& node);
     ir::LLVMBasicBlock& _createBlock(std::string label);
 };
 
