@@ -332,8 +332,8 @@ void IRGenVisitor::visit(ast::expressions::PrimaryExpression& node) {
 }
 
 void IRGenVisitor::visit(ast::expressions::binary::AddMultExpression& node) {
-    std::size_t rhs = _evaluateAsRValue(*node.getRhs());
-    std::size_t lhs = _evaluateAsRValue(*node.getLhs());
+    const std::size_t rhs = _evaluateAsRValue(*node.getRhs());
+    const std::size_t lhs = _evaluateAsRValue(*node.getLhs());
 
     auto toOp = [](ast::expressions::binary::AddMultExpressionType type) -> ir::LLVMOpcode {
         switch (type) {
@@ -407,7 +407,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
         __builtin_unreachable();
     };
 
-    ir::LLVMType type = _function->instructions.at(rhs).type;
+    const ir::LLVMType type = _function->instructions.at(rhs).type;
 
     // compound assignment
     // TODO currently always assumes lhs dereferenced is the same type as the rhs for loading
@@ -418,7 +418,7 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
             .operands = {{.kind = ir::LLVMValueKind::INSTR, .id = lhs}},
             .cond{},
         });
-        ir::LLVMOpcode op = toOp(node.getOp());
+        const ir::LLVMOpcode op = toOp(node.getOp());
         _emitInstr({
             .opcode = op,
             .type = type,
@@ -446,8 +446,8 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
 }
 
 void IRGenVisitor::visit(ast::expressions::binary::BitwiseExpression& node) {
-    std::size_t rhs = _evaluateAsRValue(*node.getRhs());
-    std::size_t lhs = _evaluateAsRValue(*node.getLhs());
+    const std::size_t rhs = _evaluateAsRValue(*node.getRhs());
+    const std::size_t lhs = _evaluateAsRValue(*node.getLhs());
 
     auto toOp = [](ast::expressions::binary::BitwiseExpressionType type) -> ir::LLVMOpcode {
         switch (type) {
