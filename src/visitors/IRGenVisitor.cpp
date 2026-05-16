@@ -142,21 +142,6 @@ void IRGenVisitor::visit(ast::declarators::FunctionDeclarator& node) {
     if (node.getIdentifiers() != nullptr) node.getIdentifiers()->accept(*this);
 }
 
-void IRGenVisitor::visit(ast::declarators::InitDeclarator& node) {
-    node.getDecl()->accept(*this);
-    if (_function == nullptr) {
-        _global->type =
-            types::toLLVMType(*std::get<std::shared_ptr<types::VarSymbol>>(node.getSymbol())->type);
-        if (node.getInitializer() != nullptr) node.getInitializer()->accept(*this);
-    } else {
-        *_type =
-            types::toLLVMType(*std::get<std::shared_ptr<types::VarSymbol>>(node.getSymbol())->type);
-
-        _initialising = node.getIdentifier();
-        if (node.getInitializer() != nullptr) node.getInitializer()->accept(*this);
-    }
-}
-
 void IRGenVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
     if (_global != nullptr) {
         // identifier for global so yay
@@ -181,216 +166,19 @@ void IRGenVisitor::visit(ast::declarators::IdentifierDeclarator& node) {
     // TODO
 }
 
-void IRGenVisitor::visit(ast::statements::CompoundStatement& node) {
-    if (node.getDeclarationList() != nullptr) node.getDeclarationList()->accept(*this);
-    if (node.getStatementList() != nullptr) node.getStatementList()->accept(*this);
-}
+void IRGenVisitor::visit(ast::declarators::InitDeclarator& node) {
+    node.getDecl()->accept(*this);
+    if (_function == nullptr) {
+        _global->type =
+            types::toLLVMType(*std::get<std::shared_ptr<types::VarSymbol>>(node.getSymbol())->type);
+        if (node.getInitializer() != nullptr) node.getInitializer()->accept(*this);
+    } else {
+        *_type =
+            types::toLLVMType(*std::get<std::shared_ptr<types::VarSymbol>>(node.getSymbol())->type);
 
-void IRGenVisitor::visit(ast::statements::ExpressionStatement& node) {
-    node.getExpr()->accept(*this);
-}
-
-void IRGenVisitor::visit(ast::statements::IfStatement& node) {
-    node.getCond()->accept(*this);
-    const std::size_t ifID = _function->instructions.size();
-
-    _emitInstr({
-        .opcode = ir::LLVMOpcode::BR,
-        .type{},
-        .operands =
-            {
-                {
-                    .kind = ir::LLVMValueKind::INSTR,
-                    .id = _function->instructions.size() - 1,
-                },
-                {
-                    .kind = ir::LLVMValueKind::BLOCK,
-                    .id = _function->blocks.size(),
-                },
-                {
-                    .kind = ir::LLVMValueKind::BLOCK,
-                    .id = 0,
-                },
-            },
-        .cond{},
-    });
-
-    const ir::LLVMInstruction jumpEnd = {
-        .opcode = ir::LLVMOpcode::BR,
-        .type{},
-        .operands =
-            {
-                {
-                    .kind = ir::LLVMValueKind::BLOCK,
-                    .id = 0,
-                },
-            },
-        .cond{},
-    };
-
-    const std::size_t startJumpEnd = _function->instructions.size();
-    _function->instructions.push_back(jumpEnd);
-
-    _createBlock(std::format("if_true_{}", ifID));
-
-    node.getIfStatement()->accept(*this);
-
-    const std::size_t endIndex = _function->instructions.size();
-    _emitInstr(jumpEnd);
-
-    if (node.getElseStatement() != nullptr) {
-        _createBlock(std::format("if_false_{}", ifID));
-
-        _function->instructions[ifID].operands[2].id = _function->blocks.size() - 1;
-
-        node.getElseStatement()->accept(*this);
+        _initialising = node.getIdentifier();
+        if (node.getInitializer() != nullptr) node.getInitializer()->accept(*this);
     }
-
-    _createBlock(std::format("if_end_{}", ifID));
-
-    if (_function->instructions[ifID].operands[2].id == 0) {
-        _function->instructions[ifID].operands[2].id = _function->blocks.size() - 1;
-    }
-    _function->instructions[endIndex].operands[0].id = _function->blocks.size() - 1;
-    _function->instructions[startJumpEnd].operands[0].id = _function->blocks.size() - 1;
-}
-
-void IRGenVisitor::visit(ast::expressions::binary::AddMultExpression& node) {
-    node.getRhs()->accept(*this);
-    std::size_t rhs = _function->instructions.size() - 1;
-    if (_function->instructions.at(rhs).type.type == ir::LLVMBasicType::PTR) {
-        rhs = _emitInstr({
-            .opcode = ir::LLVMOpcode::LOAD,
-            .type = types::toLLVMType(*node.getRhs()->getEvaluatedType()),
-            .operands = {{.kind = ir::LLVMValueKind::INSTR, .id = rhs}},
-            .cond{},
-        });
-    }
-
-    node.getLhs()->accept(*this);
-    std::size_t lhs = _function->instructions.size() - 1;
-    if (_function->instructions.at(lhs).type.type == ir::LLVMBasicType::PTR) {
-        lhs = _emitInstr({
-            .opcode = ir::LLVMOpcode::LOAD,
-            .type = types::toLLVMType(*node.getLhs()->getEvaluatedType()),
-            .operands = {{.kind = ir::LLVMValueKind::INSTR, .id = lhs}},
-            .cond{},
-        });
-    }
-
-    auto toOp = [](ast::expressions::binary::AddMultExpressionType type) -> ir::LLVMOpcode {
-        switch (type) {
-            case ast::expressions::binary::AddMultExpressionType::ADD:
-                return ir::LLVMOpcode::ADD;
-            case ast::expressions::binary::AddMultExpressionType::SUB:
-                return ir::LLVMOpcode::SUB;
-            case ast::expressions::binary::AddMultExpressionType::MUL:
-                return ir::LLVMOpcode::MUL;
-            case ast::expressions::binary::AddMultExpressionType::DIV:
-                return ir::LLVMOpcode::SDIV;
-            case ast::expressions::binary::AddMultExpressionType::REM:
-                return ir::LLVMOpcode::SREM;
-        }
-        assert(false && "Unhandled AddMultExpressionType");
-        __builtin_unreachable();
-    };
-
-    _emitInstr({
-        .opcode = toOp(node.getOp()),
-        .type = types::toLLVMType(*node.getRhs()->getEvaluatedType()),
-        .operands =
-            {
-                {
-                    .kind = ir::LLVMValueKind::INSTR,
-                    .id = _function->instructions.size() - 1,
-                },
-                {
-                    .kind = ir::LLVMValueKind::INSTR,
-                    .id = rhs,
-                },
-            },
-        .cond{},
-    });
-}
-
-void IRGenVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
-    node.getRhs()->accept(*this);
-    const std::size_t rhs = _function->instructions.size() - 1;
-    node.getLhs()->accept(*this);
-    const std::size_t lhs = _function->instructions.size() - 1;
-
-    ir::LLVMInstruction instr;
-    if (node.getLhs()->isLvalue()) {
-        _emitInstr({
-            .opcode = ir::LLVMOpcode::LOAD,
-            .type = types::toLLVMType(*node.getRhs()->getEvaluatedType()),
-            .operands =
-                {
-                    {
-                        .kind = ir::LLVMValueKind::INSTR,
-                        .id = lhs,
-                    },
-                },
-            .cond{},
-        });
-    }
-
-    instr = {
-        .opcode = ir::LLVMOpcode::ICMP,
-        .type =
-            {
-                .type = ir::LLVMBasicType::INT,
-                .intSize = 1,
-            },
-        .operands =
-            {
-                {
-                    .kind = ir::LLVMValueKind::INSTR,
-                    .id = _function->instructions.size() - 1,
-                },
-                {
-                    .kind = ir::LLVMValueKind::INSTR,
-                    .id = rhs,
-                },
-            },
-        .cond = node.getIsNe() ? ir::LLVMCmpCond::NE : ir::LLVMCmpCond::EQ,
-    };
-    _emitInstr(instr);
-}
-
-void IRGenVisitor::visit(ast::statements::ReturnStatement& node) {
-    node.getExpr()->accept(*this);
-    const std::size_t ret = _function->instructions.size() - 1;
-
-    // _expr is a ListExpression. We check whether the last emitted instruction is a pointer.
-    // TODO Is this correct, or should we be checking whether the last Expression is an lvalue?
-    if (_function->instructions.at(ret).type.type == ir::LLVMBasicType::PTR) {
-        _emitInstr({
-            .opcode = ir::LLVMOpcode::LOAD,
-            .type = _function->instructions.at(ret).type,
-            .operands =
-                {
-                    {
-                        .kind = ir::LLVMValueKind::INSTR,
-                        .id = ret,
-                    },
-                },
-            .cond{},
-        });
-    }
-
-    _emitInstr({
-        .opcode = ir::LLVMOpcode::RET,
-        .type = types::toLLVMType(*node.getExpr()->getEvaluatedType()),
-        .operands =
-            {
-                {
-                    .kind = ir::LLVMValueKind::INSTR,
-                    .id = _function->instructions.size() - 1,
-                },
-            },
-        .cond{},
-    });
 }
 
 void IRGenVisitor::visit(ast::expressions::IdentifierExpression& node) {
@@ -527,6 +315,64 @@ void IRGenVisitor::visit(ast::expressions::PrimaryExpression& node) {
             // die
         }
     }
+}
+
+void IRGenVisitor::visit(ast::expressions::binary::AddMultExpression& node) {
+    node.getRhs()->accept(*this);
+    std::size_t rhs = _function->instructions.size() - 1;
+    if (_function->instructions.at(rhs).type.type == ir::LLVMBasicType::PTR) {
+        rhs = _emitInstr({
+            .opcode = ir::LLVMOpcode::LOAD,
+            .type = types::toLLVMType(*node.getRhs()->getEvaluatedType()),
+            .operands = {{.kind = ir::LLVMValueKind::INSTR, .id = rhs}},
+            .cond{},
+        });
+    }
+
+    node.getLhs()->accept(*this);
+    std::size_t lhs = _function->instructions.size() - 1;
+    if (_function->instructions.at(lhs).type.type == ir::LLVMBasicType::PTR) {
+        lhs = _emitInstr({
+            .opcode = ir::LLVMOpcode::LOAD,
+            .type = types::toLLVMType(*node.getLhs()->getEvaluatedType()),
+            .operands = {{.kind = ir::LLVMValueKind::INSTR, .id = lhs}},
+            .cond{},
+        });
+    }
+
+    auto toOp = [](ast::expressions::binary::AddMultExpressionType type) -> ir::LLVMOpcode {
+        switch (type) {
+            case ast::expressions::binary::AddMultExpressionType::ADD:
+                return ir::LLVMOpcode::ADD;
+            case ast::expressions::binary::AddMultExpressionType::SUB:
+                return ir::LLVMOpcode::SUB;
+            case ast::expressions::binary::AddMultExpressionType::MUL:
+                return ir::LLVMOpcode::MUL;
+            case ast::expressions::binary::AddMultExpressionType::DIV:
+                return ir::LLVMOpcode::SDIV;
+            case ast::expressions::binary::AddMultExpressionType::REM:
+                return ir::LLVMOpcode::SREM;
+        }
+        assert(false && "Unhandled AddMultExpressionType");
+        __builtin_unreachable();
+    };
+
+    _emitInstr({
+        .opcode = toOp(node.getOp()),
+        .type = types::toLLVMType(*node.getRhs()->getEvaluatedType()),
+        .operands =
+            {
+                {
+                    .kind = ir::LLVMValueKind::INSTR,
+                    .id = _function->instructions.size() - 1,
+                },
+                {
+                    .kind = ir::LLVMValueKind::INSTR,
+                    .id = rhs,
+                },
+            },
+        .cond{},
+    });
 }
 
 void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
@@ -785,6 +631,160 @@ void IRGenVisitor::visit(ast::expressions::binary::BitwiseExpression& node) {
                 {
                     .kind = ir::LLVMValueKind::INSTR,
                     .id = rhs,
+                },
+            },
+        .cond{},
+    });
+}
+
+void IRGenVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
+    node.getRhs()->accept(*this);
+    const std::size_t rhs = _function->instructions.size() - 1;
+    node.getLhs()->accept(*this);
+    const std::size_t lhs = _function->instructions.size() - 1;
+
+    ir::LLVMInstruction instr;
+    if (node.getLhs()->isLvalue()) {
+        _emitInstr({
+            .opcode = ir::LLVMOpcode::LOAD,
+            .type = types::toLLVMType(*node.getRhs()->getEvaluatedType()),
+            .operands =
+                {
+                    {
+                        .kind = ir::LLVMValueKind::INSTR,
+                        .id = lhs,
+                    },
+                },
+            .cond{},
+        });
+    }
+
+    instr = {
+        .opcode = ir::LLVMOpcode::ICMP,
+        .type =
+            {
+                .type = ir::LLVMBasicType::INT,
+                .intSize = 1,
+            },
+        .operands =
+            {
+                {
+                    .kind = ir::LLVMValueKind::INSTR,
+                    .id = _function->instructions.size() - 1,
+                },
+                {
+                    .kind = ir::LLVMValueKind::INSTR,
+                    .id = rhs,
+                },
+            },
+        .cond = node.getIsNe() ? ir::LLVMCmpCond::NE : ir::LLVMCmpCond::EQ,
+    };
+    _emitInstr(instr);
+}
+
+void IRGenVisitor::visit(ast::statements::CompoundStatement& node) {
+    if (node.getDeclarationList() != nullptr) node.getDeclarationList()->accept(*this);
+    if (node.getStatementList() != nullptr) node.getStatementList()->accept(*this);
+}
+
+void IRGenVisitor::visit(ast::statements::ExpressionStatement& node) {
+    node.getExpr()->accept(*this);
+}
+
+void IRGenVisitor::visit(ast::statements::IfStatement& node) {
+    node.getCond()->accept(*this);
+    const std::size_t ifID = _function->instructions.size();
+
+    _emitInstr({
+        .opcode = ir::LLVMOpcode::BR,
+        .type{},
+        .operands =
+            {
+                {
+                    .kind = ir::LLVMValueKind::INSTR,
+                    .id = _function->instructions.size() - 1,
+                },
+                {
+                    .kind = ir::LLVMValueKind::BLOCK,
+                    .id = _function->blocks.size(),
+                },
+                {
+                    .kind = ir::LLVMValueKind::BLOCK,
+                    .id = 0,
+                },
+            },
+        .cond{},
+    });
+
+    const ir::LLVMInstruction jumpEnd = {
+        .opcode = ir::LLVMOpcode::BR,
+        .type{},
+        .operands =
+            {
+                {
+                    .kind = ir::LLVMValueKind::BLOCK,
+                    .id = 0,
+                },
+            },
+        .cond{},
+    };
+
+    const std::size_t startJumpEnd = _function->instructions.size();
+    _function->instructions.push_back(jumpEnd);
+
+    _createBlock(std::format("if_true_{}", ifID));
+
+    node.getIfStatement()->accept(*this);
+
+    const std::size_t endIndex = _function->instructions.size();
+    _emitInstr(jumpEnd);
+
+    if (node.getElseStatement() != nullptr) {
+        _createBlock(std::format("if_false_{}", ifID));
+
+        _function->instructions[ifID].operands[2].id = _function->blocks.size() - 1;
+
+        node.getElseStatement()->accept(*this);
+    }
+
+    _createBlock(std::format("if_end_{}", ifID));
+
+    if (_function->instructions[ifID].operands[2].id == 0) {
+        _function->instructions[ifID].operands[2].id = _function->blocks.size() - 1;
+    }
+    _function->instructions[endIndex].operands[0].id = _function->blocks.size() - 1;
+    _function->instructions[startJumpEnd].operands[0].id = _function->blocks.size() - 1;
+}
+
+void IRGenVisitor::visit(ast::statements::ReturnStatement& node) {
+    node.getExpr()->accept(*this);
+    const std::size_t ret = _function->instructions.size() - 1;
+
+    // _expr is a ListExpression. We check whether the last emitted instruction is a pointer.
+    // TODO Is this correct, or should we be checking whether the last Expression is an lvalue?
+    if (_function->instructions.at(ret).type.type == ir::LLVMBasicType::PTR) {
+        _emitInstr({
+            .opcode = ir::LLVMOpcode::LOAD,
+            .type = _function->instructions.at(ret).type,
+            .operands =
+                {
+                    {
+                        .kind = ir::LLVMValueKind::INSTR,
+                        .id = ret,
+                    },
+                },
+            .cond{},
+        });
+    }
+
+    _emitInstr({
+        .opcode = ir::LLVMOpcode::RET,
+        .type = types::toLLVMType(*node.getExpr()->getEvaluatedType()),
+        .operands =
+            {
+                {
+                    .kind = ir::LLVMValueKind::INSTR,
+                    .id = _function->instructions.size() - 1,
                 },
             },
         .cond{},
