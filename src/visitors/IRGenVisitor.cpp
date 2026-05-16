@@ -375,185 +375,60 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
 
     const std::size_t rhs = _evaluateAsRValue(*node.getRhs());
 
+    // ASSUMES LHS ALWAYS RETURNS A POINTER
     node.getLhs()->accept(*this);
     const std::size_t lhs = _function->instructions.size() - 1;
 
-    // ASSUMES LHS ALWAYS RETURNS A POINTER
-    // TODO:
-    // once typing things exist this can be fixed to respect the lhs type correctly,
-    // currently always assumes lhs dereferenced is the same type as the rhs for loading
-    switch (node.getOp()) {
-        case ast::expressions::binary::AssignmentExpressionType::MUL_ASSIGN: {
-            const std::size_t loaded = _emitInstr({
-                .opcode = ir::LLVMOpcode::LOAD,
-                .type = _function->instructions.at(rhs).type,
-                .operands =
-                    {
-                        {
-                            .kind = ir::LLVMValueKind::INSTR,
-                            .id = lhs,
-                        },
-                    },
-                .cond{},
-            });
-            _emitInstr({
-                .opcode = ir::LLVMOpcode::MUL,
-                .type = _function->instructions.at(rhs).type,
-                .operands =
-                    {
-                        {
-                            .kind = ir::LLVMValueKind::INSTR,
-                            .id = loaded,
-                        },
-                        {
-                            .kind = ir::LLVMValueKind::INSTR,
-                            .id = rhs,
-                        },
-                    },
-                .cond{},
-            });
-            break;
+    // TODO: fix with signed/unsigned
+    auto toOp = [](ast::expressions::binary::AssignmentExpressionType type) -> ir::LLVMOpcode {
+        switch (type) {
+            case ast::expressions::binary::AssignmentExpressionType::ASSIGN:
+                break;  // Not a compound assignment
+            case ast::expressions::binary::AssignmentExpressionType::MUL_ASSIGN:
+                return ir::LLVMOpcode::MUL;
+            case ast::expressions::binary::AssignmentExpressionType::DIV_ASSIGN:
+                return ir::LLVMOpcode::UDIV;
+            case ast::expressions::binary::AssignmentExpressionType::MOD_ASSIGN:
+                return ir::LLVMOpcode::UREM;
+            case ast::expressions::binary::AssignmentExpressionType::ADD_ASSIGN:
+                return ir::LLVMOpcode::ADD;
+            case ast::expressions::binary::AssignmentExpressionType::SUB_ASSIGN:
+                return ir::LLVMOpcode::SUB;
+            case ast::expressions::binary::AssignmentExpressionType::LEFT_ASSIGN:
+            case ast::expressions::binary::AssignmentExpressionType::RIGHT_ASSIGN:
+            case ast::expressions::binary::AssignmentExpressionType::AND_ASSIGN:
+                return ir::LLVMOpcode::AND;
+            case ast::expressions::binary::AssignmentExpressionType::XOR_ASSIGN:
+                return ir::LLVMOpcode::XOR;
+            case ast::expressions::binary::AssignmentExpressionType::OR_ASSIGN:
+                return ir::LLVMOpcode::OR;
         }
-        // TODO: fix with signed/unsigned
-        case ast::expressions::binary::AssignmentExpressionType::DIV_ASSIGN: {
-            _emitInstr({
-                .opcode = ir::LLVMOpcode::LOAD,
-                .type = _function->instructions.at(rhs).type,
-                .operands =
-                    {
-                        {
-                            .kind = ir::LLVMValueKind::INSTR,
-                            .id = lhs,
-                        },
-                    },
-                .cond{},
-            });
-            const size_t loaded = _function->instructions.size() - 1;
-            _emitInstr({
-                .opcode = ir::LLVMOpcode::UDIV,
-                .type = _function->instructions.at(rhs).type,
-                .operands =
-                    {
-                        {
-                            .kind = ir::LLVMValueKind::INSTR,
-                            .id = loaded,
-                        },
-                        {
-                            .kind = ir::LLVMValueKind::INSTR,
-                            .id = rhs,
-                        },
-                    },
-                .cond{},
-            });
-            break;
-        }
-            // TODO: same as above
-        case ast::expressions::binary::AssignmentExpressionType::MOD_ASSIGN: {
-            _emitInstr({
-                .opcode = ir::LLVMOpcode::LOAD,
-                .type = _function->instructions.at(rhs).type,
-                .operands =
-                    {
-                        {
-                            .kind = ir::LLVMValueKind::INSTR,
-                            .id = lhs,
-                        },
-                    },
-                .cond{},
-            });
-            const size_t loaded = _function->instructions.size() - 1;
-            _emitInstr({
-                .opcode = ir::LLVMOpcode::UREM,
-                .type = _function->instructions.at(rhs).type,
-                .operands =
-                    {
-                        {
-                            .kind = ir::LLVMValueKind::INSTR,
-                            .id = loaded,
-                        },
-                        {
-                            .kind = ir::LLVMValueKind::INSTR,
-                            .id = rhs,
-                        },
-                    },
-                .cond{},
-            });
-            break;
-        }
-        case ast::expressions::binary::AssignmentExpressionType::ADD_ASSIGN: {
-            _emitInstr({
-                .opcode = ir::LLVMOpcode::LOAD,
-                .type = _function->instructions.at(rhs).type,
-                .operands =
-                    {
-                        {
-                            .kind = ir::LLVMValueKind::INSTR,
-                            .id = lhs,
-                        },
-                    },
-                .cond{},
-            });
-            const size_t loaded = _function->instructions.size() - 1;
-            _emitInstr({
-                .opcode = ir::LLVMOpcode::ADD,
-                .type = _function->instructions.at(rhs).type,
-                .operands =
-                    {
-                        {
-                            .kind = ir::LLVMValueKind::INSTR,
-                            .id = loaded,
-                        },
-                        {
-                            .kind = ir::LLVMValueKind::INSTR,
-                            .id = rhs,
-                        },
-                    },
-                .cond{},
-            });
-            break;
-        }
-        case ast::expressions::binary::AssignmentExpressionType::SUB_ASSIGN: {
-            _emitInstr({
-                .opcode = ir::LLVMOpcode::LOAD,
-                .type = _function->instructions.at(rhs).type,
-                .operands =
-                    {
-                        {
-                            .kind = ir::LLVMValueKind::INSTR,
-                            .id = lhs,
-                        },
-                    },
-                .cond{},
-            });
-            const size_t loaded = _function->instructions.size() - 1;
-            _emitInstr({
-                .opcode = ir::LLVMOpcode::SUB,
-                .type = _function->instructions.at(rhs).type,
-                .operands =
-                    {
-                        {
-                            .kind = ir::LLVMValueKind::INSTR,
-                            .id = loaded,
-                        },
-                        {
-                            .kind = ir::LLVMValueKind::INSTR,
-                            .id = rhs,
-                        },
-                    },
-                .cond{},
-            });
-            break;
-        }
-        // do these after signed things exist
-        case ast::expressions::binary::AssignmentExpressionType::LEFT_ASSIGN:
-        case ast::expressions::binary::AssignmentExpressionType::RIGHT_ASSIGN:
-        case ast::expressions::binary::AssignmentExpressionType::AND_ASSIGN:
-        case ast::expressions::binary::AssignmentExpressionType::XOR_ASSIGN:
-        case ast::expressions::binary::AssignmentExpressionType::OR_ASSIGN:
-        case ast::expressions::binary::AssignmentExpressionType::ASSIGN:
-        default: {
-            break;
-        }
+        assert(false && "Unhandled AssignmentExpressionType");
+        __builtin_unreachable();
+    };
+
+    ir::LLVMType type = _function->instructions.at(rhs).type;
+
+    // compound assignment
+    // TODO currently always assumes lhs dereferenced is the same type as the rhs for loading
+    if (node.getOp() != ast::expressions::binary::AssignmentExpressionType::ASSIGN) {
+        const std::size_t loadedLhs = _emitInstr({
+            .opcode = ir::LLVMOpcode::LOAD,
+            .type = type,
+            .operands = {{.kind = ir::LLVMValueKind::INSTR, .id = lhs}},
+            .cond{},
+        });
+        ir::LLVMOpcode op = toOp(node.getOp());
+        _emitInstr({
+            .opcode = op,
+            .type = type,
+            .operands =
+                {
+                    {.kind = ir::LLVMValueKind::INSTR, .id = loadedLhs},
+                    {.kind = ir::LLVMValueKind::INSTR, .id = rhs},
+                },
+            .cond{},
+        });
     }
 
     _emitInstr({
@@ -561,14 +436,8 @@ void IRGenVisitor::visit(ast::expressions::binary::AssignmentExpression& node) {
         .type{},
         .operands =
             {
-                {
-                    .kind = ir::LLVMValueKind::INSTR,
-                    .id = rhs,
-                },
-                {
-                    .kind = ir::LLVMValueKind::INSTR,
-                    .id = lhs,
-                },
+                {.kind = ir::LLVMValueKind::INSTR, .id = rhs},
+                {.kind = ir::LLVMValueKind::INSTR, .id = lhs},
             },
         .cond{},
     });
