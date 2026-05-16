@@ -481,25 +481,8 @@ void IRGenVisitor::visit(ast::expressions::binary::BitwiseExpression& node) {
 }
 
 void IRGenVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
-    node.getRhs()->accept(*this);
-    const std::size_t rhs = _function->instructions.size() - 1;
-    node.getLhs()->accept(*this);
-    const std::size_t lhs = _function->instructions.size() - 1;
-
-    if (node.getLhs()->isLvalue()) {
-        _emitInstr({
-            .opcode = ir::LLVMOpcode::LOAD,
-            .type = types::toLLVMType(*node.getRhs()->getEvaluatedType()),
-            .operands =
-                {
-                    {
-                        .kind = ir::LLVMValueKind::INSTR,
-                        .id = lhs,
-                    },
-                },
-            .cond{},
-        });
-    }
+    const std::size_t rhs = _evaluateAsRValue(*node.getRhs());
+    const std::size_t lhs = _evaluateAsRValue(*node.getLhs());
 
     _emitInstr({
         .opcode = ir::LLVMOpcode::ICMP,
@@ -510,14 +493,8 @@ void IRGenVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
             },
         .operands =
             {
-                {
-                    .kind = ir::LLVMValueKind::INSTR,
-                    .id = _function->instructions.size() - 1,
-                },
-                {
-                    .kind = ir::LLVMValueKind::INSTR,
-                    .id = rhs,
-                },
+                {.kind = ir::LLVMValueKind::INSTR, .id = lhs},
+                {.kind = ir::LLVMValueKind::INSTR, .id = rhs},
             },
         .cond = node.getIsNe() ? ir::LLVMCmpCond::NE : ir::LLVMCmpCond::EQ,
     });
@@ -598,38 +575,25 @@ void IRGenVisitor::visit(ast::statements::IfStatement& node) {
 }
 
 void IRGenVisitor::visit(ast::statements::ReturnStatement& node) {
-    node.getExpr()->accept(*this);
-    const std::size_t ret = _function->instructions.size() - 1;
-
-    // _expr is a ListExpression. We check whether the last emitted instruction is a pointer.
-    // TODO Is this correct, or should we be checking whether the last Expression is an lvalue?
-    if (_function->instructions.at(ret).type.type == ir::LLVMBasicType::PTR) {
+    if (node.getExpr() != nullptr) {
+        // _expr is a ListExpression. This checks whether the last emitted instruction is a pointer.
+        // TODO Is this correct, or should we be checking whether the last Expression is an lvalue?
+        const std::size_t ret = _evaluateAsRValue(*node.getExpr());
         _emitInstr({
-            .opcode = ir::LLVMOpcode::LOAD,
-            .type = _function->instructions.at(ret).type,
-            .operands =
-                {
-                    {
-                        .kind = ir::LLVMValueKind::INSTR,
-                        .id = ret,
-                    },
-                },
+            .opcode = ir::LLVMOpcode::RET,
+            .type = types::toLLVMType(*node.getExpr()->getEvaluatedType()),
+            .operands = {{.kind = ir::LLVMValueKind::INSTR, .id = ret}},
+            .cond{},
+        });
+    } else {
+        // void return
+        _emitInstr({
+            .opcode = ir::LLVMOpcode::RET,
+            .type = {.type = ir::LLVMBasicType::VOID},
+            .operands = {},
             .cond{},
         });
     }
-
-    _emitInstr({
-        .opcode = ir::LLVMOpcode::RET,
-        .type = types::toLLVMType(*node.getExpr()->getEvaluatedType()),
-        .operands =
-            {
-                {
-                    .kind = ir::LLVMValueKind::INSTR,
-                    .id = _function->instructions.size() - 1,
-                },
-            },
-        .cond{},
-    });
 }
 
 }  // namespace thogcc::visitors
