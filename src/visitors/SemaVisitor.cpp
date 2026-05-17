@@ -412,6 +412,62 @@ void SemaVisitor::visit(ast::expressions::postfix::FunctionCallExpression& node)
     node.setIsLvalue(false);
 }
 
+void SemaVisitor::visit(ast::expressions::prefix::UnaryOperatorExpression& node) {
+    node.getExpr()->accept(*this);
+
+    const auto exprType = node.getExpr()->getEvaluatedType();
+
+    switch (node.getType()) {
+        case ast::expressions::prefix::UnaryOperatorType::ADDRESSOF: {
+            if (!node.getExpr()->isLvalue()) {
+                throw errors::SemaError("Operand of '&' is not lvalue");
+            }
+
+            auto ptrType = std::make_shared<types::Type>();
+            ptrType->data = types::PointerType{exprType};
+            node.setEvaluatedType(ptrType);
+            node.setIsLvalue(false);
+            break;
+        }
+        case ast::expressions::prefix::UnaryOperatorType::INDIRECTION: {
+            const auto* ptr = std::get_if<types::PointerType>(&exprType->data);
+            if (ptr == nullptr) {
+                throw errors::SemaError("Operand of '*' is not a pointer type");
+            }
+
+            node.setEvaluatedType(ptr->pointsTo);
+            node.setIsLvalue(true);
+            break;
+        }
+        case ast::expressions::prefix::UnaryOperatorType::PLUS:
+        case ast::expressions::prefix::UnaryOperatorType::MINUS: {
+            node.setEvaluatedType(exprType);
+            node.setIsLvalue(false);
+            break;
+        }
+        case ast::expressions::prefix::UnaryOperatorType::BITWISE_NOT: {
+            const auto* basicType = std::get_if<types::BasicType>(&exprType->data);
+            if (basicType == nullptr || basicType->kind == types::BasicType::Kind::FLOAT ||
+                basicType->kind == types::BasicType::Kind::DOUBLE) {
+                throw errors::SemaError("Operand of '~' is not an integer type");
+            }
+
+            node.setEvaluatedType(exprType);
+            node.setIsLvalue(false);
+            break;
+        }
+        case ast::expressions::prefix::UnaryOperatorType::LOGICAL_NOT: {
+            // result of ! is always an int.
+            auto intType =
+                std::make_shared<types::Type>(types::BasicType{types::BasicType::Kind::INT});
+            node.setEvaluatedType(intType);
+            node.setIsLvalue(false);
+            break;
+        }
+    }
+    // TODO const folding
+}
+
 void SemaVisitor::visit(ast::statements::CompoundStatement& node) {
     _table.pushScope();
     RecursiveVisitor::visit(node);
