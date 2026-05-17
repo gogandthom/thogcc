@@ -195,6 +195,11 @@ void IRGenVisitor::visit(ast::declarators::InitDeclarator& node) {
     }
 }
 
+void IRGenVisitor::visit(ast::declarators::PointerDeclarator& node) {
+    // this shouldn't need to emit any IR or do anything after sema pass.
+    node.getPtr()->accept(*this);
+}
+
 void IRGenVisitor::visit(ast::expressions::IdentifierExpression& node) {
     if (node.isLvalue()) {
         _emitInstr(ir::LLVMInstruction{
