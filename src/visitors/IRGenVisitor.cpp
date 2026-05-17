@@ -505,6 +505,67 @@ void IRGenVisitor::visit(ast::expressions::binary::EqualityExpression& node) {
     });
 }
 
+void IRGenVisitor::visit(ast::expressions::prefix::UnaryOperatorExpression& node) {
+    switch (node.getType()) {
+        case ast::expressions::prefix::UnaryOperatorType::ADDRESSOF: {
+            node.getExpr()->accept(*this);
+            break;
+        }
+        case ast::expressions::prefix::UnaryOperatorType::INDIRECTION:
+        case ast::expressions::prefix::UnaryOperatorType::PLUS: {
+            _evaluateAsRValue(*node.getExpr());
+            break;
+        }
+        case ast::expressions::prefix::UnaryOperatorType::MINUS: {
+            const std::size_t exprID = _evaluateAsRValue(*node.getExpr());
+            _emitInstr({
+                .opcode = ir::LLVMOpcode::SUB,
+                .type = types::toLLVMType(*node.getEvaluatedType()),
+                .operands =
+                    {
+                        {.kind = ir::LLVMValueKind::CONST, .id = 0},
+                        {.kind = ir::LLVMValueKind::INSTR, .id = exprID},
+                    },
+                .cond{},
+            });
+            break;
+        }
+        case ast::expressions::prefix::UnaryOperatorType::BITWISE_NOT: {
+            const std::size_t exprID = _evaluateAsRValue(*node.getExpr());
+            const auto type = types::toLLVMType(*node.getEvaluatedType());
+            // bitwise not is xor with -1
+            _function->consts.push_back({.type = type, .value = static_cast<uint64_t>(-1)});
+            _emitInstr({
+                .opcode = ir::LLVMOpcode::XOR,
+                .type = type,
+                .operands =
+                    {
+                        {.kind = ir::LLVMValueKind::INSTR, .id = exprID},
+                        {.kind = ir::LLVMValueKind::CONST, .id = _function->consts.size() - 1},
+                    },
+                .cond{},
+            });
+            break;
+        }
+        case ast::expressions::prefix::UnaryOperatorType::LOGICAL_NOT: {
+            const std::size_t exprID = _evaluateAsRValue(*node.getExpr());
+            // logical not is compare with zero
+            _emitInstr({
+                .opcode = ir::LLVMOpcode::ICMP,
+                .type = {.type = ir::LLVMBasicType::INT, .intSize = 1},  // ICMP yields i1
+                .operands =
+                    {
+                        {.kind = ir::LLVMValueKind::INSTR, .id = exprID},
+                        {.kind = ir::LLVMValueKind::CONST, .id = 0},
+                    },
+                .cond = ir::LLVMCmpCond::EQ,
+            });
+            // TODO zero extend
+            break;
+        }
+    }
+}
+
 void IRGenVisitor::visit(ast::statements::CompoundStatement& node) {
     if (node.getDeclarationList() != nullptr) node.getDeclarationList()->accept(*this);
     if (node.getStatementList() != nullptr) node.getStatementList()->accept(*this);

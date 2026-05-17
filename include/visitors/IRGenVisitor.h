@@ -36,6 +36,7 @@ class IRGenVisitor : public DefaultVisitor {
     void visit(ast::expressions::binary::AssignmentExpression& node) override;
     void visit(ast::expressions::binary::BitwiseExpression& node) override;
     void visit(ast::expressions::binary::EqualityExpression& node) override;
+    void visit(ast::expressions::prefix::UnaryOperatorExpression& node) override;
     void visit(ast::statements::CompoundStatement& node) override;
     void visit(ast::statements::ExpressionStatement& node) override;
     void visit(ast::statements::IfStatement& node) override;
